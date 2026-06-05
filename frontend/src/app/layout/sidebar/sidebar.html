@@ -1,0 +1,239 @@
+<aside class="sidebar">
+
+  <div class="sidebar-top">
+
+    <div class="sidebar-logo">
+      <img
+        src="/images/logo-clear.png"
+        alt="logo"
+      />
+    </div>
+
+    <nav
+      *ngIf="currentSection === 'dashboard'"
+      class="sidebar-menu">
+
+      <a
+        routerLink="/dashboard"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }">
+
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Overview</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-bolt"></i>
+        <span>Quick Actions</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>Recent Activity</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-bell"></i>
+        <span>Notifications</span>
+      </a>
+
+    </nav>
+
+    <nav
+      *ngIf="currentSection === 'seasons'"
+      class="sidebar-menu">
+
+      <a
+        routerLink="/seasons"
+        [queryParams]="{ view: 'create' }"
+        [class.active]="seasonView === 'create'">
+
+        <i class="fa-solid fa-plus"></i>
+        <span>Create Season</span>
+      </a>
+
+      <a
+        routerLink="/seasons"
+        [queryParams]="{ view: 'list' }"
+        [class.active]="seasonView === 'list'">
+
+        <i class="fa-solid fa-list"></i>
+        <span>All Seasons</span>
+      </a>
+
+      <a
+        routerLink="/seasons"
+        [queryParams]="{ view: 'current' }"
+        [class.active]="seasonView === 'current'">
+
+        <i class="fa-solid fa-fire"></i>
+        <span>Current Season</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-trophy"></i>
+        <span>Tournaments</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-medal"></i>
+        <span>Season Awards</span>
+      </a>
+
+    </nav>
+
+    <nav
+      *ngIf="currentSection === 'arena'"
+      class="sidebar-menu">
+
+      <a>
+        <i class="fa-solid fa-gamepad"></i>
+        <span>Matchmaking</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-circle-play"></i>
+        <span>Live Matches</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-user-check"></i>
+        <span>Check-In</span>
+      </a>
+
+    </nav>
+
+    <nav
+      *ngIf="currentSection === 'clubs'"
+      class="sidebar-menu">
+
+      <a>
+        <i class="fa-solid fa-users"></i>
+        <span>My Clubs</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-plus"></i>
+        <span>Create Club</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-ranking-star"></i>
+        <span>Club Rankings</span>
+      </a>
+
+    </nav>
+
+    <nav
+      *ngIf="currentSection === 'rankings'"
+      class="sidebar-menu">
+
+      <a>
+        <i class="fa-solid fa-trophy"></i>
+        <span>Global Rankings</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-earth-americas"></i>
+        <span>Regional Rankings</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-star"></i>
+        <span>Top Players</span>
+      </a>
+
+    </nav>
+
+    <nav
+      *ngIf="currentSection === 'stats'"
+      class="sidebar-menu">
+
+      <a>
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Performance</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-futbol"></i>
+        <span>Goals</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-handshake"></i>
+        <span>Assists</span>
+      </a>
+
+      <a>
+        <i class="fa-solid fa-shield"></i>
+        <span>Defense</span>
+      </a>
+
+    </nav>
+
+  </div>
+
+  <div class="sidebar-bottom">
+
+    <div class="season-card">
+
+      <span class="season-label">
+        SEASON 7
+      </span>
+
+      <h3>CHAMPIONS ARENA</h3>
+
+      <div class="season-rank">
+        <span>32</span>
+      </div>
+
+      <div class="xp-bar">
+        <span></span>
+      </div>
+
+      <small>8,650 / 12,000 XP</small>
+
+      <button>
+        View Season Pass
+      </button>
+
+    </div>
+
+    <div class="cup-card">
+
+      <div class="cup-icon">
+        <i class="fa-solid fa-trophy"></i>
+      </div>
+
+      <h3>GLOBAL CUP</h3>
+
+      <p>STARTS IN</p>
+
+      <div class="countdown">
+
+        <div>
+          <strong>02</strong>
+          <span>DAYS</span>
+        </div>
+
+        <div>
+          <strong>14</strong>
+          <span>HRS</span>
+        </div>
+
+        <div>
+          <strong>37</strong>
+          <span>MIN</span>
+        </div>
+
+      </div>
+
+      <button>
+        See Details
+      </button>
+
+    </div>
+
+  </div>
+
+</aside>

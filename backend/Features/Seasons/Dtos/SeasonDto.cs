@@ -1,0 +1,22 @@
+﻿namespace backend.Features.Seasons.Dtos;
+
+public class SeasonDto
+{
+	public Guid SeasonId { get; set; }
+
+	public string Name { get; set; } = string.Empty;
+
+	public string Description { get; set; } = string.Empty;
+
+	public DateTime StartDate { get; set; }
+
+	public DateTime EndDate { get; set; }
+
+	public bool IsCurrent { get; set; }
+
+	public bool IsActive { get; set; }
+
+	public DateTime CreatedAtUTC { get; set; }
+
+	public DateTime? UpdatedAtUTC { get; set; }
+}

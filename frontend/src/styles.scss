@@ -1,0 +1,284 @@
+@use '@angular/material' as mat;
+@use "tailwindcss";
+@use './styles/colors';
+
+/* =========================
+   ANGULAR MATERIAL THEME
+========================= */
+
+html {
+  height: 100%;
+
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+/* =========================
+   GLOBAL RESET
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+
+  width: 100%;
+  min-height: 100%;
+
+  background: #050816;
+  color: var(--text-main);
+
+  font-family: 'Rajdhani', Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  overflow-x: hidden;
+}
+
+body {
+  color-scheme: dark;
+  height: 100%;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(0, 255, 136, 0.12),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom,
+      rgba(0, 255, 136, 0.18),
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      var(--bg-primary),
+      var(--bg-secondary) 45%,
+      #020403
+    );
+}
+
+/* =========================
+   GLOBAL BACKGROUND GRID
+========================= */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      rgba(0, 255, 136, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(0, 255, 136, 0.05) 1px,
+      transparent 1px
+    );
+
+  background-size: 56px 56px;
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* =========================
+   TYPOGRAPHY
+========================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Orbitron', Arial, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* =========================
+   GLOBAL FORM CONTROLS
+========================= */
+
+input,
+textarea,
+select {
+  width: 100%;
+
+  border: 1px solid var(--border-secondary);
+  border-radius: 12px;
+
+  padding: 12px 14px;
+
+  background: rgba(5, 7, 11, 0.72);
+  color: var(--text-main);
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--neon-primary);
+  box-shadow: 0 0 0 3px var(--neon-soft);
+  background: rgba(5, 7, 11, 0.9);
+}
+
+input[type="checkbox"] {
+  width: auto;
+  accent-color: var(--neon-primary);
+}
+
+/* =========================
+   GLOBAL BUTTONS
+========================= */
+
+button {
+  border: 0;
+  border-radius: 12px;
+
+  padding: 11px 16px;
+
+  font-weight: 800;
+  letter-spacing: 0.04em;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease,
+    background 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button[type="submit"] {
+  background: linear-gradient(
+    135deg,
+    var(--neon-primary),
+    var(--neon-secondary)
+  );
+
+  color: #02130a;
+
+  box-shadow:
+    0 0 22px rgba(0, 255, 136, 0.22);
+}
+
+button[type="button"] {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+
+  border: 1px solid var(--border-secondary);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* =========================
+   GLOBAL TABLES
+========================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  color: var(--text-secondary);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  text-align: left;
+}
+
+td,
+th {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+td {
+  color: var(--text-main);
+}
+
+/* =========================
+   GLOBAL UTILITIES
+========================= */
+
+.glass-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 18px;
+
+  backdrop-filter: blur(18px);
+
+  box-shadow: var(--shadow-panel);
+}
+
+.neon-text {
+  color: var(--neon-primary);
+  text-shadow: 0 0 18px var(--neon-glow);
+}
+
+.neon-border {
+  border: 1px solid var(--border-primary);
+  box-shadow: var(--shadow-neon);
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    var(--neon-primary),
+    var(--neon-secondary)
+  );
+
+  border-radius: 999px;
+}

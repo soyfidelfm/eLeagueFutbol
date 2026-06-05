@@ -1,0 +1,471 @@
+.sidebar {
+  width: 290px;
+  min-width: 290px;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  padding: 22px 18px;
+
+  position: sticky;
+  top: 0;
+
+  overflow-y: auto;
+
+  background:
+    rgba(6, 10, 16, .88);
+
+  border-right:
+    1px solid var(--border-primary);
+
+  backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 0 30px rgba(0,255,136,.08);
+}
+
+/* =========================================
+   TOP
+========================================= */
+
+.sidebar-top {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sidebar-logo img {
+  width: 253px;
+  object-fit: contain;
+
+  filter:
+    drop-shadow(
+      0 0 16px rgba(0,255,136,.45)
+    );
+}
+
+.logo-text h2 {
+  margin: 0;
+
+  color: white;
+
+  font-size: 22px;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+}
+
+.logo-text span {
+  color: var(--neon-primary);
+
+  font-size: 11px;
+
+  letter-spacing: 4px;
+
+  font-weight: 700;
+}
+
+/* =========================================
+   MENU
+========================================= */
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-menu a {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  height: 54px;
+
+  padding: 0 16px;
+
+  border-radius: 14px;
+
+  color: var(--text-secondary);
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition: .25s ease;
+}
+
+.sidebar-menu a i {
+  width: 18px;
+
+  text-align: center;
+
+  font-size: 15px;
+}
+
+.sidebar-menu a span {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sidebar-menu a:hover {
+  color: white;
+
+  background:
+    rgba(255,255,255,.04);
+
+  transform: translateX(4px);
+}
+
+.sidebar-menu a.active {
+  color: var(--neon-primary);
+
+  background:
+    rgba(0,255,136,.08);
+
+  border:
+    1px solid rgba(0,255,136,.18);
+
+  box-shadow:
+    0 0 20px rgba(0,255,136,.12);
+}
+
+.sidebar-menu a.active::before {
+  content: "";
+
+  position: absolute;
+
+  left: -18px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  width: 4px;
+  height: 30px;
+
+  border-radius: 999px;
+
+  background:
+    var(--neon-primary);
+
+  box-shadow:
+    0 0 12px rgba(0,255,136,.8);
+}
+
+.sidebar-menu a b {
+  margin-left: auto;
+
+  width: 22px;
+  height: 22px;
+
+  border-radius: 50%;
+
+  display: grid;
+  place-content: center;
+
+  background:
+    var(--success);
+
+  color: #04110a;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+/* =========================================
+   BOTTOM
+========================================= */
+
+.sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  margin-top: 28px;
+}
+
+/* =========================================
+   SEASON CARD
+========================================= */
+
+.season-card {
+  padding: 22px;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0,255,136,.10),
+      rgba(0,255,136,.03)
+    );
+
+  border:
+    1px solid rgba(0,255,136,.18);
+
+  box-shadow:
+    0 0 28px rgba(0,255,136,.10);
+}
+
+.season-label {
+  color: var(--text-secondary);
+
+  font-size: 11px;
+
+  letter-spacing: 2px;
+}
+
+.season-card h3 {
+  margin: 8px 0 18px;
+
+  color: white;
+
+  font-size: 20px;
+}
+
+.season-rank {
+  width: 86px;
+  height: 86px;
+
+  margin: 0 auto 18px;
+
+  border-radius: 50%;
+
+  display: grid;
+  place-content: center;
+
+  border:
+    4px solid var(--neon-primary);
+
+  box-shadow:
+    0 0 24px rgba(0,255,136,.25);
+}
+
+.season-rank span {
+  font-size: 28px;
+  font-weight: 900;
+
+  color: white;
+}
+
+.xp-bar {
+  height: 10px;
+
+  border-radius: 999px;
+
+  overflow: hidden;
+
+  background:
+    rgba(255,255,255,.08);
+
+  margin-bottom: 10px;
+}
+
+.xp-bar span {
+  display: block;
+
+  width: 72%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--neon-primary),
+      var(--neon-secondary)
+    );
+
+  box-shadow:
+    0 0 18px rgba(0,255,136,.7);
+}
+
+.season-card small {
+  color: var(--text-secondary);
+}
+
+.season-card button {
+  width: 100%;
+
+  margin-top: 18px;
+
+  height: 46px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--neon-primary),
+      var(--neon-secondary)
+    );
+
+  color: #04110a;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition: .25s ease;
+}
+
+.season-card button:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 0 24px rgba(0,255,136,.3);
+}
+
+/* =========================================
+   GLOBAL CUP
+========================================= */
+
+.cup-card {
+  padding: 22px;
+
+  border-radius: 20px;
+
+  background:
+    rgba(255,255,255,.03);
+
+  border:
+    1px solid var(--border-primary);
+
+  text-align: center;
+}
+
+.cup-icon {
+  width: 72px;
+  height: 72px;
+
+  margin: 0 auto 16px;
+
+  border-radius: 50%;
+
+  display: grid;
+  place-content: center;
+
+  background:
+    rgba(0,255,136,.08);
+
+  border:
+    1px solid rgba(0,255,136,.18);
+
+  box-shadow:
+    0 0 20px rgba(0,255,136,.12);
+}
+
+.cup-icon i {
+  font-size: 28px;
+
+  color: var(--gold);
+}
+
+.cup-card h3 {
+  margin: 0 0 6px;
+
+  color: white;
+}
+
+.cup-card p {
+  margin: 0 0 18px;
+
+  color: var(--text-secondary);
+
+  font-size: 13px;
+}
+
+.countdown {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+
+  margin-bottom: 20px;
+}
+
+.countdown div {
+  width: 64px;
+  height: 64px;
+
+  border-radius: 14px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  background:
+    rgba(255,255,255,.04);
+
+  border:
+    1px solid rgba(255,255,255,.06);
+}
+
+.countdown strong {
+  color: white;
+
+  font-size: 22px;
+}
+
+.countdown span {
+  color: var(--text-secondary);
+
+  font-size: 10px;
+
+  letter-spacing: 1px;
+}
+
+.cup-card button {
+  width: 100%;
+  height: 46px;
+
+  border-radius: 14px;
+
+  border:
+    1px solid var(--border-primary);
+
+  background:
+    rgba(255,255,255,.03);
+
+  color: white;
+
+  cursor: pointer;
+
+  transition: .25s ease;
+}
+
+.cup-card button:hover {
+  background:
+    rgba(0,255,136,.08);
+
+  border-color:
+    rgba(0,255,136,.25);
+
+  box-shadow:
+    0 0 18px rgba(0,255,136,.12);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1200px) {
+
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+
+    height: auto;
+
+    position: relative;
+  }
+
+}

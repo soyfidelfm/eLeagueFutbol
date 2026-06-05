@@ -1,0 +1,17 @@
+# Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# .NET
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+
+# User Secrets
+**/secrets.json
+
+# Logs
+*.log

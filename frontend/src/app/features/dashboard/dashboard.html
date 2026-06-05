@@ -1,0 +1,234 @@
+<section class="dashboard-content">
+
+  <div class="kpi-strip">
+    <div class="kpi-card" *ngFor="let kpi of kpis">
+      <span>{{ kpi.label }}</span>
+      <strong>{{ kpi.value }}</strong>
+      <small>{{ kpi.sub }}</small>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+
+    <article class="panel leaderboard-panel">
+      <div class="panel-header">
+        <div>
+          <h2>ELITE LEADERBOARD</h2>
+          <span>TOP 100 PLAYERS</span>
+        </div>
+        <button>View All</button>
+      </div>
+
+      <div class="leaderboard-table">
+        <div class="table-row table-head">
+          <span>Rank</span>
+          <span>Player</span>
+          <span>PTS</span>
+          <span>GD</span>
+          <span>W/L</span>
+          <span>Form</span>
+        </div>
+
+        <div
+          class="table-row"
+          *ngFor="let player of leaderboard"
+          [class.gold]="player.rank === 1"
+          [class.silver]="player.rank === 2"
+          [class.bronze]="player.rank === 3"
+        >
+          <span class="rank">{{ player.rank }}</span>
+
+          <span class="player">
+            <img [src]="player.avatar" alt="avatar" />
+            <strong>{{ player.name }}</strong>
+          </span>
+
+          <span>{{ player.points }}</span>
+          <span>{{ player.gd }}</span>
+          <span>{{ player.record }}</span>
+
+          <span class="form">
+            <b *ngFor="let item of player.form" [class.loss]="item === 'L'">
+              {{ item }}
+            </b>
+          </span>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel match-week-panel">
+      <div class="panel-header">
+        <div>
+          <h2>MATCH OF THE WEEK</h2>
+          <span>{{ matchOfWeek.arena }} · {{ matchOfWeek.stage }}</span>
+        </div>
+        <button>View Match</button>
+      </div>
+
+      <div class="match-week">
+        <div class="hero-player green">
+          <div class="rating">{{ matchOfWeek.home.rating }}</div>
+          <img [src]="matchOfWeek.home.image" alt="player" />
+          <h3>{{ matchOfWeek.home.name }}</h3>
+          <p>Rank #{{ matchOfWeek.home.rank }}</p>
+          <strong>{{ matchOfWeek.home.streak }}</strong>
+        </div>
+
+        <div class="match-center">
+          <span>{{ matchOfWeek.arena }}</span>
+          <h1>VS</h1>
+          <p>{{ matchOfWeek.date }}</p>
+          <strong>{{ matchOfWeek.countdown }}</strong>
+        </div>
+
+        <div class="hero-player purple">
+          <div class="rating">{{ matchOfWeek.away.rating }}</div>
+          <img [src]="matchOfWeek.away.image" alt="player" />
+          <h3>{{ matchOfWeek.away.name }}</h3>
+          <p>Rank #{{ matchOfWeek.away.rank }}</p>
+          <strong>{{ matchOfWeek.away.streak }}</strong>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel active-panel">
+      <div class="panel-header">
+        <div>
+          <h2>ACTIVE MATCHES</h2>
+          <span>2 LIVE / 3 UPCOMING</span>
+        </div>
+        <button>View All</button>
+      </div>
+
+      <div class="active-list">
+        <div class="active-match" *ngFor="let match of matches">
+          <div>
+            <strong>{{ match.stage }}</strong>
+            <span>{{ match.status }}</span>
+          </div>
+
+          <h3>{{ match.score }}</h3>
+
+          <small [class.live]="match.status === 'LIVE'">
+            {{ match.status }}
+          </small>
+        </div>
+      </div>
+    </article>
+
+    <!-- <article class="panel player-week-panel">
+      <h2>PLAYER OF THE WEEK</h2>
+
+      <div class="player-week">
+        <img [src]="playerOfWeek.image" alt="player" />
+
+        <div>
+          <h3>{{ playerOfWeek.name }}</h3>
+          <span>Rank #{{ playerOfWeek.rank }}</span>
+          <strong class="player-streak">{{ playerOfWeek.streak }}</strong>
+        </div>
+      </div>
+    </article> -->
+
+    <article class="panel upcoming-panel">
+      <div class="panel-header">
+        <div>
+          <h2>UPCOMING MATCHES</h2>
+          <span>NEXT FIXTURES</span>
+        </div>
+        <button>View All</button>
+      </div>
+
+      <div class="upcoming-list">
+        <div class="upcoming-match" *ngFor="let match of upcomingMatches">
+          <strong>{{ match.home }}</strong>
+          <span>VS</span>
+          <strong>{{ match.away }}</strong>
+          <small>{{ match.date }}</small>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel news-panel">
+      <div class="panel-header">
+        <div>
+          <h2>LEAGUE NEWS</h2>
+          <span>LATEST UPDATES</span>
+        </div>
+        <button>View All</button>
+      </div>
+
+      <div class="news-list">
+        <div class="news-item" *ngFor="let item of news">
+          <strong>{{ item.title }}</strong>
+          <span>{{ item.time }}</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel stats-panel">
+      <h2>MY STATS</h2>
+
+      <div class="win-rate">
+        <div class="circle">
+          <strong>{{ myStats.winRate }}</strong>
+          <span>WIN RATE</span>
+        </div>
+
+        <div class="stat-list">
+          <p>Goals <b>{{ myStats.goals }}</b></p>
+          <p>Assists <b>{{ myStats.assists }}</b></p>
+          <p>Clean Sheets <b>{{ myStats.cleanSheets }}</b></p>
+          <p>Avg Possession <b>{{ myStats.avgPossession }}</b></p>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel stream-panel">
+      <div class="panel-header">
+        <div>
+          <h2>LIVE STREAM</h2>
+          <span>CHAMPIONS ARENA BROADCAST</span>
+        </div>
+        <button>Watch Live</button>
+      </div>
+
+      <div class="stream-placeholder">
+        <img src="/images/live-stream-placeholder.jpg" alt="Live stream" />
+
+        <div class="live-badge">LIVE</div>
+
+        <div class="stream-overlay">
+          <h3>EliteStriker vs RazorX</h3>
+          <p>Quarter Finals · Champions Arena</p>
+          <button>Watch Match</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel activity-panel">
+      <div class="panel-header">
+        <div>
+          <h2>RECENT ACTIVITY</h2>
+          <span>LIVE UPDATES</span>
+        </div>
+        <button>View All</button>
+      </div>
+
+      <div class="activity-list">
+        <div class="activity-item" *ngFor="let activity of activities">
+          <img [src]="activity.avatar" alt="avatar" />
+
+          <div>
+            <strong>{{ activity.name }}</strong>
+            <p>{{ activity.text }}</p>
+          </div>
+
+          <span>{{ activity.time }}</span>
+        </div>
+      </div>
+    </article>
+
+  </div>
+
+</section>

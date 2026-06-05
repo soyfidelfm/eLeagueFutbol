@@ -1,0 +1,408 @@
+<section class="seasons-page">
+
+  <div class="page-header">
+    <div>
+      <h1>Seasons</h1>
+
+      <div class="breadcrumb">
+        <span>Home</span>
+        <span>›</span>
+        <span>Seasons</span>
+        <span>›</span>
+
+        <strong>
+          {{
+            view === 'current'
+              ? 'Current Season'
+              : view === 'list'
+                ? 'All Seasons'
+                : isEditMode
+                  ? 'Edit Season'
+                  : 'Create Season'
+          }}
+        </strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- CURRENT SEASON VIEW -->
+  <ng-container *ngIf="view === 'current'">
+
+    <ng-container *ngIf="isLoading; else currentSeasonContent">
+      <div class="loading-state">
+        Loading current season...
+      </div>
+    </ng-container>
+
+    <ng-template #currentSeasonContent>
+
+      <div
+        class="empty-state"
+        *ngIf="!seasons || seasons.length === 0">
+
+        No current season found.
+
+      </div>
+
+      <div
+        class="season-panel"
+        *ngIf="seasons && seasons.length > 0">
+
+        <div class="panel-title">
+          <div class="title-icon">
+            🔥
+          </div>
+
+          <div>
+            <h2>
+              {{ currentSeason?.name }}
+            </h2>
+
+            <p>
+              {{ currentSeason?.description }}
+            </p>
+          </div>
+        </div>
+
+        <div class="toggle-grid">
+
+          <div class="toggle-card">
+            <span class="custom-check"></span>
+
+            <div>
+              <strong>Start Date</strong>
+              <p>
+               {{ currentSeason?.startDate | date:'medium' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="toggle-card">
+            <span class="custom-check"></span>
+
+            <div>
+              <strong>End Date</strong>
+              <p>
+                {{ currentSeason?.endDate | date:'medium' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="toggle-card">
+            <span class="custom-check"></span>
+
+            <div>
+              <strong>Status</strong>
+              <p>
+                {{
+                  currentSeason?.isActive
+                    ? 'Active Season'
+                    : 'Inactive Season'
+                }}
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-actions">
+
+          <button
+  type="button"
+  class="primary-action"
+  (click)="edit(currentSeason)">
+
+  Edit Current Season
+
+</button>
+
+        </div>
+
+      </div>
+
+    </ng-template>
+
+  </ng-container>
+
+  <!-- CREATE / EDIT SEASON VIEW -->
+  <div
+    class="season-panel"
+    id="create-season"
+    *ngIf="view === 'create'">
+
+    <div class="panel-title">
+      <div class="title-icon">
+        📅
+      </div>
+
+      <div>
+        <h2>{{ isEditMode ? 'Edit Season' : 'Create New Season' }}</h2>
+        <p>Configure your eLeagueFutbol competitive season.</p>
+      </div>
+    </div>
+
+    <form
+      (ngSubmit)="save()"
+      class="season-form">
+
+      <div class="top-grid">
+
+        <div class="field-card">
+          <label>Season Name</label>
+
+          <div class="input-wrapper">
+            <span>🏆</span>
+
+            <input
+              type="text"
+              name="name"
+              placeholder="Enter season name"
+              [(ngModel)]="form.name"
+            />
+          </div>
+        </div>
+
+        <div class="field-card">
+          <label>Description</label>
+
+          <div class="input-wrapper">
+            <span>📝</span>
+
+            <input
+              type="text"
+              name="description"
+              placeholder="Enter season description"
+              [(ngModel)]="form.description"
+            />
+          </div>
+        </div>
+
+      </div>
+
+      <div class="date-grid">
+
+        <div class="date-card">
+          <label>
+            <span>📅</span>
+            Start Date & Time
+          </label>
+
+          <input
+            type="datetime-local"
+            name="startDate"
+            [(ngModel)]="form.startDate"
+          />
+
+          <div class="date-preview">
+            🕒 {{ form.startDate ? (form.startDate | date:'medium') : 'Not selected' }}
+          </div>
+        </div>
+
+        <div class="date-card">
+          <label>
+            <span>📅</span>
+            End Date & Time
+          </label>
+
+          <input
+            type="datetime-local"
+            name="endDate"
+            [(ngModel)]="form.endDate"
+          />
+
+          <div class="date-preview">
+            🕒 {{ form.endDate ? (form.endDate | date:'medium') : 'Not selected' }}
+          </div>
+        </div>
+
+      </div>
+
+      <div class="toggle-grid">
+
+        <label class="toggle-card">
+          <input
+            type="checkbox"
+            name="isCurrent"
+            [(ngModel)]="form.isCurrent"
+          />
+
+          <span class="custom-check"></span>
+
+          <div>
+            <strong>Set as current season</strong>
+            <p>This season will be marked as the active current season.</p>
+          </div>
+        </label>
+
+        <label class="toggle-card">
+          <input
+            type="checkbox"
+            name="isActive"
+            [(ngModel)]="form.isActive"
+          />
+
+          <span class="custom-check"></span>
+
+          <div>
+            <strong>Active season</strong>
+            <p>Allow this season to appear in the platform.</p>
+          </div>
+        </label>
+
+      </div>
+
+      <div class="form-actions">
+
+        <button
+          type="submit"
+          class="primary-action"
+          [disabled]="isSaving">
+
+          {{ isSaving ? 'Saving...' : (isEditMode ? 'Update Season' : 'Create Season') }}
+
+        </button>
+
+        <button
+          type="button"
+          class="secondary-action"
+          (click)="resetForm()"
+          *ngIf="isEditMode">
+
+          Cancel
+
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+  <!-- ALL SEASONS VIEW -->
+  <ng-container *ngIf="view === 'list'">
+
+    <ng-container *ngIf="isLoading; else seasonsContent">
+      <div class="loading-state">
+        Loading seasons...
+      </div>
+    </ng-container>
+
+    <ng-template #seasonsContent>
+
+      <div
+        class="empty-state"
+        id="season-list"
+        *ngIf="seasons.length === 0">
+
+        No seasons found.
+
+      </div>
+
+      <div
+        class="season-table-card"
+        id="season-list"
+        *ngIf="seasons.length > 0">
+
+        <div class="table-header">
+          <h3>All Seasons</h3>
+          <span>{{ seasons.length }} total</span>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Current</th>
+                <th>Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let season of seasons">
+
+                <td>
+                  <strong>{{ season.name }}</strong>
+                  <small>{{ season.description || 'No description' }}</small>
+                </td>
+
+                <td>{{ season.startDate | date:'medium' }}</td>
+                <td>{{ season.endDate | date:'medium' }}</td>
+
+                <td>
+                  <span
+                    class="status-pill current"
+                    *ngIf="season.isCurrent">
+
+                    Current
+
+                  </span>
+
+                  <span
+                    class="status-pill off"
+                    *ngIf="!season.isCurrent">
+
+                    No
+
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    class="status-pill active"
+                    *ngIf="season.isActive">
+
+                    Active
+
+                  </span>
+
+                  <span
+                    class="status-pill off"
+                    *ngIf="!season.isActive">
+
+                    Inactive
+
+                  </span>
+                </td>
+
+                <td>
+                  <div class="row-actions">
+
+                    <button
+                      type="button"
+                      class="edit-btn"
+                      (click)="edit(season)">
+
+                      Edit
+
+                    </button>
+
+                    <button
+                      type="button"
+                      class="delete-btn"
+                      (click)="delete(season.seasonId)">
+
+                      Delete
+
+                    </button>
+
+                  </div>
+                </td>
+
+              </tr>
+            </tbody>
+
+          </table>
+        </div>
+
+      </div>
+
+    </ng-template>
+
+  </ng-container>
+
+</section>

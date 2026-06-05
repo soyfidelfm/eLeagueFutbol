@@ -1,0 +1,334 @@
+.navbar {
+  height: 82px;
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+
+  align-items: center;
+
+  padding: 0 28px;
+
+  position: sticky;
+  top: 0;
+
+  z-index: 100;
+
+  backdrop-filter: blur(18px);
+
+  background:
+    rgba(6, 10, 16, .82);
+
+  border-bottom:
+    1px solid var(--border-primary);
+
+  box-shadow:
+    0 0 25px rgba(0,255,136,.08);
+}
+
+/* =========================================
+   LEFT
+========================================= */
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand img {
+  width: 46px;
+  height: 46px;
+
+  object-fit: contain;
+
+  filter:
+    drop-shadow(
+      0 0 14px rgba(0,255,136,.35)
+    );
+}
+
+.brand-text h1 {
+  margin: 0;
+
+  font-size: 24px;
+  font-weight: 800;
+
+  color: white;
+
+  letter-spacing: 1px;
+}
+
+.brand-text span {
+  color: var(--neon-primary);
+
+  font-size: 12px;
+
+  letter-spacing: 4px;
+
+  font-weight: 700;
+}
+
+/* =========================================
+   CENTER NAV
+========================================= */
+
+.navbar-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 18px;
+}
+
+.navbar-center a {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 12px 16px;
+
+  border-radius: 12px;
+
+  color: var(--text-secondary);
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition: .25s ease;
+}
+
+.navbar-center a i {
+  font-size: 15px;
+}
+
+.navbar-center a span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.navbar-center a:hover {
+  color: white;
+
+  background:
+    rgba(255,255,255,.04);
+}
+
+.navbar-center a.active {
+  color: var(--neon-primary);
+
+  background:
+    rgba(0,255,136,.08);
+
+  border:
+    1px solid rgba(0,255,136,.18);
+
+  box-shadow:
+    0 0 18px rgba(0,255,136,.14);
+}
+
+.navbar-center a.active::after {
+  content: "";
+
+  position: absolute;
+
+  bottom: -10px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  width: 40px;
+  height: 2px;
+
+  border-radius: 999px;
+
+  background:
+    var(--neon-primary);
+
+  box-shadow:
+    0 0 10px rgba(0,255,136,.8);
+}
+
+/* =========================================
+   RIGHT
+========================================= */
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon-btn {
+  position: relative;
+
+  width: 46px;
+  height: 46px;
+
+  border-radius: 14px;
+
+  border:
+    1px solid var(--border-primary);
+
+  background:
+    rgba(255,255,255,.03);
+
+  color: white;
+
+  cursor: pointer;
+
+  transition: .25s ease;
+}
+
+.icon-btn:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    var(--shadow-neon);
+}
+
+.notification-dot {
+  position: absolute;
+
+  top: -4px;
+  right: -4px;
+
+  width: 20px;
+  height: 20px;
+
+  border-radius: 50%;
+
+  display: grid;
+  place-content: center;
+
+  background:
+    var(--success);
+
+  color: #04110a;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.coins-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 0 18px;
+
+  height: 46px;
+
+  border-radius: 14px;
+
+  background:
+    rgba(255,255,255,.03);
+
+  border:
+    1px solid var(--border-primary);
+}
+
+.coins-box i {
+  color: #ffd66b;
+}
+
+.coins-box strong {
+  color: white;
+}
+
+.profile-box {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 8px 14px;
+
+  border-radius: 14px;
+
+  background:
+    rgba(255,255,255,.03);
+
+  border:
+    1px solid var(--border-primary);
+}
+
+.profile-box img {
+  width: 42px;
+  height: 42px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+
+  border:
+    1px solid rgba(0,255,136,.4);
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-info strong {
+  color: white;
+  font-size: 14px;
+}
+
+.profile-info span {
+  color: var(--neon-primary);
+
+  font-size: 11px;
+
+  letter-spacing: 1px;
+}
+
+.online-dot {
+  position: absolute;
+
+  right: 10px;
+  bottom: 10px;
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+
+  background:
+    var(--success);
+
+  box-shadow:
+    0 0 12px rgba(0,255,136,.8);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1200px) {
+
+  .navbar {
+    grid-template-columns: 1fr;
+    gap: 18px;
+
+    height: auto;
+
+    padding: 18px;
+  }
+
+  .navbar-center {
+    flex-wrap: wrap;
+  }
+
+  .navbar-right {
+    justify-content: center;
+  }
+}

@@ -1,0 +1,276 @@
+<section class="login-page">
+
+  <div class="login-shell">
+
+    <!-- LEFT SIDE -->
+    <div class="hero-section">
+
+      <div class="hero-bg"></div>
+      <div class="hero-lights"></div>
+      <div class="hero-grid"></div>
+
+      <div class="brand">
+
+        <img src="/images/logo-clear.png" alt="eLeagueFutbol Logo" class="brand-logo" />
+
+      </div>
+
+      <div class="hero-content">
+
+        <h3>WELCOME BACK TO</h3>
+
+        <h2>E-LEAGUE</h2>
+
+        <h4>COMPETE. CONNECT. CONQUER.</h4>
+
+        <p>
+          Join players worldwide, compete in live matches,
+          climb rankings and dominate the eLeague.
+        </p>
+
+        <div class="hero-buttons">
+
+          <button class="primary-btn" type="button" (click)="enterArena()">
+            GET STARTED
+          </button>
+
+          <button class="secondary-btn" type="button" (click)="openExploreModal()">
+            EXPLORE
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="login-card">
+
+      <div class="login-header auth-header">
+
+  <div>
+    <img
+      src="/images/iOSicon-clear.png"
+      alt="eLeagueFutbol Logo"
+      class="brand-logo"
+    />
+  </div>
+
+  <h2>LOGIN</h2>
+
+  <p class="subtitle">
+    Continue your competitive journey.
+  </p>
+
+</div>
+
+      <div class="divider">
+
+        <span></span>
+
+        <p>SOCIAL LOGIN</p>
+
+        <span></span>
+
+      </div>
+
+      <button class="social-btn google" type="button" (click)="loginWithProvider('google-oauth2')">
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" />
+
+        <span>
+          Continue with Google
+        </span>
+      </button>
+
+      <button class="social-btn microsoft" type="button" (click)="loginWithProvider('windowslive')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft" />
+
+        <span>
+          Continue with Microsoft
+        </span>
+      </button>
+
+      <button class="social-btn apple" type="button" (click)="loginWithProvider('apple')">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" />
+
+        <span>
+          Continue with Apple
+        </span>
+      </button>
+
+      <div class="login-footer">
+
+        <p>
+          By continuing you agree to the
+          <a>Terms of Service</a>
+          and
+          <a>Privacy Policy</a>
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ARENA INTRO -->
+  <div class="arena-overlay" *ngIf="showArenaIntro">
+    <div class="arena-content">
+      <span>ENTER THE ARENA</span>
+      <h1>ENTER THE ARENA</h1>
+    </div>
+  </div>
+
+  <!-- EXPLORE MODAL -->
+  <div class="explore-overlay" *ngIf="showExploreModal" (click)="closeExploreModal()">
+
+    <div class="explore-modal" (click)="$event.stopPropagation()">
+
+      <button class="explore-close" type="button" (click)="closeExploreModal()">
+        ×
+      </button>
+
+      <div class="explore-header">
+
+        <span>EXPLORE THE PLATFORM</span>
+
+        <h2>
+          BUILT FOR COMPETITIVE PLAYERS
+        </h2>
+
+        <p>
+          Track your matches, join tournaments, climb rankings and
+          build your football gaming legacy.
+        </p>
+
+      </div>
+
+      <div class="explore-cards">
+
+        <div class="explore-card">
+          <div class="card-top">
+            <div class="card-icon">🏆</div>
+            <span class="card-badge">SEASON 02</span>
+          </div>
+
+          <h3>Ranked Seasons</h3>
+
+          <p>
+            Fight through divisions, earn promotion rewards and dominate
+            global seasonal rankings.
+          </p>
+
+          <div class="card-stat">
+            <strong>1K</strong>
+            <span>ACTIVE PLAYERS</span>
+          </div>
+
+          <div class="card-tags">
+            <span>DIVISIONS</span>
+            <span>REWARDS</span>
+            <span>CROSSPLAY</span>
+          </div>
+        </div>
+
+        <div class="explore-card">
+          <div class="card-top">
+            <div class="card-icon">📊</div>
+            <span class="card-badge live">LIVE</span>
+          </div>
+
+          <h3>Live Match Stats</h3>
+
+          <p>
+            Track goals, assists, possession, win rate and player performance
+            after every match.
+          </p>
+
+          <div class="mini-bars">
+            <div>
+              <span>WIN RATE</span>
+              <strong>82%</strong>
+            </div>
+            <div class="bar"><i style="width: 82%;"></i></div>
+
+            <div>
+              <span>POSSESSION</span>
+              <strong>64%</strong>
+            </div>
+            <div class="bar"><i style="width: 64%;"></i></div>
+          </div>
+        </div>
+
+        <div class="explore-card">
+          <div class="card-top">
+            <div class="card-icon">🔥</div>
+            <span class="card-badge">TOP 1%</span>
+          </div>
+
+          <h3>Global Leaderboards</h3>
+
+          <p>
+            Compare your ranking against elite players by region, platform
+            and competitive season.
+          </p>
+
+          <div class="rank-preview">
+            <div>
+              <small>GLOBAL RANK</small>
+              <strong>#184</strong>
+            </div>
+
+            <div>
+              <small>REGION</small>
+              <strong>NA WEST</strong>
+            </div>
+          </div>
+
+          <div class="card-tags">
+            <span>GLOBAL</span>
+            <span>REGIONAL</span>
+            <span>H2H</span>
+          </div>
+        </div>
+
+        <div class="explore-card">
+          <div class="card-top">
+            <div class="card-icon">⚽</div>
+            <span class="card-badge live">OPEN</span>
+          </div>
+
+          <h3>Friendly Weekend Tournaments</h3>
+
+          <p>
+            Join knockout events, build your squad and compete for exclusive
+            rewards every weekend.
+          </p>
+
+          <div class="event-box">
+            <small>NEXT EVENT</small>
+            <strong>SATURDAY · 8PM</strong>
+            <span>64 TEAMS REGISTERED</span>
+          </div>
+
+          <div class="card-tags">
+            <span>KNOCKOUT</span>
+            <span>PRIZES</span>
+            <span>CLUBS</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="explore-actions">
+
+        <button class="primary-btn" type="button" (click)="startFromExplore()">
+          START COMPETING
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>

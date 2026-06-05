@@ -1,0 +1,12 @@
+.glass-panel {
+  background: var(--bg-card);
+
+  border:
+    1px solid var(--border-primary);
+
+  backdrop-filter: blur(18px);
+
+  border-radius: 18px;
+
+  box-shadow: var(--shadow-panel);
+}
