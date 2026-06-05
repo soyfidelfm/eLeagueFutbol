@@ -1,12 +1,9 @@
-﻿namespace backend.Entities.Tournaments;
-
-using backend.Entities.Common;
+﻿using backend.Entities.Common;
 using backend.Entities.Enums;
 using backend.Entities.Stats;
 using backend.Entities.Teams;
 
 public class Match : BaseEntity
-
 {
 	public Guid MatchId { get; set; }
 
@@ -24,7 +21,7 @@ public class Match : BaseEntity
 
 	public MatchStatus Status { get; set; }
 
-	// Navigation
+	public bool IsFeatured { get; set; }
 
 	public Tournament Tournament { get; set; } = null!;
 

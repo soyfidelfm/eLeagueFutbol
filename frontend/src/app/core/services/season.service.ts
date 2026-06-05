@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { ApiService } from '../services/api.service.ts';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
 
 import {
@@ -13,39 +14,43 @@ import {
 @Injectable({
   providedIn: 'root'
 })
-export class SeasonService {
+export class SeasonService extends ApiService {
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    protected override http: HttpClient
+  ) {
+    super(http);
+  }
 
   getAll(): Observable<Season[]> {
-    return this.http.get<Season[]>(
+    return this.get<Season[]>(
       API_ENDPOINTS.seasons
     );
   }
 
   getById(id: string): Observable<Season> {
-    return this.http.get<Season>(
+    return this.get<Season>(
       `${API_ENDPOINTS.seasons}/${id}`
     );
   }
 
   create(dto: CreateSeasonDto): Observable<Season> {
-    return this.http.post<Season>(
+    return this.post<Season>(
       API_ENDPOINTS.seasons,
       dto
     );
   }
 
   update(id: string, dto: UpdateSeasonDto): Observable<void> {
-    return this.http.put<void>(
+    return this.put<void>(
       `${API_ENDPOINTS.seasons}/${id}`,
       dto
     );
   }
 
-  delete(id: string): Observable<void> {
-    return this.http.delete<void>(
-      `${API_ENDPOINTS.seasons}/${id}`
-    );
-  }
+  remove(id: string): Observable<void> {
+  return super.delete<void>(
+    `${API_ENDPOINTS.seasons}/${id}`
+  );
+}
 }

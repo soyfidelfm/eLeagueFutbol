@@ -15,5 +15,8 @@ export const API_ENDPOINTS = {
     `${environment.api.baseUrl}/api/matches`,
 
   users:
-    `${environment.api.baseUrl}/api/users`
+    `${environment.api.baseUrl}/api/users`,
+  
+  dashboard:
+    `${environment.api.baseUrl}/api/dashboard`
 };

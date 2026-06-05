@@ -1,10 +1,11 @@
 ﻿namespace backend.Data;
 
 using backend.Entities.Common;
+using backend.Entities.Dashboard;
 using backend.Entities.Identity;
+using backend.Entities.Stats;
 using backend.Entities.Teams;
 using backend.Entities.Tournaments;
-using backend.Entities.Stats;
 using Microsoft.EntityFrameworkCore;
 
 public class AppDbContext : DbContext
@@ -22,18 +23,60 @@ public class AppDbContext : DbContext
 	public DbSet<Match> Matches => Set<Match>();
 	public DbSet<MatchPlayerStats> MatchPlayerStats => Set<MatchPlayerStats>();
 
+	public DbSet<PlayerRanking> PlayerRankings => Set<PlayerRanking>();
+	public DbSet<ActivityFeed> ActivityFeeds => Set<ActivityFeed>();
+	public DbSet<NewsArticle> NewsArticles => Set<NewsArticle>();
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);
 
-		// Match -> HomeTeam
+		modelBuilder.Entity<PlayerRanking>(entity =>
+		{
+			entity.HasKey(x => x.Id);
+
+			entity.HasOne(x => x.User)
+				.WithMany()
+				.HasForeignKey(x => x.UserId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			entity.Property(x => x.Form)
+				.HasMaxLength(50);
+		});
+
+		modelBuilder.Entity<ActivityFeed>(entity =>
+		{
+			entity.HasKey(x => x.Id);
+
+			entity.HasOne(x => x.User)
+				.WithMany()
+				.HasForeignKey(x => x.UserId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			entity.Property(x => x.Text)
+				.HasMaxLength(300);
+		});
+
+		modelBuilder.Entity<NewsArticle>(entity =>
+		{
+			entity.HasKey(x => x.Id);
+
+			entity.Property(x => x.Title)
+				.HasMaxLength(200);
+
+			entity.Property(x => x.Content)
+				.HasMaxLength(2000);
+		});
+
+		modelBuilder.Entity<Match>()
+			.HasKey(m => m.MatchId);
+
 		modelBuilder.Entity<Match>()
 			.HasOne(m => m.HomeTeam)
 			.WithMany()
 			.HasForeignKey(m => m.HomeTeamId)
 			.OnDelete(DeleteBehavior.Restrict);
 
-		// Match -> AwayTeam
 		modelBuilder.Entity<Match>()
 			.HasOne(m => m.AwayTeam)
 			.WithMany()

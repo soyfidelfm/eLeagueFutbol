@@ -186,7 +186,7 @@ export class Seasons implements OnInit {
   delete(seasonId: string): void {
     if (!confirm('Are you sure you want to delete this season?')) return;
 
-    this.seasonService.delete(seasonId).subscribe({
+    this.seasonService.remove(seasonId).subscribe({
       next: () => this.loadSeasons(),
       error: (err) => {
         console.error('Error deleting season:', err);
