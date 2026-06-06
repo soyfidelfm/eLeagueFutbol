@@ -7,14 +7,20 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
 
   const isApiRequest =
-    req.url.startsWith('https://localhost:') ||
-    req.url.startsWith('http://localhost:');
+    req.url.startsWith('https://localhost:7159/api') ||
+    req.url.startsWith('https://api.eleaguefutbol.fidelfm.com/api');
 
   if (!isApiRequest) {
     return next(req);
   }
 
-  return from(auth.getAccessTokenSilently()).pipe(
+  return from(
+    auth.getAccessTokenSilently({
+      authorizationParams: {
+        audience: 'https://eleaguefutbol-api'
+      }
+    })
+  ).pipe(
     switchMap(token => {
       const authReq = req.clone({
         setHeaders: {
