@@ -31,23 +31,29 @@
               }
             ],
             "styles": [
-  "src/styles.scss",
-  "node_modules/@fortawesome/fontawesome-free/css/all.min.css"
-]
+              "src/styles.scss",
+              "node_modules/@fortawesome/fontawesome-free/css/all.min.css"
+            ]
           },
           "configurations": {
             "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
               "budgets": [
                 {
-  "type": "initial",
-  "maximumWarning": "700kB",
-  "maximumError": "1.5MB"
-},
+                  "type": "initial",
+                  "maximumWarning": "700kB",
+                  "maximumError": "1.5MB"
+                },
                 {
-  "type": "anyComponentStyle",
-  "maximumWarning": "12kB",
-  "maximumError": "20kB"
-}
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "12kB",
+                  "maximumError": "20kB"
+                }
               ],
               "outputHashing": "all"
             },
