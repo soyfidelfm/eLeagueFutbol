@@ -1,9 +1,11 @@
 ﻿using backend.Features.Dashboard.Dtos;
 using backend.Features.Dashboard.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Features.Dashboard.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/dashboard")]
 public class DashboardController : ControllerBase

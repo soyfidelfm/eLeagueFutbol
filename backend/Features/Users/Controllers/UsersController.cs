@@ -1,9 +1,11 @@
 ﻿using backend.Features.Users.Dtos;
 using backend.Features.Users.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Features.Users.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/users")]
 public class UsersController : ControllerBase

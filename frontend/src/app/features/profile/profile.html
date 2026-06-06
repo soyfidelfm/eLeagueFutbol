@@ -54,11 +54,19 @@
 
       <label>
         Time Zone
-        <input
-          type="text"
-          name="timeZone"
-          [(ngModel)]="form.timeZone"
-        />
+        <select
+  name="timeZone"
+  [(ngModel)]="form.timeZone">
+
+  <option
+    *ngFor="let zone of timeZones"
+    [value]="zone">
+
+    {{ zone }}
+
+  </option>
+
+</select>
       </label>
 
       <button type="submit" [disabled]="isSaving">

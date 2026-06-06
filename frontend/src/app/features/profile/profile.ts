@@ -27,11 +27,30 @@ export class Profile implements OnInit {
     timeZone: ''
   };
 
+  timeZones = [
+  'America/Los_Angeles',
+  'America/Denver',
+  'America/Chicago',
+  'America/New_York',
+  'America/Mexico_City',
+  'America/Tijuana',
+  'America/Phoenix',
+  'Europe/London',
+  'Europe/Madrid',
+  'Europe/Paris',
+  'Asia/Tokyo'
+];
+
   constructor(private userService: UserService) {}
 
   ngOnInit(): void {
-    this.loadUser();
-  }
+  this.form.timeZone =
+    Intl.DateTimeFormat()
+      .resolvedOptions()
+      .timeZone;
+
+  this.loadUser();
+}
 
   loadUser(): void {
     const userId = localStorage.getItem('userId');
@@ -48,11 +67,14 @@ export class Profile implements OnInit {
         this.user = user;
 
         this.form = {
-          displayName: user.displayName,
-          avatarUrl: user.avatarUrl,
-          timeZone: user.timeZone
-        };
-
+  displayName: user.displayName,
+  avatarUrl: user.avatarUrl,
+  timeZone:
+    user.timeZone ||
+    Intl.DateTimeFormat()
+      .resolvedOptions()
+      .timeZone
+};
         this.isLoading = false;
       },
       error: () => {

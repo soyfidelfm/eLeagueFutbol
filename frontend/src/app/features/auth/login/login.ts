@@ -30,7 +30,11 @@ export class Login implements OnDestroy {
       .pipe(
         filter(isAuthenticated => isAuthenticated),
         take(1),
-        switchMap(() => this.auth.user$.pipe(take(1))),
+
+        switchMap(() =>
+          this.auth.user$.pipe(take(1))
+        ),
+
         switchMap(profile => {
           const dto: SyncUserDto = {
             auth0Id: profile?.sub ?? '',
@@ -52,14 +56,15 @@ export class Login implements OnDestroy {
 
           return this.userService.sync(dto);
         }),
+
         takeUntil(this.destroy$)
       )
       .subscribe({
         next: user => {
           localStorage.setItem('userId', user.userId);
           localStorage.setItem('auth0Id', user.auth0Id);
-          localStorage.setItem('displayName', user.displayName);
-          localStorage.setItem('avatarUrl', user.avatarUrl);
+          localStorage.setItem('displayName', user.displayName ?? '');
+          localStorage.setItem('avatarUrl', user.avatarUrl ?? '');
 
           this.router.navigateByUrl('/dashboard');
         },
@@ -76,7 +81,9 @@ export class Login implements OnDestroy {
       },
       authorizationParams: {
         connection: provider,
-        redirect_uri: window.location.origin
+        redirect_uri: window.location.origin,
+        audience: 'https://eleaguefutbol-api',
+        scope: 'openid profile email offline_access'
       }
     });
   }

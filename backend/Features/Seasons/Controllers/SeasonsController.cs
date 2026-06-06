@@ -1,9 +1,11 @@
 ﻿using backend.Features.Seasons.Dtos;
 using backend.Features.Seasons.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Features.Seasons.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/seasons")]
 public class SeasonsController : ControllerBase

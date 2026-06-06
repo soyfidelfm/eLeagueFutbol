@@ -1,6 +1,8 @@
-﻿namespace backend.Features.GameClubs.Services
+﻿using backend.Features.GameClubs.Dtos;
+
+namespace backend.Features.GameClubs.Services;
+
+public interface IGameClubService
 {
-	public class IGameClubService
-	{
-	}
+	Task<List<GameClubDto>> GetAllAsync();
 }

@@ -2,7 +2,9 @@ using backend.Data;
 using backend.Features.Dashboard.Services;
 using backend.Features.Seasons.Services;
 using backend.Features.Users.Services;
+using backend.Features.GameClubs.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +20,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IGameClubService, GameClubService>();
 
 builder.Services.AddCors(options =>
 {
@@ -32,6 +35,19 @@ builder.Services.AddCors(options =>
 	});
 });
 
+builder.Services
+	.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+	.AddJwtBearer(options =>
+	{
+		options.Authority =
+			$"https://{builder.Configuration["Auth0:Domain"]}/";
+
+		options.Audience =
+			builder.Configuration["Auth0:Audience"];
+	});
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -44,6 +60,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AngularPolicy");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
