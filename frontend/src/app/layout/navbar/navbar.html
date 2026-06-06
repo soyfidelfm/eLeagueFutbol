@@ -2,54 +2,39 @@
 
   <!-- LEFT -->
   <div class="navbar-left">
-
     <div class="brand">
-
     </div>
-
   </div>
 
   <!-- CENTER -->
   <nav class="navbar-center">
 
-    <a
-      routerLink="/dashboard"
-      routerLinkActive="active">
+    <a routerLink="/dashboard" routerLinkActive="active">
       <i class="fa-solid fa-house"></i>
       <span>Dashboard</span>
     </a>
 
-    <a
-      routerLink="/arena"
-      routerLinkActive="active">
+    <a routerLink="/arena" routerLinkActive="active">
       <i class="fa-solid fa-shield-halved"></i>
       <span>Arena</span>
     </a>
 
-    <a
-      routerLink="/seasons"
-      routerLinkActive="active">
+    <a routerLink="/seasons" routerLinkActive="active">
       <i class="fa-solid fa-trophy"></i>
       <span>Seasons & Tournaments</span>
     </a>
 
-    <a
-      routerLink="/clubs"
-      routerLinkActive="active">
+    <a routerLink="/clubs" routerLinkActive="active">
       <i class="fa-solid fa-users"></i>
       <span>Clubs</span>
     </a>
 
-    <a
-      routerLink="/rankings"
-      routerLinkActive="active">
+    <a routerLink="/rankings" routerLinkActive="active">
       <i class="fa-solid fa-chart-line"></i>
       <span>Rankings</span>
     </a>
 
-    <a
-      routerLink="/stats"
-      routerLinkActive="active">
+    <a routerLink="/stats" routerLinkActive="active">
       <i class="fa-solid fa-chart-simple"></i>
       <span>Stats</span>
     </a>
@@ -59,54 +44,85 @@
   <!-- RIGHT -->
   <div class="navbar-right">
 
-    <!-- NOTIFICATIONS -->
     <button class="icon-btn">
       <i class="fa-regular fa-bell"></i>
-
-      <span class="notification-dot">
-        3
-      </span>
+      <span class="notification-dot">3</span>
     </button>
 
-    <!-- COINS -->
     <div class="coins-box">
-
       <i class="fa-solid fa-coins"></i>
-
       <strong>25,680</strong>
-
     </div>
 
     <!-- USER -->
-    <a
-  class="profile-box"
-  routerLink="/profile"
-  routerLinkActive="profile-active"
-  *ngIf="auth.user$ | async as user">
+    <div
+      class="profile-box"
+      *ngIf="auth.user$ | async as user"
+      (click)="toggleUserMenu($event)">
 
-  <img
-    [src]="user.picture"
-    [alt]="user.name"
-  />
+      <img
+        [src]="user.picture"
+        [alt]="user.name"
+      />
 
-  <div class="profile-info">
+      <div class="profile-info">
+        <strong>{{ user.name }}</strong>
+        <span>{{ user.email }}</span>
+      </div>
 
-    <strong>
-      {{ user.name }}
-    </strong>
+      <div class="online-dot"></div>
 
-    <span>
-      {{ user.email }}
-    </span>
+      <!-- USER MENU -->
+      <div
+        class="user-menu"
+        *ngIf="showUserMenu"
+        (click)="$event.stopPropagation()">
+
+        <button type="button" (click)="openProfileModal()">
+          <i class="fa-regular fa-user"></i>
+          <span>Profile</span>
+        </button>
+
+        <button type="button" (click)="logout()">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Sign out</span>
+        </button>
+
+      </div>
+
+    </div>
 
   </div>
 
-  <div class="online-dot"></div>
+</header>
 
-</a>
+<!-- PROFILE MODAL -->
+<div
+  class="profile-modal-backdrop"
+  *ngIf="showProfileModal"
+  (click)="closeProfileModal()">
 
-  <div class="online-dot"></div>
+  <div
+    class="profile-modal"
+    *ngIf="auth.user$ | async as user"
+    (click)="$event.stopPropagation()">
+
+    <button
+      type="button"
+      class="modal-close"
+      (click)="closeProfileModal()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <img
+      [src]="user.picture"
+      [alt]="user.name"
+    />
+
+    <h2>{{ user.name }}</h2>
+
+    <p>{{ user.email }}</p>
+
+  </div>
 
 </div>
-
-</header>

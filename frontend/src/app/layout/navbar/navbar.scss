@@ -15,14 +15,11 @@
 
   backdrop-filter: blur(18px);
 
-  background:
-    rgba(6, 10, 16, .82);
+  background: rgba(6, 10, 16, .82);
 
-  border-bottom:
-    1px solid var(--border-primary);
+  border-bottom: 1px solid var(--border-primary);
 
-  box-shadow:
-    0 0 25px rgba(0,255,136,.08);
+  box-shadow: 0 0 25px rgba(0, 255, 136, .08);
 }
 
 /* =========================================
@@ -46,10 +43,7 @@
 
   object-fit: contain;
 
-  filter:
-    drop-shadow(
-      0 0 14px rgba(0,255,136,.35)
-    );
+  filter: drop-shadow(0 0 14px rgba(0, 255, 136, .35));
 }
 
 .brand-text h1 {
@@ -117,21 +111,17 @@
 .navbar-center a:hover {
   color: white;
 
-  background:
-    rgba(255,255,255,.04);
+  background: rgba(255, 255, 255, .04);
 }
 
 .navbar-center a.active {
   color: var(--neon-primary);
 
-  background:
-    rgba(0,255,136,.08);
+  background: rgba(0, 255, 136, .08);
 
-  border:
-    1px solid rgba(0,255,136,.18);
+  border: 1px solid rgba(0, 255, 136, .18);
 
-  box-shadow:
-    0 0 18px rgba(0,255,136,.14);
+  box-shadow: 0 0 18px rgba(0, 255, 136, .14);
 }
 
 .navbar-center a.active::after {
@@ -149,11 +139,9 @@
 
   border-radius: 999px;
 
-  background:
-    var(--neon-primary);
+  background: var(--neon-primary);
 
-  box-shadow:
-    0 0 10px rgba(0,255,136,.8);
+  box-shadow: 0 0 10px rgba(0, 255, 136, .8);
 }
 
 /* =========================================
@@ -174,11 +162,9 @@
 
   border-radius: 14px;
 
-  border:
-    1px solid var(--border-primary);
+  border: 1px solid var(--border-primary);
 
-  background:
-    rgba(255,255,255,.03);
+  background: rgba(255, 255, 255, .03);
 
   color: white;
 
@@ -190,8 +176,7 @@
 .icon-btn:hover {
   transform: translateY(-2px);
 
-  box-shadow:
-    var(--shadow-neon);
+  box-shadow: var(--shadow-neon);
 }
 
 .notification-dot {
@@ -208,8 +193,7 @@
   display: grid;
   place-content: center;
 
-  background:
-    var(--success);
+  background: var(--success);
 
   color: #04110a;
 
@@ -228,11 +212,9 @@
 
   border-radius: 14px;
 
-  background:
-    rgba(255,255,255,.03);
+  background: rgba(255, 255, 255, .03);
 
-  border:
-    1px solid var(--border-primary);
+  border: 1px solid var(--border-primary);
 }
 
 .coins-box i {
@@ -242,6 +224,10 @@
 .coins-box strong {
   color: white;
 }
+
+/* =========================================
+   USER BOX
+========================================= */
 
 .profile-box {
   position: relative;
@@ -254,11 +240,24 @@
 
   border-radius: 14px;
 
-  background:
-    rgba(255,255,255,.03);
+  background: rgba(255, 255, 255, .03);
 
-  border:
-    1px solid var(--border-primary);
+  border: 1px solid var(--border-primary);
+
+  text-decoration: none;
+  color: inherit;
+
+  cursor: pointer;
+
+  transition: .25s ease;
+}
+
+.profile-box:hover {
+  transform: translateY(-1px);
+
+  border-color: rgba(0, 255, 136, 0.55);
+
+  box-shadow: 0 0 18px rgba(0, 255, 136, 0.12);
 }
 
 .profile-box img {
@@ -269,18 +268,24 @@
 
   object-fit: cover;
 
-  border:
-    1px solid rgba(0,255,136,.4);
+  border: 1px solid rgba(0, 255, 136, .4);
 }
 
 .profile-info {
   display: flex;
   flex-direction: column;
+
+  max-width: 190px;
 }
 
 .profile-info strong {
   color: white;
+
   font-size: 14px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profile-info span {
@@ -289,6 +294,10 @@
   font-size: 11px;
 
   letter-spacing: 1px;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .online-dot {
@@ -302,27 +311,213 @@
 
   border-radius: 50%;
 
-  background:
-    var(--success);
+  background: var(--success);
+
+  box-shadow: 0 0 12px rgba(0, 255, 136, .8);
+}
+
+/* =========================================
+   USER DROPDOWN
+========================================= */
+
+.user-menu {
+  position: absolute;
+
+  top: calc(100% + 14px);
+  right: 0;
+
+  min-width: 210px;
+
+  padding: 10px;
+
+  border-radius: 16px;
+
+  background: rgba(6, 10, 16, 0.96);
+
+  border: 1px solid rgba(0, 255, 136, 0.22);
+
+  backdrop-filter: blur(20px);
 
   box-shadow:
-    0 0 12px rgba(0,255,136,.8);
+    0 20px 45px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(0, 255, 136, 0.12);
+
+  z-index: 9999;
 }
 
-.profile-box {
-  text-decoration: none;
-  color: inherit;
+.user-menu::before {
+  content: "";
+
+  position: absolute;
+
+  top: -7px;
+  right: 24px;
+
+  width: 12px;
+  height: 12px;
+
+  transform: rotate(45deg);
+
+  background: rgba(6, 10, 16, 0.96);
+
+  border-left: 1px solid rgba(0, 255, 136, 0.22);
+  border-top: 1px solid rgba(0, 255, 136, 0.22);
+}
+
+.user-menu button {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 14px;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: transparent;
+
+  color: white;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  text-align: left;
+
   cursor: pointer;
+
+  transition: .2s ease;
 }
 
-.profile-box:hover {
-  transform: translateY(-1px);
-  border-color: rgba(0, 255, 136, 0.55);
+.user-menu button i {
+  width: 18px;
+
+  color: var(--neon-primary);
 }
 
-.profile-active {
-  border-color: rgba(0, 255, 136, 0.75);
-  box-shadow: 0 0 22px rgba(0, 255, 136, 0.25);
+.user-menu button:hover {
+  background: rgba(0, 255, 136, 0.12);
+
+  color: var(--neon-primary);
+}
+
+/* =========================================
+   PROFILE MODAL
+========================================= */
+
+.profile-modal-backdrop {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(0, 0, 0, 0.68);
+
+  backdrop-filter: blur(10px);
+
+  z-index: 10000;
+}
+
+.profile-modal {
+  position: relative;
+
+  width: 430px;
+  max-width: 92vw;
+
+  padding: 40px 34px;
+
+  border-radius: 26px;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(0, 255, 136, 0.12),
+      transparent 34%
+    ),
+    linear-gradient(
+      145deg,
+      rgba(8, 15, 12, 0.98),
+      rgba(3, 8, 6, 0.98)
+    );
+
+  border: 1px solid rgba(0, 255, 136, 0.28);
+
+  text-align: center;
+
+  box-shadow:
+    0 0 45px rgba(0, 255, 136, 0.16),
+    0 28px 75px rgba(0, 0, 0, 0.65);
+}
+
+.profile-modal img {
+  width: 112px;
+  height: 112px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+
+  border: 3px solid var(--neon-primary);
+
+  margin-bottom: 18px;
+
+  box-shadow: 0 0 28px rgba(0, 255, 136, 0.42);
+}
+
+.profile-modal h2 {
+  margin: 0 0 8px;
+
+  color: white;
+
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.profile-modal p {
+  margin: 0;
+
+  color: var(--neon-primary);
+
+  font-size: 14px;
+
+  word-break: break-word;
+}
+
+.modal-close {
+  position: absolute;
+
+  top: 16px;
+  right: 16px;
+
+  width: 38px;
+  height: 38px;
+
+  display: grid;
+  place-content: center;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  color: white;
+
+  cursor: pointer;
+
+  transition: .2s ease;
+}
+
+.modal-close:hover {
+  background: rgba(0, 255, 136, 0.15);
+
+  color: var(--neon-primary);
+
+  box-shadow: 0 0 18px rgba(0, 255, 136, 0.18);
 }
 
 /* =========================================
@@ -340,11 +535,35 @@
     padding: 18px;
   }
 
+  .navbar-left {
+    justify-content: center;
+  }
+
   .navbar-center {
     flex-wrap: wrap;
   }
 
   .navbar-right {
     justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 720px) {
+
+  .navbar-center a span {
+    display: none;
+  }
+
+  .profile-info {
+    display: none;
+  }
+
+  .coins-box {
+    display: none;
+  }
+
+  .user-menu {
+    right: -8px;
   }
 }
