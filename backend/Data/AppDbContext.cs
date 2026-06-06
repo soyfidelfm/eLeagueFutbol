@@ -26,7 +26,7 @@ public class AppDbContext : DbContext
 	public DbSet<PlayerRanking> PlayerRankings => Set<PlayerRanking>();
 	public DbSet<ActivityFeed> ActivityFeeds => Set<ActivityFeed>();
 	public DbSet<NewsArticle> NewsArticles => Set<NewsArticle>();
-
+	public DbSet<GameClub> GameClubs { get; set; }
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);

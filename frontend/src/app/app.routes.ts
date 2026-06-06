@@ -29,30 +29,17 @@ export const routes: Routes = [
       },
 
       {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/profile/profile')
+            .then(m => m.Profile)
+      },
+
+      {
         path: 'seasons',
         loadComponent: () =>
           import('./features/seasons/seasons')
-            .then(m => m.Seasons),
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('./features/seasons/seasons')
-                .then(m => m.Seasons)
-          },
-          // {
-          //   path: 'tournaments',
-          //   loadComponent: () =>
-          //     import('./features/tournaments/tournaments')
-          //       .then(m => m.Tournaments)
-          // },
-          {
-            path: 'create',
-            loadComponent: () =>
-              import('./features/seasons/seasons')
-                .then(m => m.Seasons)
-          }
-        ]
+            .then(m => m.Seasons)
       }
 
     ]

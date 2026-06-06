@@ -1,6 +1,7 @@
 using backend.Data;
 using backend.Features.Dashboard.Services;
 using backend.Features.Seasons.Services;
+using backend.Features.Users.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddCors(options =>
 {

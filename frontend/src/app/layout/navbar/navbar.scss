@@ -309,6 +309,22 @@
     0 0 12px rgba(0,255,136,.8);
 }
 
+.profile-box {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.profile-box:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 255, 136, 0.55);
+}
+
+.profile-active {
+  border-color: rgba(0, 255, 136, 0.75);
+  box-shadow: 0 0 22px rgba(0, 255, 136, 0.25);
+}
+
 /* =========================================
    RESPONSIVE
 ========================================= */

@@ -1,15 +1,24 @@
 export interface User {
-  id?: string;
+  userId: string;
+  auth0Id: string;
+  email: string;
+  displayName: string;
+  avatarUrl: string;
+  timeZone: string;
+  lastLoginAtUTC: string | null;
+  isActive: boolean;
+}
 
-  username: string;
+export interface SyncUserDto {
+  auth0Id: string;
+  email: string;
+  displayName: string;
+  avatarUrl: string;
+  timeZone: string;
+}
 
-  avatar: string;
-
-  level?: number;
-
-  rank?: string;
-
-  online?: boolean;
-
-  status?: string;
+export interface UpdateUserDto {
+  displayName: string;
+  avatarUrl: string;
+  timeZone: string;
 }

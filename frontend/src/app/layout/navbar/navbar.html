@@ -4,53 +4,55 @@
   <div class="navbar-left">
 
     <div class="brand">
-    
+
     </div>
 
   </div>
 
   <!-- CENTER -->
   <nav class="navbar-center">
-<a
-  routerLink="/dashboard"
-  routerLinkActive="active">
-  <i class="fa-solid fa-house"></i>
-  <span>Dashboard</span>
-</a>
+
     <a
-  routerLink="/arena"
-  routerLinkActive="active">
-  <i class="fa-solid fa-shield-halved"></i>
-  <span>Arena</span>
-</a>
+      routerLink="/dashboard"
+      routerLinkActive="active">
+      <i class="fa-solid fa-house"></i>
+      <span>Dashboard</span>
+    </a>
 
-<a
-  routerLink="/seasons"
-  routerLinkActive="active">
-  <i class="fa-solid fa-trophy"></i>
-  <span>Seasons & Tournaments</span>
-</a>
+    <a
+      routerLink="/arena"
+      routerLinkActive="active">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>Arena</span>
+    </a>
 
-<a
-  routerLink="/clubs"
-  routerLinkActive="active">
-  <i class="fa-solid fa-users"></i>
-  <span>Clubs</span>
-</a>
+    <a
+      routerLink="/seasons"
+      routerLinkActive="active">
+      <i class="fa-solid fa-trophy"></i>
+      <span>Seasons & Tournaments</span>
+    </a>
 
-<a
-  routerLink="/rankings"
-  routerLinkActive="active">
-  <i class="fa-solid fa-chart-line"></i>
-  <span>Rankings</span>
-</a>
+    <a
+      routerLink="/clubs"
+      routerLinkActive="active">
+      <i class="fa-solid fa-users"></i>
+      <span>Clubs</span>
+    </a>
 
-<a
-  routerLink="/stats"
-  routerLinkActive="active">
-  <i class="fa-solid fa-chart-simple"></i>
-  <span>Stats</span>
-</a>
+    <a
+      routerLink="/rankings"
+      routerLinkActive="active">
+      <i class="fa-solid fa-chart-line"></i>
+      <span>Rankings</span>
+    </a>
+
+    <a
+      routerLink="/stats"
+      routerLinkActive="active">
+      <i class="fa-solid fa-chart-simple"></i>
+      <span>Stats</span>
+    </a>
 
   </nav>
 
@@ -76,25 +78,35 @@
     </div>
 
     <!-- USER -->
-    <div class="profile-box">
+    <a
+  class="profile-box"
+  routerLink="/profile"
+  routerLinkActive="profile-active"
+  *ngIf="auth.user$ | async as user">
 
-      <img
-        src="/images/avatar1.png"
-        alt="profile"
-      />
+  <img
+    [src]="user.picture"
+    [alt]="user.name"
+  />
 
-      <div class="profile-info">
+  <div class="profile-info">
 
-        <strong>EliteStriker</strong>
+    <strong>
+      {{ user.name }}
+    </strong>
 
-        <span>LEVEL 32</span>
-
-      </div>
-
-      <div class="online-dot"></div>
-
-    </div>
+    <span>
+      {{ user.email }}
+    </span>
 
   </div>
+
+  <div class="online-dot"></div>
+
+</a>
+
+  <div class="online-dot"></div>
+
+</div>
 
 </header>

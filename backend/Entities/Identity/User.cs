@@ -5,7 +5,6 @@ using backend.Entities.Stats;
 using backend.Entities.Teams;
 
 public class User : BaseEntity
-
 {
 	public Guid UserId { get; set; }
 
@@ -17,8 +16,11 @@ public class User : BaseEntity
 
 	public string AvatarUrl { get; set; } = string.Empty;
 
+	public string TimeZone { get; set; } = "UTC";
 
-	public bool IsActive { get; set; }
+	public DateTime? LastLoginAtUTC { get; set; }
+
+	public bool IsActive { get; set; } = true;
 
 	// Navigation
 

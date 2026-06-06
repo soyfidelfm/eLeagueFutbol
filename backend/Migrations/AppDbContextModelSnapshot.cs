@@ -247,6 +247,13 @@ namespace backend.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("LastLoginAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TimeZone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime?>("UpdatedAtUTC")
                         .HasColumnType("timestamp with time zone");
 
@@ -303,6 +310,55 @@ namespace backend.Migrations
                     b.ToTable("MatchPlayerStats");
                 });
 
+            modelBuilder.Entity("backend.Entities.Teams.GameClub", b =>
+                {
+                    b.Property<Guid>("GameClubId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("League")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LogoUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("GameClubId");
+
+                    b.ToTable("GameClubs");
+                });
+
             modelBuilder.Entity("backend.Entities.Teams.Team", b =>
                 {
                     b.Property<Guid>("TeamId")
@@ -318,6 +374,9 @@ namespace backend.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<Guid>("GameClubId")
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -340,6 +399,8 @@ namespace backend.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("TeamId");
+
+                    b.HasIndex("GameClubId");
 
                     b.HasIndex("OwnerUserId");
 
@@ -515,11 +576,19 @@ namespace backend.Migrations
 
             modelBuilder.Entity("backend.Entities.Teams.Team", b =>
                 {
+                    b.HasOne("backend.Entities.Teams.GameClub", "GameClub")
+                        .WithMany()
+                        .HasForeignKey("GameClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("backend.Entities.Identity.User", "OwnerUser")
                         .WithMany()
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("GameClub");
 
                     b.Navigation("OwnerUser");
                 });

@@ -1,0 +1,72 @@
+<section class="profile-page">
+
+  <div class="profile-card">
+
+    <div class="profile-header">
+
+      <div>
+        <span class="eyebrow">PLAYER SETTINGS</span>
+
+        <h2>My Profile</h2>
+
+        <p class="subtitle">
+          Edit your eLeagueFutbol identity.
+        </p>
+      </div>
+
+      <div class="avatar-preview" *ngIf="form.avatarUrl">
+        <img [src]="form.avatarUrl" alt="Avatar" />
+      </div>
+
+    </div>
+
+    <div *ngIf="isLoading" class="message">
+      Loading profile...
+    </div>
+
+    <div *ngIf="errorMessage" class="error">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="successMessage" class="success">
+      {{ successMessage }}
+    </div>
+
+    <form *ngIf="!isLoading && user" (ngSubmit)="save()">
+
+      <label>
+        Display Name
+        <input
+          type="text"
+          name="displayName"
+          [(ngModel)]="form.displayName"
+        />
+      </label>
+
+      <label>
+        Avatar URL
+        <input
+          type="text"
+          name="avatarUrl"
+          [(ngModel)]="form.avatarUrl"
+        />
+      </label>
+
+      <label>
+        Time Zone
+        <input
+          type="text"
+          name="timeZone"
+          [(ngModel)]="form.timeZone"
+        />
+      </label>
+
+      <button type="submit" [disabled]="isSaving">
+        {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      </button>
+
+    </form>
+
+  </div>
+
+</section>
