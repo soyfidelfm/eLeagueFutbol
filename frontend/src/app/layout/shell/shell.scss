@@ -41,9 +41,7 @@
     );
 }
 
-/* =========================================
-   MAIN LAYOUT
-========================================= */
+/* MAIN LAYOUT */
 
 .main-layout {
   position: relative;
@@ -55,11 +53,10 @@
   flex-direction: column;
 
   min-width: 0;
+  min-height: 100vh;
 }
 
-/* =========================================
-   PAGE CONTENT
-========================================= */
+/* PAGE CONTENT */
 
 .page-content {
   position: relative;
@@ -72,9 +69,7 @@
   padding: 24px;
 }
 
-/* =========================================
-   SIDEBAR / NAVBAR LAYER FIX
-========================================= */
+/* LAYERS */
 
 app-sidebar,
 app-navbar {
@@ -82,23 +77,50 @@ app-navbar {
   z-index: 2;
 }
 
-/* =========================================
-   RESPONSIVE
-========================================= */
+/* MOBILE / TABLET PORTRAIT */
 
-@media (max-width: 1200px) {
+@media (max-width: 1200px), (orientation: portrait) {
 
   .app-shell {
     flex-direction: column;
+
+    background-size: cover;
     background-attachment: scroll;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  app-sidebar {
+    display: none;
   }
 
   .main-layout {
     width: 100%;
+    min-height: 100vh;
   }
 
   .page-content {
-    padding: 18px;
+    flex: 1;
+
+    padding: 16px;
+
+    overflow: visible;
   }
 
+  app-footer {
+  display: none;
+}
+
+@media (max-width: 1400px), (orientation: portrait) {
+  app-footer {
+    display: block;
+    position: relative;
+    z-index: 5;
+  }
+
+  .page-content {
+    padding-bottom: 95px;
+  }
+}
 }

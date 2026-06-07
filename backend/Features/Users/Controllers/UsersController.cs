@@ -52,4 +52,16 @@ public class UsersController : ControllerBase
 
 		return Ok(user);
 	}
+
+	[Authorize]
+	[HttpGet("me")]
+	public async Task<ActionResult<MeUserDto>> GetMe()
+	{
+		var me = await _service.GetMeAsync(User);
+
+		if (me == null)
+			return NotFound("User not found.");
+
+		return Ok(me);
+	}
 }

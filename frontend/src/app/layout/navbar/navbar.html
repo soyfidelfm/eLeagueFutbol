@@ -1,8 +1,12 @@
 <header class="navbar">
 
-  <!-- LEFT -->
+  <!-- LEFT / MOBILE LOGO ONLY -->
   <div class="navbar-left">
     <div class="brand">
+      <img
+         src="/images/logo-clear.png"
+        alt="eLeague Futbol"
+        class="brand-logo" />
     </div>
   </div>
 
@@ -50,31 +54,46 @@
     </button>
 
     <!-- USER -->
-    <div class="profile-box" *ngIf="auth.user$ | async as user" (click)="toggleUserMenu($event)">
+    <div
+  class="profile-box"
+  [class.loading]="!me"
+  (click)="me && toggleUserMenu($event)">
 
-      <img [src]="user.picture" [alt]="user.name" />
+      <img
+  [src]="me?.avatarUrl || '/images/default-avatar.png'"
+  [alt]="me?.displayName || 'User'" />
 
-      <div class="profile-info">
-        <strong>{{ user.name }}</strong>
-        <span>{{ user.email }}</span>
-      </div>
+<div class="profile-info">
+  <strong>{{ me?.displayName || 'Loading...' }}</strong>
 
-      <div class="online-dot"></div>
+  <span>
+    {{ me?.gamerTag?.trim() ? me?.gamerTag : (me?.email || 'Profile') }}
+  </span>
+</div>
 
-      <!-- USER MENU -->
-      <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
+<div class="online-dot" *ngIf="me"></div>
 
-        <button type="button" (click)="openProfileModal($event)">
-  <i class="fa-regular fa-user"></i>
-  <span>Profile</span>
-</button>
+    </div>
 
-        <button type="button" (click)="logout()">
-          <i class="fa-solid fa-right-from-bracket"></i>
-          <span>Sign out</span>
-        </button>
+    <!-- USER MENU -->
+    <div
+      class="user-menu"
+      *ngIf="showUserMenu"
+      (click)="$event.stopPropagation()">
 
-      </div>
+      <button
+        type="button"
+        (click)="openProfileModal($event)">
+        <i class="fa-regular fa-user"></i>
+        <span>Profile</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="logout()">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Sign out</span>
+      </button>
 
     </div>
 
@@ -104,6 +123,7 @@
     </app-profile>
 
   </div>
+
 </div>
 
 <!-- TOAST -->
@@ -112,7 +132,6 @@
   *ngIf="showToast">
 
   <i class="fa-solid fa-circle-check"></i>
-
   <span>{{ toastMessage }}</span>
 
 </div>

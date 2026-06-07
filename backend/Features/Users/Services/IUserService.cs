@@ -1,4 +1,5 @@
 ﻿using backend.Features.Users.Dtos;
+using System.Security.Claims;
 
 namespace backend.Features.Users.Services;
 
@@ -11,4 +12,5 @@ public interface IUserService
 	Task<UserDto> SyncAsync(SyncUserDto dto);
 
 	Task<UserDto?> UpdateAsync(Guid userId, UpdateUserDto dto);
+	Task<MeUserDto?> GetMeAsync(ClaimsPrincipal principal);
 }

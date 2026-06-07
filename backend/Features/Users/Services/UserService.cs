@@ -2,6 +2,7 @@
 using backend.Entities.Identity;
 using backend.Features.Users.Dtos;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace backend.Features.Users.Services;
 
@@ -133,6 +134,7 @@ public class UserService : IUserService
 			: dto.TimeZone;
 		user.ClubName = dto.ClubName;
 		user.GameClubId = dto.GameClubId;
+		user.GamerTag = dto.GamerTag;
 
 		await _context.SaveChangesAsync();
 
@@ -155,6 +157,43 @@ public class UserService : IUserService
 		.Where(x => x.GameClubId == user.GameClubId)
 		.Select(x => x.League)
 		.FirstOrDefaultAsync() ?? string.Empty
+		};
+	}
+	public async Task<MeUserDto?> GetMeAsync(ClaimsPrincipal principal)
+	{
+		var auth0Id =
+			principal.FindFirstValue(ClaimTypes.NameIdentifier)
+			?? principal.FindFirstValue("sub");
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return null;
+
+		var user = await _context.Users
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x => x.Auth0Id == auth0Id);
+
+		if (user == null)
+			return null;
+
+		return new MeUserDto
+		{
+			UserId = user.UserId,
+			Auth0Id = user.Auth0Id,
+			Email = user.Email,
+			DisplayName = user.DisplayName,
+			AvatarUrl = user.AvatarUrl,
+			TimeZone = user.TimeZone,
+			GamerTag = user.GamerTag,
+			IsActive = user.IsActive,
+			LastLoginAtUTC = user.LastLoginAtUTC,
+
+			Claims = principal.Claims
+				.Select(c => new ClaimDto
+				{
+					Type = c.Type,
+					Value = c.Value
+				})
+				.ToList()
 		};
 	}
 }

@@ -9,7 +9,8 @@ import { API_ENDPOINTS } from '../constants/api-endpoints';
 import {
   User,
   SyncUserDto,
-  UpdateUserDto
+  UpdateUserDto, 
+  MeUserDto
 } from '../models/user.model';
 
 @Injectable({
@@ -48,4 +49,10 @@ export class UserService extends ApiService {
       dto
     );
   }
+
+  getMe(): Observable<MeUserDto> {
+  return this.get<MeUserDto>(
+    `${API_ENDPOINTS.users}/me`
+  );
+}
 }

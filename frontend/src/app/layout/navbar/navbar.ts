@@ -1,9 +1,11 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit,ChangeDetectorRef  } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
 
 import { Profile } from '../../features/profile/profile';
+import { UserService } from '../../core/services/user.service';
+import { MeUserDto } from '../../core/models/user.model';
 
 @Component({
   selector: 'app-navbar',
@@ -16,17 +18,36 @@ import { Profile } from '../../features/profile/profile';
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss'
 })
-export class Navbar {
-showToast = false;
-toastMessage = '';
+export class Navbar implements OnInit {
+  me: MeUserDto | null = null;
+
+  showToast = false;
+  toastMessage = '';
 
   showUserMenu = false;
-
   showProfileModal = false;
 
   constructor(
-    public auth: AuthService
+    public auth: AuthService,
+    private userService: UserService,
+    private cdr: ChangeDetectorRef
   ) { }
+
+  ngOnInit(): void {
+    this.loadMe();
+  }
+
+  loadMe(): void {
+  this.userService.getMe().subscribe({
+    next: me => {
+      this.me = me;
+      this.cdr.detectChanges();
+    },
+    error: err => {
+      console.error('Error loading me', err);
+    }
+  });
+}
 
   toggleUserMenu(event: MouseEvent): void {
     event.stopPropagation();
@@ -34,11 +55,11 @@ toastMessage = '';
   }
 
   openProfileModal(event?: MouseEvent): void {
-  event?.stopPropagation();
+    event?.stopPropagation();
 
-  this.showUserMenu = false;
-  this.showProfileModal = true;
-}
+    this.showUserMenu = false;
+    this.showProfileModal = true;
+  }
 
   closeProfileModal(): void {
     this.showProfileModal = false;
@@ -53,16 +74,17 @@ toastMessage = '';
   }
 
   onProfileSaved(): void {
+    this.showProfileModal = false;
 
-  this.showProfileModal = false;
+    this.loadMe();
 
-  this.toastMessage = 'Profile updated successfully.';
-  this.showToast = true;
+    this.toastMessage = 'Profile updated successfully.';
+    this.showToast = true;
 
-  setTimeout(() => {
-    this.showToast = false;
-  }, 3000);
-}
+    setTimeout(() => {
+      this.showToast = false;
+    }, 3000);
+  }
 
   @HostListener('document:click')
   onDocumentClick(): void {

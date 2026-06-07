@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 
 import { Navbar } from '../navbar/navbar';
 import { Sidebar } from '../sidebar/sidebar';
+import { Footer } from '../footer/footer';
 
 @Component({
   selector: 'app-shell',
@@ -10,7 +11,8 @@ import { Sidebar } from '../sidebar/sidebar';
   imports: [
     RouterOutlet,
     Navbar,
-    Sidebar
+    Sidebar,
+    Footer
   ],
   templateUrl: './shell.html',
   styleUrl: './shell.scss'

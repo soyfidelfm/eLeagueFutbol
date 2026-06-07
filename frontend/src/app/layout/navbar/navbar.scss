@@ -1,9 +1,7 @@
 .navbar {
   height: 82px;
 
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-
+  display: flex;
   align-items: center;
 
   padding: 0 28px;
@@ -23,48 +21,28 @@
 }
 
 /* =========================================
-   LEFT
+   LEFT / BRAND
 ========================================= */
 
 .navbar-left {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .brand {
-  display: flex;
+  display: none;
   align-items: center;
-  gap: 14px;
 }
 
-.brand img {
-  width: 46px;
-  height: 46px;
+.brand-logo {
+  height: 48px;
+  width: auto;
+  max-width: 160px;
 
   object-fit: contain;
 
-  filter: drop-shadow(0 0 14px rgba(0, 255, 136, .35));
-}
-
-.brand-text h1 {
-  margin: 0;
-
-  font-size: 24px;
-  font-weight: 800;
-
-  color: white;
-
-  letter-spacing: 1px;
-}
-
-.brand-text span {
-  color: var(--neon-primary);
-
-  font-size: 12px;
-
-  letter-spacing: 4px;
-
-  font-weight: 700;
+  display: block;
 }
 
 /* =========================================
@@ -72,11 +50,13 @@
 ========================================= */
 
 .navbar-center {
+  flex: 1;
+
   display: flex;
   align-items: center;
   justify-content: center;
 
-  gap: 18px;
+  gap: 12px;
 }
 
 .navbar-center a {
@@ -86,7 +66,7 @@
   align-items: center;
   gap: 8px;
 
-  padding: 12px 16px;
+  padding: 12px 14px;
 
   border-radius: 12px;
 
@@ -97,6 +77,8 @@
   cursor: pointer;
 
   transition: .25s ease;
+
+  white-space: nowrap;
 }
 
 .navbar-center a i {
@@ -149,9 +131,14 @@
 ========================================= */
 
 .navbar-right {
+  margin-left: auto;
+
   display: flex;
   align-items: center;
+
   gap: 16px;
+
+  position: relative;
 }
 
 .icon-btn {
@@ -159,6 +146,8 @@
 
   width: 46px;
   height: 46px;
+
+  flex-shrink: 0;
 
   border-radius: 14px;
 
@@ -201,30 +190,6 @@
   font-weight: 900;
 }
 
-.coins-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  padding: 0 18px;
-
-  height: 46px;
-
-  border-radius: 14px;
-
-  background: rgba(255, 255, 255, .03);
-
-  border: 1px solid var(--border-primary);
-}
-
-.coins-box i {
-  color: #ffd66b;
-}
-
-.coins-box strong {
-  color: white;
-}
-
 /* =========================================
    USER BOX
 ========================================= */
@@ -235,6 +200,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
+
+  min-width: 220px;
+  max-width: 280px;
+  min-height: 60px;
 
   padding: 8px 14px;
 
@@ -250,6 +219,13 @@
   cursor: pointer;
 
   transition: .25s ease;
+
+  flex-shrink: 0;
+}
+
+.profile-box.loading {
+  cursor: default;
+  opacity: .75;
 }
 
 .profile-box:hover {
@@ -260,9 +236,19 @@
   box-shadow: 0 0 18px rgba(0, 255, 136, 0.12);
 }
 
+.profile-box.loading:hover {
+  transform: none;
+
+  border-color: var(--border-primary);
+
+  box-shadow: none;
+}
+
 .profile-box img {
   width: 42px;
   height: 42px;
+
+  flex-shrink: 0;
 
   border-radius: 50%;
 
@@ -271,11 +257,17 @@
   border: 1px solid rgba(0, 255, 136, .4);
 }
 
+.profile-box.loading img {
+  opacity: .55;
+}
+
 .profile-info {
   display: flex;
   flex-direction: column;
 
-  max-width: 190px;
+  min-width: 0;
+
+  line-height: 1.15;
 }
 
 .profile-info strong {
@@ -303,7 +295,7 @@
 .online-dot {
   position: absolute;
 
-  right: 10px;
+  left: 42px;
   bottom: 10px;
 
   width: 10px;
@@ -312,6 +304,8 @@
   border-radius: 50%;
 
   background: var(--success);
+
+  border: 2px solid rgba(6, 10, 16, .95);
 
   box-shadow: 0 0 12px rgba(0, 255, 136, .8);
 }
@@ -508,8 +502,9 @@
 }
 
 /* =========================================
-TOAST
+   TOAST
 ========================================= */
+
 .toast-success {
   position: fixed;
 
@@ -536,7 +531,7 @@ TOAST
   font-weight: 800;
 
   box-shadow:
-    0 0 30px rgba(0,255,136,.35);
+    0 0 30px rgba(0, 255, 136, .35);
 
   z-index: 20000;
 
@@ -556,76 +551,187 @@ TOAST
 }
 
 /* =========================================
-   RESPONSIVE
+   RESPONSIVE DESKTOP SMALL
 ========================================= */
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
 
   .navbar {
-    grid-template-columns: 1fr;
-    gap: 18px;
-
-    height: auto;
-
-    padding: 18px;
-  }
-
-  .navbar-left {
-    justify-content: center;
+    padding: 0 18px;
+    gap: 16px;
   }
 
   .navbar-center {
-    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .navbar-center a {
+    padding: 10px 10px;
+  }
+
+  .navbar-center a span {
+    font-size: 12px;
+  }
+
+  .profile-box {
+    min-width: 190px;
+    max-width: 220px;
+  }
+}
+
+/* =========================================
+   MOBILE / IPAD PORTRAIT
+   Logo visible only here
+========================================= */
+
+@media (max-width: 900px) and (orientation: portrait) {
+
+  .navbar {
+    height: 92px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 22px;
+    gap: 14px;
+  }
+
+  .navbar-left {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+  }
+
+  .brand-logo {
+    height: 64px;
+    max-width: 210px;
+  }
+
+  .navbar-center {
+    display: none;
   }
 
   .navbar-right {
-    justify-content: center;
-    flex-wrap: wrap;
+    margin-left: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    flex-wrap: nowrap;
+    min-width: 0;
   }
-}
 
-@media (max-width: 720px) {
-
-  .navbar-center a span {
+  .icon-btn {
     display: none;
+  }
+
+  .profile-box {
+    width: 190px;
+    min-width: 190px;
+    max-width: 190px;
+    min-height: 70px;
+
+    padding: 8px 12px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    border-radius: 18px;
+
+    background: rgba(255, 255, 255, .04);
+  }
+
+  .profile-box img {
+    width: 52px;
+    height: 52px;
+
+    display: block;
+
+    opacity: 1;
+    visibility: visible;
+
+    flex-shrink: 0;
+  }
+
+  .profile-box.loading img {
+    opacity: .55;
   }
 
   .profile-info {
-    display: none;
+    display: flex;
+    flex-direction: column;
+
+    flex: 1;
+    min-width: 0;
   }
 
-  .coins-box {
-    display: none;
+  .profile-info strong {
+    font-size: 13px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .profile-info span {
+    font-size: 10px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .online-dot {
+    left: 50px;
+    right: auto;
+    bottom: 10px;
   }
 
   .user-menu {
-    right: -8px;
+    right: 0;
+    left: auto;
+    transform: none;
+  }
+
+  .user-menu::before {
+    right: 24px;
+    transform: rotate(45deg);
   }
 
   .profile-modal-backdrop {
-  padding: 14px;
-}
+    padding: 14px;
+  }
 
-.profile-modal-clean {
-  width: calc(100vw - 28px);
-  max-height: calc(100vh - 28px);
+  .profile-modal-clean {
+    width: calc(100vw - 28px);
+    max-height: calc(100vh - 28px);
 
-  padding: 14px;
+    padding: 14px;
 
-  border-radius: 22px;
-}
+    border-radius: 22px;
+  }
 
-.profile-modal-clean::before {
-  border-radius: 22px;
-}
+  .profile-modal-clean::before {
+    border-radius: 22px;
+  }
 
-.profile-modal-clean .modal-close {
-  top: 12px;
-  right: 12px;
-}
+  .profile-modal-clean .modal-close {
+    top: 12px;
+    right: 12px;
+  }
 
-.modal-close {
-  width: 38px;
-  height: 38px;
-}
+  .modal-close {
+    width: 38px;
+    height: 38px;
+  }
 }
