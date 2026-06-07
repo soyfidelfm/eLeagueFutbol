@@ -6,5 +6,6 @@ export const API_ENDPOINTS = {
   tournaments: `${environment.api.baseUrl}/api/tournaments`,
   matches: `${environment.api.baseUrl}/api/matches`,
   users: `${environment.api.baseUrl}/api/users`,
-  dashboard: `${environment.api.baseUrl}/api/dashboard`
+  dashboard: `${environment.api.baseUrl}/api/dashboard`,
+  gameClubs: `${environment.api.baseUrl}/api/game-clubs`
 };

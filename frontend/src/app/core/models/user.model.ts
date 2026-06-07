@@ -5,6 +5,12 @@ export interface User {
   displayName: string;
   avatarUrl: string;
   timeZone: string;
+
+  clubName: string;
+  gameClubId: string | null;
+  gameClubLeague: string;
+  gamerTag: string;
+
   lastLoginAtUTC: string | null;
   isActive: boolean;
 }
@@ -21,4 +27,8 @@ export interface UpdateUserDto {
   displayName: string;
   avatarUrl: string;
   timeZone: string;
+
+  clubName: string;
+  gameClubId: string | null;
+  gamerTag: string;
 }

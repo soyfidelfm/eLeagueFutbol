@@ -3,7 +3,7 @@ using backend.Features.Seasons.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace backend.Features.Seasons.Controllers;
+namespace backend.Features.Users.Controllers.Controllers;
 
 [Authorize]
 [ApiController]

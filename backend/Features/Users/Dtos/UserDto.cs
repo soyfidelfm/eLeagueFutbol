@@ -13,8 +13,16 @@ public class UserDto
 	public string AvatarUrl { get; set; } = string.Empty;
 
 	public bool IsActive { get; set; }
+
 	public string TimeZone { get; set; } = "UTC";
 
+	public string ClubName { get; set; } = string.Empty;
+
+	public Guid? GameClubId { get; set; }
+
+	public string GameClubLeague { get; set; } = string.Empty;
+
+	public string GamerTag { get; set; } = string.Empty;
 	public DateTime? LastLoginAtUTC { get; set; }
 }
 
@@ -25,4 +33,9 @@ public class UpdateUserDto
 	public string AvatarUrl { get; set; } = string.Empty;
 
 	public string TimeZone { get; set; } = "UTC";
+
+	public string ClubName { get; set; } = string.Empty;
+
+	public Guid? GameClubId { get; set; }
+	public string GamerTag { get; set; } = string.Empty;
 }

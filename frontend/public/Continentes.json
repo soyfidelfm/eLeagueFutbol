@@ -1,0 +1,33 @@
+{
+    "success": true,
+    "data": [
+        {
+            "id": 2,
+            "value": "Europe"
+        },
+        {
+            "id": 6,
+            "value": "Asia"
+        },
+        {
+            "id": 0,
+            "value": "South America"
+        },
+        {
+            "id": 1,
+            "value": "North America"
+        },
+        {
+            "id": 8,
+            "value": "Africa"
+        },
+        {
+            "id": 7,
+            "value": "Oceania"
+        },
+        {
+            "id": 5,
+            "value": "Antarctica"
+        }
+    ]
+}

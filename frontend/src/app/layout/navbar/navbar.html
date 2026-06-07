@@ -49,21 +49,10 @@
       <span class="notification-dot">3</span>
     </button>
 
-    <div class="coins-box">
-      <i class="fa-solid fa-coins"></i>
-      <strong>25,680</strong>
-    </div>
-
     <!-- USER -->
-    <div
-      class="profile-box"
-      *ngIf="auth.user$ | async as user"
-      (click)="toggleUserMenu($event)">
+    <div class="profile-box" *ngIf="auth.user$ | async as user" (click)="toggleUserMenu($event)">
 
-      <img
-        [src]="user.picture"
-        [alt]="user.name"
-      />
+      <img [src]="user.picture" [alt]="user.name" />
 
       <div class="profile-info">
         <strong>{{ user.name }}</strong>
@@ -73,15 +62,12 @@
       <div class="online-dot"></div>
 
       <!-- USER MENU -->
-      <div
-        class="user-menu"
-        *ngIf="showUserMenu"
-        (click)="$event.stopPropagation()">
+      <div class="user-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
 
-        <button type="button" (click)="openProfileModal()">
-          <i class="fa-regular fa-user"></i>
-          <span>Profile</span>
-        </button>
+        <button type="button" (click)="openProfileModal($event)">
+  <i class="fa-regular fa-user"></i>
+  <span>Profile</span>
+</button>
 
         <button type="button" (click)="logout()">
           <i class="fa-solid fa-right-from-bracket"></i>
@@ -96,15 +82,14 @@
 
 </header>
 
-<!-- PROFILE MODAL -->
+<!-- PROFILE POPUP -->
 <div
   class="profile-modal-backdrop"
   *ngIf="showProfileModal"
   (click)="closeProfileModal()">
 
   <div
-    class="profile-modal"
-    *ngIf="auth.user$ | async as user"
+    class="profile-modal-clean"
     (click)="$event.stopPropagation()">
 
     <button
@@ -114,15 +99,20 @@
       <i class="fa-solid fa-xmark"></i>
     </button>
 
-    <img
-      [src]="user.picture"
-      [alt]="user.name"
-    />
-
-    <h2>{{ user.name }}</h2>
-
-    <p>{{ user.email }}</p>
+    <app-profile
+      (saved)="onProfileSaved()">
+    </app-profile>
 
   </div>
+</div>
+
+<!-- TOAST -->
+<div
+  class="toast-success"
+  *ngIf="showToast">
+
+  <i class="fa-solid fa-circle-check"></i>
+
+  <span>{{ toastMessage }}</span>
 
 </div>

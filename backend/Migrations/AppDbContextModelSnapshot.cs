@@ -227,6 +227,10 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("ClubName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAtUTC")
                         .HasColumnType("timestamp with time zone");
 
@@ -238,6 +242,13 @@ namespace backend.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("GameClubId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("GamerTag")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -316,6 +327,9 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("AttackRating")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasColumnType("text");
@@ -329,6 +343,12 @@ namespace backend.Migrations
 
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("DefenseRating")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ExternalTeamId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -344,7 +364,21 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("MidfieldRating")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("OverallRating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StadiumName")
                         .IsRequired()
                         .HasColumnType("text");
 

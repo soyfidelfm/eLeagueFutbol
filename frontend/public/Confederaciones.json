@@ -1,0 +1,33 @@
+{
+    "success": true,
+    "data": [
+        {
+            "id": 4,
+            "value": "CONMEBOL"
+        },
+        {
+            "id": 6,
+            "value": "UEFA"
+        },
+        {
+            "id": 2,
+            "value": "CAF"
+        },
+        {
+            "id": 1,
+            "value": "AFC"
+        },
+        {
+            "id": 3,
+            "value": "CONCACAF"
+        },
+        {
+            "id": 5,
+            "value": "OFC"
+        },
+        {
+            "id": 7,
+            "value": "NON"
+        }
+    ]
+}

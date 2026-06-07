@@ -1,80 +1,201 @@
 <section class="profile-page">
-
   <div class="profile-card">
 
     <div class="profile-header">
-
-      <div>
+      <div class="profile-title">
         <span class="eyebrow">PLAYER SETTINGS</span>
 
         <h2>My Profile</h2>
 
         <p class="subtitle">
-          Edit your eLeagueFutbol identity.
+          Customize your eLeagueFutbol identity and match timezone.
         </p>
       </div>
 
       <div class="avatar-preview" *ngIf="form.avatarUrl">
         <img [src]="form.avatarUrl" alt="Avatar" />
+        <span class="avatar-status"></span>
       </div>
-
     </div>
 
     <div *ngIf="isLoading" class="message">
-      Loading profile...
+      <i class="fa-solid fa-circle-notch fa-spin"></i>
+      <span>Loading profile...</span>
     </div>
 
-    <div *ngIf="errorMessage" class="error">
-      {{ errorMessage }}
+    <div *ngIf="!isLoading && errorMessage" class="error">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>{{ errorMessage }}</span>
     </div>
 
-    <div *ngIf="successMessage" class="success">
-      {{ successMessage }}
+    <div *ngIf="!isLoading && successMessage" class="success">
+      <i class="fa-solid fa-circle-check"></i>
+      <span>{{ successMessage }}</span>
     </div>
 
     <form *ngIf="!isLoading && user" (ngSubmit)="save()">
 
       <label>
-        Display Name
+        <span>
+          <i class="fa-regular fa-user"></i>
+          Display Name
+        </span>
+
         <input
           type="text"
           name="displayName"
           [(ngModel)]="form.displayName"
-        />
+          autocomplete="name"
+          placeholder="Enter your player name" />
       </label>
 
       <label>
-        Avatar URL
+        <span>
+          <i class="fa-regular fa-image"></i>
+          Avatar URL
+        </span>
+
         <input
           type="text"
           name="avatarUrl"
           [(ngModel)]="form.avatarUrl"
-        />
+          autocomplete="off"
+          placeholder="https://example.com/avatar.png" />
+      </label>
+
+      <div class="team-selection-grid">
+
+        <label>
+          <span>
+            <i class="fa-solid fa-trophy"></i>
+            League
+          </span>
+
+          <mat-form-field class="profile-select" appearance="outline">
+            <input
+              type="text"
+              matInput
+              #leagueTrigger="matAutocompleteTrigger"
+              name="leagueSearch"
+              [(ngModel)]="leagueSearchText"
+              (ngModelChange)="filterLeagues()"
+              [matAutocomplete]="leagueAuto"
+              placeholder="Search league" />
+
+            <mat-autocomplete
+              #leagueAuto="matAutocomplete"
+              (optionSelected)="selectLeague($event.option.value); leagueTrigger.closePanel()">
+
+              <mat-option
+                *ngFor="let league of filteredLeagues"
+                [value]="league">
+                {{ league }}
+              </mat-option>
+
+            </mat-autocomplete>
+          </mat-form-field>
+        </label>
+
+        <label>
+          <span>
+            <i class="fa-solid fa-shield-halved"></i>
+            Team
+          </span>
+
+          <mat-form-field class="profile-select" appearance="outline">
+            <input
+              type="text"
+              matInput
+              #teamTrigger="matAutocompleteTrigger"
+              name="teamSearch"
+              [(ngModel)]="teamSearchText"
+              (ngModelChange)="filterTeams()"
+              [matAutocomplete]="teamAuto"
+              [disabled]="!selectedLeague"
+              placeholder="Search team" />
+
+            <mat-autocomplete
+              #teamAuto="matAutocomplete"
+              (optionSelected)="selectTeam($event.option.value); teamTrigger.closePanel()">
+
+              <mat-option
+                *ngFor="let club of filteredGameClubs"
+                [value]="club">
+                {{ club.name }}
+              </mat-option>
+
+            </mat-autocomplete>
+          </mat-form-field>
+        </label>
+
+      </div>
+
+      <label>
+        <span>
+          <i class="fa-solid fa-futbol"></i>
+          Club Name
+        </span>
+
+        <input
+          type="text"
+          name="clubName"
+          [(ngModel)]="form.clubName"
+          autocomplete="off"
+          placeholder="Enter your club name" />
       </label>
 
       <label>
-        Time Zone
-        <select
-  name="timeZone"
-  [(ngModel)]="form.timeZone">
+        <span>
+          <i class="fa-solid fa-gamepad"></i>
+          PS ID / Gamertag
+        </span>
 
-  <option
-    *ngFor="let zone of timeZones"
-    [value]="zone">
-
-    {{ zone }}
-
-  </option>
-
-</select>
+        <input
+          type="text"
+          name="gamerTag"
+          [(ngModel)]="form.gamerTag"
+          autocomplete="off"
+          placeholder="Enter your PS ID or Gamertag" />
       </label>
 
-      <button type="submit" [disabled]="isSaving">
-        {{ isSaving ? 'Saving...' : 'Save Changes' }}
+      <label>
+        <span>
+          <i class="fa-regular fa-clock"></i>
+          Time Zone
+        </span>
+
+        <mat-form-field class="timezone-field" appearance="outline">
+          <mat-select
+            name="timeZone"
+            [(ngModel)]="form.timeZone">
+
+            <mat-option
+              *ngFor="let zone of timeZones"
+              [value]="zone">
+              {{ zone }}
+            </mat-option>
+
+          </mat-select>
+        </mat-form-field>
+      </label>
+
+      <button
+        class="btn-primary"
+        type="button"
+        [disabled]="isSaving"
+        (click)="save()">
+
+        <i
+          class="fa-solid"
+          [ngClass]="isSaving ? 'fa-circle-notch fa-spin' : 'fa-floppy-disk'">
+        </i>
+
+        <span>
+          {{ isSaving ? 'Saving profile...' : 'Save Changes' }}
+        </span>
       </button>
 
     </form>
 
   </div>
-
 </section>

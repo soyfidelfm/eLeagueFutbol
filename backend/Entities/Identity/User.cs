@@ -22,6 +22,11 @@ public class User : BaseEntity
 
 	public bool IsActive { get; set; } = true;
 
+	public string ClubName { get; set; } = string.Empty;
+
+	public Guid? GameClubId { get; set; }
+	public string GamerTag { get; set; } = string.Empty;
+
 	// Navigation
 
 	public ICollection<TeamMember> TeamMemberships { get; set; }

@@ -20,7 +20,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IGameClubService, GameClubService>();
+//builder.Services.AddScoped<IGameClubService, GameClubService>();
+builder.Services.AddHttpClient<IGameClubService, GameClubService>();
 
 builder.Services.AddCors(options =>
 {
