@@ -430,7 +430,7 @@
 .stream-placeholder img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit:contain;
   opacity: .42;
   filter: saturate(1.25) contrast(1.1);
 }
@@ -585,6 +585,237 @@
     );
 
   animation: loadingBar 1.4s ease-in-out infinite;
+}
+
+// JOINSEASON
+.season-join-banner {
+  margin-bottom: 22px;
+  padding: 22px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  border: 1px solid rgba(0, 255, 136, .28);
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0, 255, 136, .16),
+      rgba(12, 18, 28, .88)
+    );
+
+  box-shadow:
+    0 0 30px rgba(0, 255, 136, .10),
+    inset 0 0 20px rgba(255, 255, 255, .03);
+}
+
+.season-join-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.season-join-content .eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #00ff88;
+}
+
+.season-join-content h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.season-join-content p {
+  margin: 0;
+  color: rgba(255, 255, 255, .72);
+}
+
+.season-join-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.join-btn,
+.registered-btn {
+  min-width: 160px;
+  height: 48px;
+
+  border: none;
+  border-radius: 999px;
+
+  font-weight: 900;
+  letter-spacing: .5px;
+
+  cursor: pointer;
+}
+
+.join-btn {
+  color: #04100a;
+  background: linear-gradient(135deg, #00ff88, #a6ffcb);
+  box-shadow: 0 0 20px rgba(0, 255, 136, .35);
+}
+
+.join-btn:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
+
+.registered-btn {
+  color: #00ff88;
+  background: rgba(0, 255, 136, .12);
+  border: 1px solid rgba(0, 255, 136, .35);
+  cursor: default;
+}
+
+// MODAL
+.season-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, .72);
+  backdrop-filter: blur(10px);
+}
+
+.season-modal {
+  position: relative;
+
+  width: min(460px, calc(100% - 32px));
+
+  padding: 28px;
+
+  border-radius: 24px;
+  border: 1px solid rgba(0, 255, 136, .35);
+
+  background: rgba(6, 12, 18, .96);
+
+  box-shadow:
+    0 0 40px rgba(0, 255, 136, .18),
+    inset 0 0 24px rgba(255, 255, 255, .03);
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+
+  border: none;
+  background: transparent;
+
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.season-modal .eyebrow {
+  color: #00ff88;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.season-modal h2 {
+  margin: 10px 0 8px;
+  color: white;
+}
+
+.season-modal p {
+  margin: 0 0 20px;
+  color: rgba(255, 255, 255, .68);
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-field label {
+  color: rgba(255, 255, 255, .75);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.modal-field select {
+  height: 46px;
+
+  padding: 0 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0, 255, 136, .28);
+
+  color: white;
+  background: rgba(255, 255, 255, .06);
+}
+
+.modal-error {
+  margin-top: 14px;
+  color: #ff6b6b;
+  font-weight: 700;
+}
+
+.modal-actions {
+  margin-top: 24px;
+
+  display: flex;
+  gap: 12px;
+}
+
+.cancel-btn,
+.confirm-btn {
+  flex: 1;
+  height: 46px;
+
+  border-radius: 999px;
+  border: none;
+
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  color: white;
+  background: rgba(255, 255, 255, .08);
+}
+
+.confirm-btn {
+  color: #031008;
+  background: linear-gradient(135deg, #00ff88, #9dffc7);
+}
+
+.confirm-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .season-join-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 18px;
+  }
+
+  .season-join-content h2 {
+    font-size: 22px;
+  }
+
+  .season-join-actions,
+  .join-btn,
+  .registered-btn {
+    width: 100%;
+  }
 }
 
 @keyframes loadingSpin {

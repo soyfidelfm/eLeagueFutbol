@@ -78,6 +78,36 @@ namespace backend.Migrations
                     b.ToTable("Matches");
                 });
 
+            modelBuilder.Entity("SeasonRegistration", b =>
+                {
+                    b.Property<Guid>("SeasonRegistrationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GameClubId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("RegisteredAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("SeasonRegistrationId");
+
+                    b.HasIndex("GameClubId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("SeasonId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("SeasonRegistrations");
+                });
+
             modelBuilder.Entity("Tournament", b =>
                 {
                     b.Property<Guid>("TournamentId")
@@ -511,9 +541,15 @@ namespace backend.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("MaxPlayers")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("RegistrationOpen")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
@@ -554,6 +590,33 @@ namespace backend.Migrations
                     b.Navigation("HomeTeam");
 
                     b.Navigation("Tournament");
+                });
+
+            modelBuilder.Entity("SeasonRegistration", b =>
+                {
+                    b.HasOne("backend.Entities.Teams.GameClub", "GameClub")
+                        .WithMany()
+                        .HasForeignKey("GameClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Tournaments.Season", "Season")
+                        .WithMany("Registrations")
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Identity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GameClub");
+
+                    b.Navigation("Season");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Tournament", b =>
@@ -670,6 +733,8 @@ namespace backend.Migrations
 
             modelBuilder.Entity("backend.Entities.Tournaments.Season", b =>
                 {
+                    b.Navigation("Registrations");
+
                     b.Navigation("Tournaments");
                 });
 #pragma warning restore 612, 618

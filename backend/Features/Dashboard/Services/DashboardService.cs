@@ -20,23 +20,37 @@ public class DashboardService : IDashboardService
 	public async Task<DashboardDto> GetAsync(string timeZone, CancellationToken ct)
 	{
 		var weekStartUtc = DateTimeHelper.GetStartOfWeekUtc(timeZone);
+		var weekEndUtc = weekStartUtc.AddDays(7);
 
-		var usersCount = await _context.Users.CountAsync(ct);
-		var teamsCount = await _context.Teams.CountAsync(ct);
+		var usersCount = await _context.Users
+			.CountAsync(x => x.IsActive, ct);
+
+		var teamsCount = await _context.Teams
+			.CountAsync(ct);
 
 		var liveMatchesCount = await _context.Matches
 			.CountAsync(x => x.Status == MatchStatus.Live, ct);
 
 		var matchesThisWeekCount = await _context.Matches
-			.CountAsync(x => x.MatchDate >= weekStartUtc, ct);
+			.CountAsync(x =>
+				x.MatchDate >= weekStartUtc &&
+				x.MatchDate < weekEndUtc,
+				ct);
 
 		var currentSeason = await _context.Seasons
+			.Where(x => x.IsActive && x.IsCurrent)
+			.OrderByDescending(x => x.StartDate)
+			.FirstOrDefaultAsync(ct);
+
+		currentSeason ??= await _context.Seasons
+			.Where(x => x.IsActive)
 			.OrderByDescending(x => x.StartDate)
 			.FirstOrDefaultAsync(ct);
 
 		var rankings = await _context.PlayerRankings
 			.Include(x => x.User)
 			.OrderByDescending(x => x.Points)
+			.ThenByDescending(x => x.GoalDifference)
 			.Take(10)
 			.ToListAsync(ct);
 
@@ -49,16 +63,19 @@ public class DashboardService : IDashboardService
 			.FirstOrDefaultAsync(ct);
 
 		var activeMatches = await _context.Matches
+			.Include(x => x.Tournament)
 			.Include(x => x.HomeTeam)
 			.Include(x => x.AwayTeam)
 			.Where(x =>
 				x.Status == MatchStatus.Live ||
+				x.Status == MatchStatus.WarmingUp ||
 				x.Status == MatchStatus.Scheduled)
 			.OrderBy(x => x.MatchDate)
 			.Take(3)
 			.ToListAsync(ct);
 
 		var upcomingMatches = await _context.Matches
+			.Include(x => x.Tournament)
 			.Include(x => x.HomeTeam)
 			.Include(x => x.AwayTeam)
 			.Where(x => x.Status == MatchStatus.Scheduled)
@@ -83,9 +100,14 @@ public class DashboardService : IDashboardService
 			.Take(5)
 			.Select(x => new ActivityDto
 			{
-				Name = x.User.DisplayName,
+				Name = string.IsNullOrWhiteSpace(x.User.DisplayName)
+					? x.User.Email
+					: x.User.DisplayName,
+
 				Text = x.Text,
+
 				Time = DateTimeHelper.GetRelativeTime(x.CreatedAtUTC),
+
 				Avatar = string.IsNullOrWhiteSpace(x.User.AvatarUrl)
 					? "/images/avatar1.png"
 					: x.User.AvatarUrl
@@ -96,57 +118,69 @@ public class DashboardService : IDashboardService
 
 		return new DashboardDto
 		{
+			CurrentSeasonId = currentSeason?.SeasonId,
+			CurrentSeasonName = currentSeason?.Name,
 			Kpis =
 			[
 				new()
-				{
-					Label = "Season",
-					Value = currentSeason?.Name ?? "No Season",
-					Sub = "Current Season"
-				},
-				new()
-				{
-					Label = "Players",
-					Value = usersCount.ToString("N0"),
-					Sub = "Registered"
-				},
-				new()
-				{
-					Label = "Teams",
-					Value = teamsCount.ToString("N0"),
-					Sub = "Active Clubs"
-				},
-				new()
-				{
-					Label = "Live Now",
-					Value = liveMatchesCount.ToString(),
-					Sub = "Matches"
-				},
-				new()
-				{
-					Label = "This Week",
-					Value = matchesThisWeekCount.ToString(),
-					Sub = "Matches Played"
-				}
+			{
+				Label = "Season",
+				Value = currentSeason?.Name ?? "No Season",
+				Sub = "Current Season"
+			},
+			new()
+			{
+				Label = "Players",
+				Value = usersCount.ToString("N0"),
+				Sub = "Registered"
+			},
+			new()
+			{
+				Label = "Teams",
+				Value = teamsCount.ToString("N0"),
+				Sub = "Active Clubs"
+			},
+			new()
+			{
+				Label = "Live Now",
+				Value = liveMatchesCount.ToString("N0"),
+				Sub = "Matches"
+			},
+			new()
+			{
+				Label = "This Week",
+				Value = matchesThisWeekCount.ToString("N0"),
+				Sub = "Scheduled"
+			}
 			],
 
 			Leaderboard = rankings
 				.Select((x, index) => new PlayerLeaderboardDto
 				{
 					Rank = index + 1,
-					Name = x.User.DisplayName,
+
+					Name = string.IsNullOrWhiteSpace(x.User.DisplayName)
+						? x.User.Email
+						: x.User.DisplayName,
+
 					Points = x.Points,
+
 					Gd = x.GoalDifference >= 0
 						? $"+{x.GoalDifference}"
 						: x.GoalDifference.ToString(),
+
 					Record = $"{x.Wins}/{x.Losses}",
+
 					Avatar = string.IsNullOrWhiteSpace(x.User.AvatarUrl)
 						? "/images/avatar1.png"
 						: x.User.AvatarUrl,
-					Form = x.Form
-						.Split(',', StringSplitOptions.RemoveEmptyEntries)
-						.Select(f => f.Trim())
-						.ToList()
+
+					Form = string.IsNullOrWhiteSpace(x.Form)
+						? []
+						: x.Form
+							.Split(',', StringSplitOptions.RemoveEmptyEntries)
+							.Select(f => f.Trim())
+							.ToList()
 				})
 				.ToList(),
 
@@ -168,9 +202,7 @@ public class DashboardService : IDashboardService
 				{
 					Home = x.HomeTeam.Name,
 					Away = x.AwayTeam.Name,
-					Date = DateTimeHelper.FormatLocal(
-						x.MatchDate,
-						timeZone),
+					Date = DateTimeHelper.FormatLocal(x.MatchDate, timeZone),
 					Stage = x.Tournament?.Name ?? "Scheduled"
 				})
 				.ToList(),
@@ -181,9 +213,12 @@ public class DashboardService : IDashboardService
 				? null
 				: new FeaturedPlayerDto
 				{
-					Name = topPlayer.User.DisplayName,
+					Name = string.IsNullOrWhiteSpace(topPlayer.User.DisplayName)
+						? topPlayer.User.Email
+						: topPlayer.User.DisplayName,
+
 					Rank = 1,
-					Rating = 91,
+					Rating = Math.Min(99, 80 + topPlayer.Wins),
 					Image = string.IsNullOrWhiteSpace(topPlayer.User.AvatarUrl)
 						? "/images/player1.png"
 						: topPlayer.User.AvatarUrl,

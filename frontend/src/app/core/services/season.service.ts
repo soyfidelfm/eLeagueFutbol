@@ -4,11 +4,12 @@ import { Observable } from 'rxjs';
 
 import { ApiService } from '../services/api.service.ts';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
-
 import {
   Season,
   CreateSeasonDto,
-  UpdateSeasonDto
+  UpdateSeasonDto,
+  RegisterSeasonDto,
+  SeasonRegistration
 } from '../models/season.model';
 
 @Injectable({
@@ -51,6 +52,23 @@ export class SeasonService extends ApiService {
   remove(id: string): Observable<void> {
   return super.delete<void>(
     `${API_ENDPOINTS.seasons}/${id}`
+  );
+}
+register(
+  seasonId: string,
+  dto: RegisterSeasonDto
+): Observable<SeasonRegistration> {
+  return super.post<SeasonRegistration>(
+    `${API_ENDPOINTS.seasons}/${seasonId}/register`,
+    dto
+  );
+}
+
+isRegistered(
+  seasonId: string
+): Observable<boolean> {
+  return super.get<boolean>(
+    `${API_ENDPOINTS.seasons}/${seasonId}/is-registered`
   );
 }
 }

@@ -27,9 +27,28 @@ public class AppDbContext : DbContext
 	public DbSet<ActivityFeed> ActivityFeeds => Set<ActivityFeed>();
 	public DbSet<NewsArticle> NewsArticles => Set<NewsArticle>();
 	public DbSet<GameClub> GameClubs { get; set; }
+	public DbSet<SeasonRegistration> SeasonRegistrations => Set<SeasonRegistration>();
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);
+		modelBuilder.Entity<SeasonRegistration>()
+	.HasIndex(x => new { x.SeasonId, x.UserId })
+	.IsUnique();
+
+		modelBuilder.Entity<SeasonRegistration>()
+			.HasOne(x => x.Season)
+			.WithMany(x => x.Registrations)
+			.HasForeignKey(x => x.SeasonId);
+
+		modelBuilder.Entity<SeasonRegistration>()
+			.HasOne(x => x.User)
+			.WithMany()
+			.HasForeignKey(x => x.UserId);
+
+		modelBuilder.Entity<SeasonRegistration>()
+			.HasOne(x => x.GameClub)
+			.WithMany()
+			.HasForeignKey(x => x.GameClubId);
 
 		modelBuilder.Entity<PlayerRanking>(entity =>
 		{

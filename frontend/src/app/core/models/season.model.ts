@@ -12,6 +12,9 @@ export interface Season {
 
   createdAtUTC: string;
   updatedAtUTC?: string | null;
+
+  registrationOpen: boolean;
+maxPlayers: number;
 }
 
 export interface CreateSeasonDto {
@@ -25,6 +28,7 @@ export interface CreateSeasonDto {
 
   isCurrent: boolean;
   isActive: boolean;
+
 }
 
 export interface UpdateSeasonDto {
@@ -38,4 +42,17 @@ export interface UpdateSeasonDto {
 
   isCurrent: boolean;
   isActive: boolean;
+}
+export interface RegisterSeasonDto {
+  gameClubId: string;
+}
+
+export interface SeasonRegistration {
+  seasonRegistrationId: string;
+
+  seasonId: string;
+  userId: string;
+  gameClubId: string;
+
+  registeredAtUTC: string;
 }

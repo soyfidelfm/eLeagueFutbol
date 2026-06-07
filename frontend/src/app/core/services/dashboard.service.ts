@@ -6,27 +6,9 @@ import { ApiService } from '../services/api.service.ts';
 
 import { API_ENDPOINTS } from '../constants/api-endpoints';
 
-import { Activity } from '../models/activity.model';
-import { FeaturedPlayer } from '../models/featuredplayer.model';
-import { Kpi } from '../models/kpi.model';
-import { Match } from '../models/match.model';
-import { MatchOfWeek } from '../models/matchofweek.model';
-import { MyStats } from '../models/mystats.model';
-import { NewsItem } from '../models/newsitem.model';
-import { Player } from '../models/player.model';
-import { UpcomingMatch } from '../models/upcomingmatch.model';
+import { DashboardResponse } from '../models/dashboard-response.model';
 
-export interface DashboardResponse {
-  kpis: Kpi[];
-  leaderboard: Player[];
-  matchOfWeek: MatchOfWeek | null;
-  matches: Match[];
-  upcomingMatches: UpcomingMatch[];
-  news: NewsItem[];
-  playerOfWeek: FeaturedPlayer | null;
-  myStats: MyStats;
-  activities: Activity[];
-}
+
 
 @Injectable({
   providedIn: 'root'

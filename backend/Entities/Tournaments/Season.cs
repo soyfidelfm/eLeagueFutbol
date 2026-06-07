@@ -21,6 +21,11 @@ public class Season : BaseEntity
 	public bool IsCurrent { get; set; }
 
 	public bool IsActive { get; set; }
+	public bool RegistrationOpen { get; set; } = false;
+	public int MaxPlayers { get; set; } = 32;
+
+	public ICollection<SeasonRegistration> Registrations { get; set; }
+		= new List<SeasonRegistration>();
 
 	// Navigation
 

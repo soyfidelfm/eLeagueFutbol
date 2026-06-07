@@ -19,6 +19,9 @@ public class DashboardDto
 	public MyStatsDto MyStats { get; set; } = new();
 
 	public List<ActivityDto> Activities { get; set; } = [];
+	public Guid? CurrentSeasonId { get; set; }
+
+	public string? CurrentSeasonName { get; set; }
 }
 
 public class KpiDto

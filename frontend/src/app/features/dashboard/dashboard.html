@@ -1,23 +1,109 @@
 <section class="dashboard-content">
 
   <div class="dashboard-loading-overlay" *ngIf="isLoading">
-  <div class="loading-card">
-    <div class="loading-ring"></div>
+    <div class="loading-card">
+      <div class="loading-ring"></div>
 
-    <h2>LOADING ARENA</h2>
-    <p>Syncing live matches, rankings and stats...</p>
+      <h2>LOADING ARENA</h2>
+      <p>Syncing live matches, rankings and stats...</p>
 
-    <div class="loading-bar">
-      <span></span>
+      <div class="loading-bar">
+        <span></span>
+      </div>
     </div>
+  </div>
+
+  <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <ng-container *ngIf="!errorMessage">
+
+    <section class="season-join-banner" *ngIf="currentSeason">
+      <div class="season-join-content">
+        <span class="eyebrow">REGISTRATION OPEN</span>
+
+        <h2>
+          Join {{ currentSeason.name }}
+        </h2>
+
+        <p>
+          Register now to compete in the current season.
+        </p>
+      </div>
+
+      <div class="season-join-actions">
+        <button
+          class="join-btn"
+          *ngIf="!isRegistered"
+          [disabled]="isRegistering"
+          (click)="openRegisterModal()"
+        >
+          {{ isRegistering ? 'Joining...' : 'Join Season' }}
+        </button>
+
+        <button
+          class="registered-btn"
+          *ngIf="isRegistered"
+          disabled
+        >
+          Registered
+        </button>
+      </div>
+
+      <div class="season-modal-backdrop" *ngIf="showRegisterModal">
+  <div class="season-modal">
+
+    <button class="modal-close" (click)="closeRegisterModal()">
+      ×
+    </button>
+
+    <span class="eyebrow">SEASON REGISTRATION</span>
+
+    <h2>
+      Join {{ currentSeason?.name }}
+    </h2>
+
+    <p>
+      Confirm your registration to compete in this season.
+    </p>
+
+    <div class="modal-field">
+      <label>Selected Club</label>
+
+      <select [(ngModel)]="selectedGameClubId">
+        <option value="">Select your club</option>
+
+        <!-- luego aquí metemos tus clubes reales -->
+        <option value="PUT-GAME-CLUB-ID-HERE">
+          Manchester City
+        </option>
+      </select>
+    </div>
+
+    <div class="modal-error" *ngIf="registerMessage">
+      {{ registerMessage }}
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel-btn" (click)="closeRegisterModal()">
+        Cancel
+      </button>
+
+      <button
+        class="confirm-btn"
+        [disabled]="isRegistering"
+        (click)="confirmRegistration()"
+      >
+        {{ isRegistering ? 'Registering...' : 'Confirm Registration' }}
+      </button>
+    </div>
+
   </div>
 </div>
 
-<div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
-  {{ errorMessage }}
-</div>
-
-<ng-container *ngIf="!errorMessage">
+      
+    </section>
 
     <div class="kpi-strip">
       <div class="kpi-card" *ngFor="let kpi of kpis">

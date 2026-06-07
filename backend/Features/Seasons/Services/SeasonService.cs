@@ -110,4 +110,90 @@ public class SeasonService : ISeasonService
 			UpdatedAtUTC = season.UpdatedAtUTC
 		};
 	}
+
+	public async Task<SeasonRegistrationDto> RegisterAsync(
+	Guid seasonId,
+	RegisterSeasonDto dto,
+	CancellationToken ct)
+	{
+		var user = await _db.Users
+			.OrderByDescending(x => x.LastLoginAtUTC)
+			.FirstOrDefaultAsync(ct);
+
+		if (user is null)
+			throw new Exception("User not found.");
+
+		var season = await _db.Seasons
+			.FirstOrDefaultAsync(x => x.SeasonId == seasonId, ct);
+
+		if (season is null)
+			throw new Exception("Season not found.");
+
+		if (!season.IsActive)
+			throw new Exception("Season is not active.");
+
+		if (!season.RegistrationOpen)
+			throw new Exception("Registration is closed.");
+
+		var gameClubExists = await _db.GameClubs
+			.AnyAsync(x => x.GameClubId == dto.GameClubId, ct);
+
+		if (!gameClubExists)
+			throw new Exception("Game club not found.");
+
+		var alreadyRegistered = await _db.SeasonRegistrations
+			.AnyAsync(x =>
+				x.SeasonId == seasonId &&
+				x.UserId == user.UserId,
+				ct);
+
+		if (alreadyRegistered)
+			throw new Exception("User already registered.");
+
+		var totalRegistered = await _db.SeasonRegistrations
+			.CountAsync(x => x.SeasonId == seasonId, ct);
+
+		if (totalRegistered >= season.MaxPlayers)
+			throw new Exception("Season is full.");
+
+		var registration = new SeasonRegistration
+		{
+			SeasonRegistrationId = Guid.NewGuid(),
+			SeasonId = seasonId,
+			UserId = user.UserId,
+			GameClubId = dto.GameClubId,
+			RegisteredAtUTC = DateTime.UtcNow
+		};
+
+		_db.SeasonRegistrations.Add(registration);
+
+		await _db.SaveChangesAsync(ct);
+
+		return new SeasonRegistrationDto
+		{
+			SeasonRegistrationId = registration.SeasonRegistrationId,
+			SeasonId = registration.SeasonId,
+			UserId = registration.UserId,
+			GameClubId = registration.GameClubId,
+			RegisteredAtUTC = registration.RegisteredAtUTC
+		};
+	}
+
+	public async Task<bool> IsUserRegisteredAsync(
+		Guid seasonId,
+		CancellationToken ct)
+	{
+		var user = await _db.Users
+			.OrderByDescending(x => x.LastLoginAtUTC)
+			.FirstOrDefaultAsync(ct);
+
+		if (user is null)
+			return false;
+
+		return await _db.SeasonRegistrations
+			.AnyAsync(x =>
+				x.SeasonId == seasonId &&
+				x.UserId == user.UserId,
+				ct);
+	}
 }
