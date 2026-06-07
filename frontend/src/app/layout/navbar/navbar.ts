@@ -20,6 +20,7 @@ import { MeUserDto } from '../../core/models/user.model';
 })
 export class Navbar implements OnInit {
   me: MeUserDto | null = null;
+  private firstProfileCheckDone = false;
 
   showToast = false;
   toastMessage = '';
@@ -41,6 +42,15 @@ export class Navbar implements OnInit {
   this.userService.getMe().subscribe({
     next: me => {
       this.me = me;
+
+      if (
+        !this.firstProfileCheckDone &&
+        !me.gamerTag?.trim()
+      ) {
+        this.showProfileModal = true;
+        this.firstProfileCheckDone = true;
+      }
+
       this.cdr.detectChanges();
     },
     error: err => {
