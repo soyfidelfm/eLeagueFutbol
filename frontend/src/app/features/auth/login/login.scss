@@ -958,6 +958,83 @@
   margin-bottom: 14px;
 }
 
+
+.email-auth-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+
+  margin: 30px 0 36px;
+}
+
+.email-login-btn,
+.email-signup-btn {
+  padding: 16px 18px;
+
+  border-radius: 16px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  cursor: pointer;
+
+  transition: 0.25s;
+
+  span {
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 0.06rem;
+  }
+
+  small {
+    margin-top: 6px;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    opacity: 0.72;
+  }
+
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.email-login-btn {
+  border: none;
+
+  background: linear-gradient(135deg, #00ff88, #00c96a);
+
+  color: #02150b;
+
+  box-shadow: 0 0 22px rgba(0, 255, 136, 0.16);
+}
+
+.email-signup-btn {
+  background: rgba(255, 255, 255, 0.035);
+
+  border: 1px solid rgba(0, 255, 136, 0.28);
+
+  color: white;
+
+  &:hover {
+    border-color: rgba(0, 255, 136, 0.55);
+    box-shadow: 0 0 22px rgba(0, 255, 136, 0.12);
+  }
+}
+
+@media (max-width: 520px) {
+  .email-auth-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===============================
    KEYFRAMES
 ================================ */
@@ -1068,17 +1145,44 @@
 ================================ */
 
 @media (max-width: 1200px) {
+
   .login-shell {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+  .hero-content h2 {
+    font-size: clamp(48px, 10vw, 72px);
   }
 
   .hero-section {
-    display: none;
+    display: flex;
+    min-height: 500px;
   }
 
   .login-card {
-    margin: 40px auto;
+    margin: 0 auto 40px;
   }
+}
+
+@media (max-width: 768px) {
+
+  .hero-content h2 {
+    font-size: 48px;
+  }
+
+  .hero-content h3 {
+    font-size: 18px;
+  }
+
+  .hero-content h4 {
+    font-size: 18px;
+  }
+
+  .hero-content p {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
 }
 
 @media (max-width: 768px) {

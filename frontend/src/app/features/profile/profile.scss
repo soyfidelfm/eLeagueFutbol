@@ -14,13 +14,13 @@
   font-size: 15px;
   font-weight: 700;
   letter-spacing: .5px;
-
   color: var(--text-main) !important;
 }
 
 :host ::ng-deep .mat-mdc-option {
   font-size: 15px;
   font-weight: 600;
+  color: white !important;
 }
 
 :host ::ng-deep .mat-mdc-select-arrow {
@@ -33,17 +33,9 @@
 
 :host ::ng-deep .mat-mdc-select-panel {
   background: #03130c !important;
-
   border: 1px solid rgba(0,255,136,.25);
-
   border-radius: 16px !important;
-
-  box-shadow:
-    0 0 25px rgba(0,255,136,.18);
-}
-
-:host ::ng-deep .mat-mdc-option {
-  color: white !important;
+  box-shadow: 0 0 25px rgba(0,255,136,.18);
 }
 
 :host ::ng-deep .mat-mdc-option:hover,
@@ -68,12 +60,9 @@
   border-color: rgba(0,255,136,.25) !important;
 }
 
-:host ::ng-deep .mat-mdc-form-field.mat-focused
-  .mdc-notched-outline__leading,
-:host ::ng-deep .mat-mdc-form-field.mat-focused
-  .mdc-notched-outline__notch,
-:host ::ng-deep .mat-mdc-form-field.mat-focused
-  .mdc-notched-outline__trailing {
+:host ::ng-deep .mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+:host ::ng-deep .mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+:host ::ng-deep .mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
   border-color: var(--neon-primary) !important;
 }
 
@@ -111,7 +100,6 @@
     );
 
   box-shadow: var(--shadow-panel);
-
   backdrop-filter: blur(18px);
 }
 
@@ -121,7 +109,6 @@
   justify-content: space-between;
 
   gap: 24px;
-
   margin-bottom: 24px;
 }
 
@@ -150,7 +137,6 @@
 
 .subtitle {
   margin: 8px 0 24px;
-
   color: var(--text-secondary);
 }
 
@@ -167,8 +153,7 @@
   border-radius: 50%;
   border: 2px solid var(--neon-primary);
 
-  box-shadow:
-    0 0 25px var(--neon-glow);
+  box-shadow: 0 0 25px var(--neon-glow);
 }
 
 .avatar-preview img {
@@ -176,7 +161,6 @@
   height: 100%;
 
   object-fit: cover;
-
   border-radius: 50%;
 }
 
@@ -190,13 +174,10 @@
   height: 16px;
 
   border-radius: 50%;
-
   background: var(--success);
-
   border: 3px solid var(--bg-secondary);
 
-  box-shadow:
-    0 0 14px var(--neon-glow);
+  box-shadow: 0 0 14px var(--neon-glow);
 }
 
 form {
@@ -217,11 +198,9 @@ label span {
   color: var(--text-secondary);
 
   font-family: 'Rajdhani', sans-serif;
-
   font-weight: 700;
 
   letter-spacing: .8px;
-
   text-transform: uppercase;
 }
 
@@ -232,7 +211,6 @@ label span i {
 button[type="submit"] {
   width: 100%;
   height: 48px;
-
   margin-top: 8px;
 }
 
@@ -263,18 +241,100 @@ button[type="submit"] {
   }
 }
 
+/* =========================================
+   IPHONE / SMALL MOBILE FIX
+========================================= */
+
 @media (max-width: 480px) {
 
   .profile-page {
-    padding: 14px;
+    height: 100dvh;
+    min-height: 100dvh;
+
+    padding: 10px;
+
+    align-items: flex-start;
+
+    overflow: hidden;
   }
 
   .profile-card {
-    padding: 18px;
-    border-radius: 20px;
+    max-height: calc(100dvh - 20px);
+
+    padding: 14px;
+    border-radius: 18px;
+
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .profile-header {
+    gap: 12px;
+    margin-bottom: 12px;
   }
 
   .profile-card h2 {
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .eyebrow {
+    font-size: 10px;
+    letter-spacing: 1.6px;
+  }
+
+  .subtitle {
+    margin: 4px 0 10px;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  .avatar-preview {
+    width: 70px;
+    height: 70px;
+  }
+
+  .avatar-status {
+    width: 12px;
+    height: 12px;
+    border-width: 2px;
+  }
+
+  form {
+    gap: 12px;
+  }
+
+  label {
+    gap: 5px;
+  }
+
+  label span {
+    font-size: 12px;
+    gap: 7px;
+  }
+
+  :host ::ng-deep .mat-mdc-form-field {
+    min-height: 0;
+  }
+
+  :host ::ng-deep .mat-mdc-text-field-wrapper {
+    min-height: 44px;
+    border-radius: 14px;
+  }
+
+  :host ::ng-deep .mat-mdc-form-field-infix {
+    min-height: 44px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  button[type="submit"] {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+
+    height: 46px;
+    margin-top: 6px;
+
+    box-shadow: 0 -10px 25px rgba(0, 0, 0, .45);
   }
 }

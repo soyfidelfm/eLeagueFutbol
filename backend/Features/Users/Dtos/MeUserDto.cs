@@ -11,7 +11,8 @@ public class MeUserDto
 	public string DisplayName { get; set; } = string.Empty;
 
 	public string AvatarUrl { get; set; } = string.Empty;
-
+	public string ClubName { get; set; } = string.Empty;
+	public Guid? GameClubId { get; set; } = null;
 	public string TimeZone { get; set; } = string.Empty;
 
 	public string? GamerTag { get; set; }

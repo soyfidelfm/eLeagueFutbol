@@ -89,6 +89,9 @@ public class UserService : IUserService
 				TimeZone = timeZone,
 				LastLoginAtUTC = DateTime.UtcNow,
 				IsActive = true,
+				ClubName = string.Empty,
+				GamerTag = string.Empty,
+				GameClubId = null
 			};
 
 			_context.Users.Add(user);
@@ -105,6 +108,13 @@ public class UserService : IUserService
 
 		await _context.SaveChangesAsync();
 
+		var gameClubLeague = user.GameClubId == null
+			? string.Empty
+			: await _context.GameClubs
+				.Where(x => x.GameClubId == user.GameClubId)
+				.Select(x => x.League)
+				.FirstOrDefaultAsync() ?? string.Empty;
+
 		return new UserDto
 		{
 			UserId = user.UserId,
@@ -115,7 +125,10 @@ public class UserService : IUserService
 			TimeZone = user.TimeZone,
 			LastLoginAtUTC = user.LastLoginAtUTC,
 			IsActive = user.IsActive,
+			ClubName = user.ClubName,
+			GameClubId = user.GameClubId,
 			GamerTag = user.GamerTag,
+			GameClubLeague = gameClubLeague
 		};
 	}
 
@@ -183,9 +196,12 @@ public class UserService : IUserService
 			DisplayName = user.DisplayName,
 			AvatarUrl = user.AvatarUrl,
 			TimeZone = user.TimeZone,
+			ClubName = user.ClubName,
+			GameClubId = user.GameClubId,
 			GamerTag = user.GamerTag,
 			IsActive = user.IsActive,
 			LastLoginAtUTC = user.LastLoginAtUTC,
+			
 
 			Claims = principal.Claims
 				.Select(c => new ClaimDto

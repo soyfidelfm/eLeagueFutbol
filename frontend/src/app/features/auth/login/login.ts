@@ -30,11 +30,7 @@ export class Login implements OnDestroy {
       .pipe(
         filter(isAuthenticated => isAuthenticated),
         take(1),
-
-        switchMap(() =>
-          this.auth.user$.pipe(take(1))
-        ),
-
+        switchMap(() => this.auth.user$.pipe(take(1))),
         switchMap(profile => {
           const dto: SyncUserDto = {
             auth0Id: profile?.sub ?? '',
@@ -46,25 +42,29 @@ export class Login implements OnDestroy {
               profile?.name ??
               profile?.['https://thekiddycloud.com/name'] ??
               profile?.nickname ??
+              profile?.email ??
               '',
             avatarUrl: profile?.picture ?? '',
-            timeZone:
-              Intl.DateTimeFormat()
-                .resolvedOptions()
-                .timeZone
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
           };
 
           return this.userService.sync(dto);
         }),
-
         takeUntil(this.destroy$)
       )
       .subscribe({
         next: user => {
           localStorage.setItem('userId', user.userId);
           localStorage.setItem('auth0Id', user.auth0Id);
+          localStorage.setItem('email', user.email ?? '');
           localStorage.setItem('displayName', user.displayName ?? '');
           localStorage.setItem('avatarUrl', user.avatarUrl ?? '');
+          localStorage.setItem('timeZone', user.timeZone ?? 'UTC');
+
+          localStorage.setItem('clubName', user.clubName ?? '');
+          localStorage.setItem('gamerTag', user.gamerTag ?? '');
+          localStorage.setItem('gameClubId', user.gameClubId ?? '');
+          localStorage.setItem('gameClubLeague', user.gameClubLeague ?? '');
 
           this.router.navigateByUrl('/dashboard');
         },
@@ -72,6 +72,35 @@ export class Login implements OnDestroy {
           console.error('Error syncing user:', error);
         }
       });
+  }
+
+  loginWithEmail(): void {
+    this.auth.loginWithRedirect({
+      appState: {
+        target: '/dashboard'
+      },
+      authorizationParams: {
+        connection: 'Username-Password-Authentication',
+        redirect_uri: window.location.origin,
+        audience: 'https://eleaguefutbol-api',
+        scope: 'openid profile email offline_access'
+      }
+    });
+  }
+
+  signUpWithEmail(): void {
+    this.auth.loginWithRedirect({
+      appState: {
+        target: '/dashboard'
+      },
+      authorizationParams: {
+        screen_hint: 'signup',
+        connection: 'Username-Password-Authentication',
+        redirect_uri: window.location.origin,
+        audience: 'https://eleaguefutbol-api',
+        scope: 'openid profile email offline_access'
+      }
+    });
   }
 
   loginWithProvider(provider: string): void {
@@ -94,6 +123,10 @@ export class Login implements OnDestroy {
 
   loginWithMicrosoft(): void {
     this.loginWithProvider('windowslive');
+  }
+
+  loginWithApple(): void {
+    this.loginWithProvider('apple');
   }
 
   enterArena(): void {

@@ -5,14 +5,13 @@ export interface User {
   displayName: string;
   avatarUrl: string;
   timeZone: string;
+  lastLoginAtUTC?: string;
+  isActive: boolean;
 
   clubName: string;
-  gameClubId: string | null;
-  gameClubLeague: string;
+  gameClubId?: string | null;
   gamerTag: string;
-
-  lastLoginAtUTC: string | null;
-  isActive: boolean;
+  gameClubLeague: string;
 }
 
 export interface SyncUserDto {
@@ -44,6 +43,7 @@ export interface MeUserDto {
   isActive: boolean;
   lastLoginAtUTC?: string | null;
   claims: ClaimDto[];
+  clubName: string;
 }
 
 export interface ClaimDto {

@@ -10,9 +10,7 @@
       <div class="hero-grid"></div>
 
       <div class="brand">
-
         <img src="/images/logo-clear.png" alt="eLeagueFutbol Logo" class="brand-logo" />
-
       </div>
 
       <div class="hero-content">
@@ -49,19 +47,33 @@
 
       <div class="login-header auth-header">
 
-  <div>
-    <img
-      src="/images/iOSicon-clear.png"
-      alt="eLeagueFutbol Logo"
-      class="brand-logo"
-    />
-  </div>
+        <div>
+          <img
+            src="/images/iOSicon-clear.png"
+            alt="eLeagueFutbol Logo"
+            class="brand-logo"
+          />
+        </div>
 
-  <h2>LOGIN</h2>
+        <h2>LOGIN</h2>
 
-  <p class="subtitle">
-    Continue your competitive journey.
-  </p>
+        <p class="subtitle">
+          Continue your competitive journey.
+        </p>
+
+      </div>
+
+      <div class="email-auth-actions">
+
+  <button class="email-login-btn" type="button" (click)="loginWithEmail()">
+    <span>LOGIN</span>
+    <!-- <small>Use your email and password</small> -->
+  </button>
+
+  <button class="email-signup-btn" type="button" (click)="signUpWithEmail()">
+    <span>SIGN UP</span>
+    <!-- <small>Create your player account</small> -->
+  </button>
 
 </div>
 
