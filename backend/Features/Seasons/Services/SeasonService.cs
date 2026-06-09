@@ -17,27 +17,24 @@ public class SeasonService : ISeasonService
 
 	public async Task<IReadOnlyList<SeasonDto>> GetAllAsync(CancellationToken ct)
 	{
-		try {
-			return await _db.Seasons
-				.AsNoTracking()
-				.Where(x => !x.IsDeleted)
-				.OrderByDescending(x => x.StartDate)
-				.Select(x => ToDto(x))
-				.ToListAsync(ct);
-		}
-		catch (Exception ex)
-		{
-			var x = ex.Message;
-			return null;
-		}
+		var seasons = await _db.Seasons
+			.AsNoTracking()
+			.Where(x => !x.IsDeleted)
+			.OrderByDescending(x => x.StartDate)
+			.ToListAsync(ct);
+
+		return seasons
+			.Select(ToDto)
+			.ToList();
 	}
+
 	public async Task<SeasonDto?> GetByIdAsync(Guid id, CancellationToken ct)
 	{
-		return await _db.Seasons
+		var season = await _db.Seasons
 			.AsNoTracking()
-			.Where(x => x.SeasonId == id && !x.IsDeleted)
-			.Select(x => ToDto(x))
-			.FirstOrDefaultAsync(ct);
+			.FirstOrDefaultAsync(x => x.SeasonId == id && !x.IsDeleted, ct);
+
+		return season is null ? null : ToDto(season);
 	}
 
 	public async Task<SeasonDto> CreateAsync(CreateSeasonDto dto, CancellationToken ct)
@@ -59,7 +56,6 @@ public class SeasonService : ISeasonService
 		};
 
 		_db.Seasons.Add(season);
-
 		await _db.SaveChangesAsync(ct);
 
 		return ToDto(season);
@@ -105,38 +101,27 @@ public class SeasonService : ISeasonService
 		return true;
 	}
 
-	private static SeasonDto ToDto(Season season)
-	{
-		return new SeasonDto
-		{
-			SeasonId = season.SeasonId,
-			Name = season.Name,
-			Description = season.Description,
-			StartDate = season.StartDate,
-			EndDate = season.EndDate,
-			IsCurrent = season.IsCurrent,
-			IsActive = season.IsActive,
-			RegistrationOpen = season.RegistrationOpen,
-			MaxPlayers = season.MaxPlayers,
-			CreatedAtUTC = season.CreatedAtUTC,
-			UpdatedAtUTC = season.UpdatedAtUTC
-		};
-	}
-
 	public async Task<SeasonRegistrationDto> RegisterAsync(
-	Guid seasonId,
-	RegisterSeasonDto dto,
-	CancellationToken ct)
+		Guid seasonId,
+		RegisterSeasonDto dto,
+		string auth0Id,
+		CancellationToken ct)
 	{
 		var user = await _db.Users
-			.OrderByDescending(x => x.LastLoginAtUTC)
-			.FirstOrDefaultAsync(ct);
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == auth0Id &&
+				x.IsActive &&
+				!x.IsDeleted,
+				ct);
 
 		if (user is null)
 			throw new Exception("User not found.");
 
 		var season = await _db.Seasons
-			.FirstOrDefaultAsync(x => x.SeasonId == seasonId, ct);
+			.FirstOrDefaultAsync(x =>
+				x.SeasonId == seasonId &&
+				!x.IsDeleted,
+				ct);
 
 		if (season is null)
 			throw new Exception("Season not found.");
@@ -178,7 +163,6 @@ public class SeasonService : ISeasonService
 		};
 
 		_db.SeasonRegistrations.Add(registration);
-
 		await _db.SaveChangesAsync(ct);
 
 		return new SeasonRegistrationDto
@@ -193,11 +177,15 @@ public class SeasonService : ISeasonService
 
 	public async Task<bool> IsUserRegisteredAsync(
 		Guid seasonId,
+		string auth0Id,
 		CancellationToken ct)
 	{
 		var user = await _db.Users
-			.OrderByDescending(x => x.LastLoginAtUTC)
-			.FirstOrDefaultAsync(ct);
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == auth0Id &&
+				x.IsActive &&
+				!x.IsDeleted,
+				ct);
 
 		if (user is null)
 			return false;
@@ -207,5 +195,23 @@ public class SeasonService : ISeasonService
 				x.SeasonId == seasonId &&
 				x.UserId == user.UserId,
 				ct);
+	}
+
+	private static SeasonDto ToDto(Season season)
+	{
+		return new SeasonDto
+		{
+			SeasonId = season.SeasonId,
+			Name = season.Name,
+			Description = season.Description,
+			StartDate = season.StartDate,
+			EndDate = season.EndDate,
+			IsCurrent = season.IsCurrent,
+			IsActive = season.IsActive,
+			RegistrationOpen = season.RegistrationOpen,
+			MaxPlayers = season.MaxPlayers,
+			CreatedAtUTC = season.CreatedAtUTC,
+			UpdatedAtUTC = season.UpdatedAtUTC
+		};
 	}
 }

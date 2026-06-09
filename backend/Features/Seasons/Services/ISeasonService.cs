@@ -8,17 +8,27 @@ public interface ISeasonService
 
 	Task<SeasonDto?> GetByIdAsync(Guid id, CancellationToken ct);
 
-	Task<SeasonDto> CreateAsync(CreateSeasonDto dto, CancellationToken ct);
+	Task<SeasonDto> CreateAsync(
+		CreateSeasonDto dto,
+		CancellationToken ct);
 
-	Task<bool> UpdateAsync(Guid id, UpdateSeasonDto dto, CancellationToken ct);
+	Task<bool> UpdateAsync(
+		Guid id,
+		UpdateSeasonDto dto,
+		CancellationToken ct);
 
-	Task<bool> DeleteAsync(Guid id, CancellationToken ct);
+	Task<bool> DeleteAsync(
+		Guid id,
+		CancellationToken ct);
+
 	Task<SeasonRegistrationDto> RegisterAsync(
-	Guid seasonId,
-	RegisterSeasonDto dto,
-	CancellationToken ct);
+		Guid seasonId,
+		RegisterSeasonDto dto,
+		string auth0Id,
+		CancellationToken ct);
 
 	Task<bool> IsUserRegisteredAsync(
 		Guid seasonId,
+		string auth0Id,
 		CancellationToken ct);
 }
