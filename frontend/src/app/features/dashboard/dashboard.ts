@@ -180,7 +180,7 @@ export class Dashboard implements OnInit {
       .pipe(take(1))
       .subscribe({
         next: result => {
-          this.isRegistered = result;
+          this.isRegistered = false;
           this.cdr.detectChanges();
         },
         error: err => {
