@@ -35,13 +35,15 @@ export class Seasons implements OnInit {
   errorMessage = '';
 
   form = {
-    name: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    isCurrent: false,
-    isActive: true
-  };
+  name: '',
+  description: '',
+  startDate: '',
+  endDate: '',
+  isCurrent: false,
+  isActive: true,
+  registrationOpen: true,
+  maxPlayers: 20
+};
 
   constructor(
     private seasonService: SeasonService,
@@ -163,13 +165,15 @@ export class Seasons implements OnInit {
     this.selectedSeasonId = season.seasonId;
 
     this.form = {
-      name: season.name ?? '',
-      description: season.description ?? '',
-      startDate: this.toDateTimeLocal(season.startDate),
-      endDate: this.toDateTimeLocal(season.endDate),
-      isCurrent: !!season.isCurrent,
-      isActive: !!season.isActive
-    };
+  name: season.name ?? '',
+  description: season.description ?? '',
+  startDate: this.toDateTimeLocal(season.startDate),
+  endDate: this.toDateTimeLocal(season.endDate),
+  isCurrent: !!season.isCurrent,
+  isActive: !!season.isActive,
+  registrationOpen: !!season.registrationOpen,
+  maxPlayers: season.maxPlayers ?? 20
+};
 
     this.router.navigate(['/seasons'], {
       queryParams: {
@@ -200,26 +204,30 @@ export class Seasons implements OnInit {
     this.selectedSeasonId = null;
 
     this.form = {
-      name: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      isCurrent: false,
-      isActive: true
-    };
+  name: '',
+  description: '',
+  startDate: '',
+  endDate: '',
+  isCurrent: false,
+  isActive: true,
+  registrationOpen: true,
+  maxPlayers: 20
+};
   }
 
   private buildDto(): CreateSeasonDto {
-    return {
-      name: this.form.name.trim(),
-      description: this.form.description.trim(),
-      startDate: this.form.startDate,
-      endDate: this.form.endDate,
-      timeZone: this.getClientTimeZone(),
-      isCurrent: this.form.isCurrent,
-      isActive: this.form.isActive
-    };
-  }
+  return {
+    name: this.form.name.trim(),
+    description: this.form.description.trim(),
+    startDate: this.form.startDate,
+    endDate: this.form.endDate,
+    timeZone: this.getClientTimeZone(),
+    isCurrent: this.form.isCurrent,
+    isActive: this.form.isActive,
+    registrationOpen: this.form.registrationOpen,
+    maxPlayers: Number(this.form.maxPlayers)
+  };
+}
 
   private getClientTimeZone(): string {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';

@@ -16,6 +16,10 @@ public class SeasonDto
 
 	public bool IsActive { get; set; }
 
+	public bool RegistrationOpen { get; set; }
+
+	public int MaxPlayers { get; set; }
+
 	public DateTime CreatedAtUTC { get; set; }
 
 	public DateTime? UpdatedAtUTC { get; set; }

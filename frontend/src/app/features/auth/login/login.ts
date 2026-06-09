@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '@auth0/auth0-angular';
 import { Router } from '@angular/router';
@@ -20,6 +20,7 @@ export class Login implements OnDestroy {
   showArenaWord = false;
 
   private destroy$ = new Subject<void>();
+  @ViewChild('loginCard') loginCard!: ElementRef<HTMLDivElement>;
 
   constructor(
     public auth: AuthService,
@@ -130,26 +131,36 @@ export class Login implements OnDestroy {
   }
 
   enterArena(): void {
-    this.showArenaIntro = true;
-    this.showArenaWord = false;
+  this.showArenaIntro = true;
+  this.showArenaWord = false;
 
-    setTimeout(() => {
-      this.showArenaWord = true;
-    }, 3000);
+  setTimeout(() => {
+    this.showArenaWord = true;
+  }, 3000);
 
-    setTimeout(() => {
-      this.showArenaIntro = false;
+  setTimeout(() => {
+    this.showArenaIntro = false;
 
-      const loginCard = document.querySelector('.login-card');
+    const loginCard = document.querySelector('.login-card');
 
-      loginCard?.classList.add('login-card-active');
+    loginCard?.classList.add('login-card-active');
 
+    // SOLO EN MÓVIL
+    if (window.innerWidth <= 768) {
       setTimeout(() => {
-        loginCard?.classList.remove('login-card-active');
-      }, 1200);
+        loginCard?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
+    }
 
-    }, 5200);
-  }
+    setTimeout(() => {
+      loginCard?.classList.remove('login-card-active');
+    }, 1200);
+
+  }, 1200);
+}
 
   openExploreModal(): void {
     this.showExploreModal = true;

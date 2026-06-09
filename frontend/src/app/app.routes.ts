@@ -36,10 +36,38 @@ export const routes: Routes = [
       },
 
       {
+        path: 'arena',
+        loadComponent: () =>
+          import('./features/arena/arena')
+            .then(m => m.Arena)
+      },
+
+      {
         path: 'seasons',
         loadComponent: () =>
           import('./features/seasons/seasons')
             .then(m => m.Seasons)
+      },
+
+      {
+        path: 'clubs',
+        loadComponent: () =>
+          import('./features/clubs/clubs')
+            .then(m => m.Clubs)
+      },
+
+      {
+        path: 'rankings',
+        loadComponent: () =>
+          import('./features/rankings/rankings')
+            .then(m => m.Rankings)
+      },
+
+      {
+        path: 'stats',
+        loadComponent: () =>
+          import('./features/stats/stats')
+            .then(m => m.Stats)
       }
 
     ]

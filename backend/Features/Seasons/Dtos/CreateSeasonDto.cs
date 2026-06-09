@@ -15,4 +15,8 @@ public class CreateSeasonDto
 	public bool IsCurrent { get; set; }
 
 	public bool IsActive { get; set; } = true;
+
+	public bool RegistrationOpen { get; set; } = true;
+
+	public int MaxPlayers { get; set; } = 20;
 }

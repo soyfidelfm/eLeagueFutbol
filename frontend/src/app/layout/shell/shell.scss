@@ -80,19 +80,25 @@ app-navbar {
 /* MOBILE / TABLET PORTRAIT */
 
 @media (max-width: 1200px), (orientation: portrait) {
-
   .app-shell {
     flex-direction: column;
-
     background-size: cover;
     background-attachment: scroll;
-
     overflow-x: hidden;
     overflow-y: auto;
   }
 
   app-sidebar {
     display: none;
+  }
+
+  app-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    z-index: 1000;
   }
 
   .main-layout {
@@ -102,25 +108,19 @@ app-navbar {
 
   .page-content {
     flex: 1;
-
     padding: 16px;
-
+    padding-top: 92px; // espacio para navbar fija
+    padding-bottom: 95px; // espacio para footer fijo
     overflow: visible;
   }
 
   app-footer {
-  display: none;
-}
-
-@media (max-width: 1400px), (orientation: portrait) {
-  app-footer {
     display: block;
-    position: relative;
-    z-index: 5;
-  }
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
 
-  .page-content {
-    padding-bottom: 95px;
+    z-index: 1000;
   }
-}
 }

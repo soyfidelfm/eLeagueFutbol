@@ -17,14 +17,20 @@ public class SeasonService : ISeasonService
 
 	public async Task<IReadOnlyList<SeasonDto>> GetAllAsync(CancellationToken ct)
 	{
-		return await _db.Seasons
-			.AsNoTracking()
-			.Where(x => !x.IsDeleted)
-			.OrderByDescending(x => x.StartDate)
-			.Select(x => ToDto(x))
-			.ToListAsync(ct);
+		try {
+			return await _db.Seasons
+				.AsNoTracking()
+				.Where(x => !x.IsDeleted)
+				.OrderByDescending(x => x.StartDate)
+				.Select(x => ToDto(x))
+				.ToListAsync(ct);
+		}
+		catch (Exception ex)
+		{
+			var x = ex.Message;
+			return null;
+		}
 	}
-
 	public async Task<SeasonDto?> GetByIdAsync(Guid id, CancellationToken ct)
 	{
 		return await _db.Seasons
@@ -47,7 +53,9 @@ public class SeasonService : ISeasonService
 			StartDate = startDateUtc,
 			EndDate = endDateUtc,
 			IsCurrent = dto.IsCurrent,
-			IsActive = dto.IsActive
+			IsActive = dto.IsActive,
+			RegistrationOpen = dto.RegistrationOpen,
+			MaxPlayers = dto.MaxPlayers
 		};
 
 		_db.Seasons.Add(season);
@@ -74,6 +82,8 @@ public class SeasonService : ISeasonService
 		season.EndDate = endDateUtc;
 		season.IsCurrent = dto.IsCurrent;
 		season.IsActive = dto.IsActive;
+		season.RegistrationOpen = dto.RegistrationOpen;
+		season.MaxPlayers = dto.MaxPlayers;
 
 		await _db.SaveChangesAsync(ct);
 
@@ -106,6 +116,8 @@ public class SeasonService : ISeasonService
 			EndDate = season.EndDate,
 			IsCurrent = season.IsCurrent,
 			IsActive = season.IsActive,
+			RegistrationOpen = season.RegistrationOpen,
+			MaxPlayers = season.MaxPlayers,
 			CreatedAtUTC = season.CreatedAtUTC,
 			UpdatedAtUTC = season.UpdatedAtUTC
 		};

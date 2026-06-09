@@ -76,12 +76,12 @@ export class Navbar implements OnInit {
   }
 
   logout(): void {
-    this.auth.logout({
-      logoutParams: {
-        returnTo: `${window.location.origin}/login`
-      }
-    });
-  }
+  this.auth.logout({
+    logoutParams: {
+      returnTo: window.location.origin + '/login'
+    }
+  });
+}
 
   onProfileSaved(): void {
     this.showProfileModal = false;

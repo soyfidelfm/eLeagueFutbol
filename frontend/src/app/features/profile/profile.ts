@@ -16,7 +16,6 @@ import {
 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 
 import { finalize } from 'rxjs';
 
@@ -33,8 +32,7 @@ import { GameClubService } from '../../core/services/game-club.service';
     FormsModule,
     MatAutocompleteModule,
     MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule
+    MatInputModule
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.scss'
@@ -76,20 +74,6 @@ export class Profile implements OnInit {
     gamerTag: ''
   };
 
-  timeZones = [
-    'America/Los_Angeles',
-    'America/Denver',
-    'America/Chicago',
-    'America/New_York',
-    'America/Mexico_City',
-    'America/Tijuana',
-    'America/Phoenix',
-    'Europe/London',
-    'Europe/Madrid',
-    'Europe/Paris',
-    'Asia/Tokyo'
-  ];
-
   constructor(
     private userService: UserService,
     private cdr: ChangeDetectorRef,
@@ -103,29 +87,21 @@ export class Profile implements OnInit {
     this.loadUser();
   }
 
+  private getCurrentTimeZone(): string {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  }
+
   private loadLeagues(): void {
     this.gameClubService.getLeagues().subscribe({
       next: leagues => {
         this.leagues = leagues;
         this.filteredLeagues = leagues;
-
         this.cdr.detectChanges();
       },
       error: error => {
         console.error('Error loading leagues:', error);
       }
     });
-  }
-
-  private getCurrentTimeZone(): string {
-    const currentTimeZone =
-      Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-    if (!this.timeZones.includes(currentTimeZone)) {
-      this.timeZones.unshift(currentTimeZone);
-    }
-
-    return currentTimeZone;
   }
 
   loadUser(): void {
@@ -154,18 +130,12 @@ export class Profile implements OnInit {
         next: user => {
           this.user = user;
 
-          const selectedTimeZone =
-            user.timeZone ||
-            this.getCurrentTimeZone();
-
-          if (!this.timeZones.includes(selectedTimeZone)) {
-            this.timeZones.unshift(selectedTimeZone);
-          }
+          const currentTimeZone = this.getCurrentTimeZone();
 
           this.form = {
             displayName: user.displayName ?? '',
             avatarUrl: user.avatarUrl ?? '',
-            timeZone: selectedTimeZone,
+            timeZone: currentTimeZone,
             clubName: user.clubName ?? '',
             gameClubId: user.gameClubId ?? '',
             gamerTag: user.gamerTag ?? ''
@@ -175,6 +145,7 @@ export class Profile implements OnInit {
           this.leagueSearchText = user.gameClubLeague ?? '';
 
           this.selectedGameClubId = user.gameClubId ?? '';
+          this.form.gameClubId = this.selectedGameClubId;
 
           if (this.selectedLeague) {
             this.loadClubsByLeague(this.selectedLeague, true);
@@ -191,9 +162,7 @@ export class Profile implements OnInit {
   }
 
   filterLeagues(): void {
-    const value = this.leagueSearchText
-      .toLowerCase()
-      .trim();
+    const value = this.leagueSearchText.toLowerCase().trim();
 
     this.filteredLeagues = this.leagues.filter(league =>
       league.toLowerCase().includes(value)
@@ -262,9 +231,7 @@ export class Profile implements OnInit {
   }
 
   filterTeams(): void {
-    const value = this.teamSearchText
-      .toLowerCase()
-      .trim();
+    const value = this.teamSearchText.toLowerCase().trim();
 
     this.filteredGameClubs = this.gameClubs.filter(club =>
       club.name.toLowerCase().includes(value)
@@ -307,6 +274,7 @@ export class Profile implements OnInit {
       return;
     }
 
+    this.form.timeZone = this.getCurrentTimeZone();
     this.form.gameClubId = this.selectedGameClubId;
 
     this.isSaving = true;
@@ -324,18 +292,12 @@ export class Profile implements OnInit {
         next: user => {
           this.user = user;
 
-          const selectedTimeZone =
-            user.timeZone ||
-            this.getCurrentTimeZone();
-
-          if (!this.timeZones.includes(selectedTimeZone)) {
-            this.timeZones.unshift(selectedTimeZone);
-          }
+          const currentTimeZone = this.getCurrentTimeZone();
 
           this.form = {
             displayName: user.displayName ?? '',
             avatarUrl: user.avatarUrl ?? '',
-            timeZone: selectedTimeZone,
+            timeZone: currentTimeZone,
             clubName: user.clubName ?? '',
             gameClubId: user.gameClubId ?? '',
             gamerTag: user.gamerTag ?? ''
@@ -345,6 +307,7 @@ export class Profile implements OnInit {
           this.leagueSearchText = user.gameClubLeague ?? '';
 
           this.selectedGameClubId = user.gameClubId ?? '';
+          this.form.gameClubId = this.selectedGameClubId;
 
           if (this.selectedLeague) {
             this.loadClubsByLeague(this.selectedLeague, true);

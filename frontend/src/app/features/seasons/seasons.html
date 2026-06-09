@@ -217,6 +217,24 @@
 
       </div>
 
+      <div class="top-grid">
+  <div class="field-card">
+    <label>Max Players</label>
+
+    <div class="input-wrapper">
+      <span>🎮</span>
+
+      <input
+        type="number"
+        name="maxPlayers"
+        min="2"
+        max="100"
+        [(ngModel)]="form.maxPlayers"
+      />
+    </div>
+  </div>
+</div>
+
       <div class="toggle-grid">
 
         <label class="toggle-card">
@@ -248,6 +266,21 @@
             <p>Allow this season to appear in the platform.</p>
           </div>
         </label>
+
+        <label class="toggle-card">
+  <input
+    type="checkbox"
+    name="registrationOpen"
+    [(ngModel)]="form.registrationOpen"
+  />
+
+  <span class="custom-check"></span>
+
+  <div>
+    <strong>Registration open</strong>
+    <p>Allow players to register for this season.</p>
+  </div>
+</label>
 
       </div>
 

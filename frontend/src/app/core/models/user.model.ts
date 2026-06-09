@@ -43,7 +43,9 @@ export interface MeUserDto {
   isActive: boolean;
   lastLoginAtUTC?: string | null;
   claims: ClaimDto[];
-  clubName: string;
+
+  clubName?: string | null;
+  gameClubId?: string | null;
 }
 
 export interface ClaimDto {

@@ -7,6 +7,7 @@ import { DashboardResponse } from '../../core/models/dashboard-response.model';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { SeasonService } from '../../core/services/season.service';
 import { UserService } from '../../core/services/user.service';
+import { MeUserDto } from '../../core/models/user.model';
 import { GameClubService } from '../../core/services/game-club.service';
 
 import { Activity } from '../../core/models/activity.model';
@@ -24,15 +25,6 @@ interface CurrentSeasonView {
   name: string;
 }
 
-interface MeView {
-  userId?: string | null;
-  email?: string | null;
-  displayName?: string | null;
-  gamerTag?: string | null;
-  teamName?: string | null;
-  avatarUrl?: string | null;
-  clubname?: string | null;
-}
 
 interface GameClubView {
   gameClubId: string;
@@ -61,7 +53,7 @@ export class Dashboard implements OnInit {
   isRegistered = false;
   isRegistering = false;
 
-  me: MeView | null = null;
+  me: MeUserDto | null = null;
   gameClubs: GameClubView[] = [];
   selectedGameClubId = '';
 
@@ -106,10 +98,11 @@ export class Dashboard implements OnInit {
       .getMe()
       .pipe(take(1))
       .subscribe({
-        next: (me: MeView) => {
-          this.me = me;
-          this.cdr.detectChanges();
-        },
+        next: (me: MeUserDto) => {
+  this.me = me;
+  this.selectedGameClubId = me.gameClubId ?? '';
+  this.cdr.detectChanges();
+},
         error: err => {
           console.error('Error loading me', err);
         }
@@ -221,7 +214,7 @@ export class Dashboard implements OnInit {
       return;
     }
 
-    if (!this.me?.teamName?.trim()) {
+    if (!this.me?.clubName?.trim()) {
       this.registerMessage = 'You need to add your Team Name first.';
       return;
     }

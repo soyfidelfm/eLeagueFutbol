@@ -23,9 +23,9 @@
 
   padding: 40px;
 
-  overflow: hidden;
-
-  position: relative;
+   overflow-x: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 .login-shell {
@@ -1165,6 +1165,21 @@
 }
 
 @media (max-width: 768px) {
+  .primary-btn,
+.secondary-btn {
+  height: 40px;
+
+  padding: 0 40px;
+
+  border-radius: 10px;
+
+  font-weight: 900;
+  font-size: 11px;
+
+  cursor: pointer;
+
+  transition: 0.3s;
+}
 
   .hero-content h2 {
     font-size: 48px;
@@ -1208,5 +1223,19 @@
 
   .explore-card {
     min-height: auto;
+  }
+}
+@media (max-width: 768px) {
+  .login-page {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .login-shell {
+    min-height: auto;
+  }
+
+  .login-card {
+    scroll-margin-top: 24px;
   }
 }

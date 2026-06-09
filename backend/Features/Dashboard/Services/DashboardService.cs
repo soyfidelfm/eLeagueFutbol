@@ -22,8 +22,20 @@ public class DashboardService : IDashboardService
 		var weekStartUtc = DateTimeHelper.GetStartOfWeekUtc(timeZone);
 		var weekEndUtc = weekStartUtc.AddDays(7);
 
-		var usersCount = await _context.Users
-			.CountAsync(x => x.IsActive, ct);
+		var currentSeason = await _context.Seasons
+			.Where(x => x.IsActive && x.IsCurrent && !x.IsDeleted)
+			.OrderByDescending(x => x.StartDate)
+			.FirstOrDefaultAsync(ct);
+
+		currentSeason ??= await _context.Seasons
+			.Where(x => x.IsActive && !x.IsDeleted)
+			.OrderByDescending(x => x.StartDate)
+			.FirstOrDefaultAsync(ct);
+
+		var registered = currentSeason is null
+			? 0
+			: await _context.SeasonRegistrations
+				.CountAsync(x => x.SeasonId == currentSeason.SeasonId, ct);
 
 		var teamsCount = await _context.Teams
 			.CountAsync(ct);
@@ -36,16 +48,6 @@ public class DashboardService : IDashboardService
 				x.MatchDate >= weekStartUtc &&
 				x.MatchDate < weekEndUtc,
 				ct);
-
-		var currentSeason = await _context.Seasons
-			.Where(x => x.IsActive && x.IsCurrent)
-			.OrderByDescending(x => x.StartDate)
-			.FirstOrDefaultAsync(ct);
-
-		currentSeason ??= await _context.Seasons
-			.Where(x => x.IsActive)
-			.OrderByDescending(x => x.StartDate)
-			.FirstOrDefaultAsync(ct);
 
 		var rankings = await _context.PlayerRankings
 			.Include(x => x.User)
@@ -120,6 +122,7 @@ public class DashboardService : IDashboardService
 		{
 			CurrentSeasonId = currentSeason?.SeasonId,
 			CurrentSeasonName = currentSeason?.Name,
+
 			Kpis =
 			[
 				new()
@@ -131,15 +134,15 @@ public class DashboardService : IDashboardService
 			new()
 			{
 				Label = "Players",
-				Value = usersCount.ToString("N0"),
+				Value = registered.ToString("N0"),
 				Sub = "Registered"
 			},
-			new()
-			{
-				Label = "Teams",
-				Value = teamsCount.ToString("N0"),
-				Sub = "Active Clubs"
-			},
+			//new()
+			//{
+			//	Label = "Teams",
+			//	Value = teamsCount.ToString("N0"),
+			//	Sub = "Active Clubs"
+			//},
 			new()
 			{
 				Label = "Live Now",
