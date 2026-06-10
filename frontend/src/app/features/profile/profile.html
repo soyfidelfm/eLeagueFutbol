@@ -49,7 +49,7 @@
           placeholder="Enter your player name" />
       </label>
 
-      <label>
+      <label class="full-width">
         <span>
           <i class="fa-regular fa-image"></i>
           Avatar URL
@@ -63,7 +63,7 @@
           placeholder="https://example.com/avatar.png" />
       </label>
 
-      <div class="team-selection-grid">
+      <div class="team-selection-grid full-width">
 
         <label>
           <span>
@@ -158,14 +158,16 @@
           placeholder="Enter your PS ID or Gamertag" />
       </label>
 
-      <!-- <div class="timezone-preview">
+      <!-- 
+      <div class="timezone-preview full-width">
         <i class="fa-regular fa-clock"></i>
         <span>Time Zone</span>
         <strong>{{ form.timeZone }}</strong>
-      </div> -->
+      </div> 
+      -->
 
       <button
-        class="btn-primary"
+        class="btn-primary full-width"
         type="submit"
         [disabled]="isSaving">
 

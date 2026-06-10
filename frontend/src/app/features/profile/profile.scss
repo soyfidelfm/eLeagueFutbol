@@ -505,17 +505,29 @@ button[type="submit"]:disabled {
   }
 
   form {
-    gap: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 14px 10px;
   }
 
   label {
+    min-width: 0;
+
     gap: 8px;
+  }
+
+  label.full-width,
+  .full-width {
+    grid-column: 1 / -1;
   }
 
   label span {
     font-size: 10px;
     gap: 4px;
     letter-spacing: 1px;
+
+    white-space: nowrap;
   }
 
   label span i {
@@ -523,10 +535,21 @@ button[type="submit"]:disabled {
   }
 
   .team-selection-grid {
+    grid-column: 1 / -1;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
     gap: 10px;
   }
 
+  .team-selection-grid label {
+    min-width: 0;
+  }
+
   form > label > input {
+    width: 100%;
+    min-width: 0;
     height: 40px;
 
     padding: 0 14px;
@@ -535,6 +558,10 @@ button[type="submit"]:disabled {
 
     font-size: 13px;
     line-height: 40px;
+  }
+
+  :host ::ng-deep .profile-select {
+    width: 100%;
   }
 
   :host ::ng-deep .profile-select .mat-mdc-text-field-wrapper {
@@ -558,17 +585,21 @@ button[type="submit"]:disabled {
 
     padding: 0 14px !important;
 
-    font-size: 15px !important;
+    font-size: 13px !important;
     font-weight: 800 !important;
     line-height: 40px !important;
   }
 
   .timezone-preview {
+    grid-column: 1 / -1;
+
     padding: 14px 18px;
     border-radius: 18px;
   }
 
   button[type="submit"] {
+    grid-column: 1 / -1;
+
     height: 52px;
 
     margin-top: 4px;
@@ -580,6 +611,8 @@ button[type="submit"]:disabled {
   }
 
   .btn-primary {
+    grid-column: 1 / -1;
+
     height: 46px !important;
 
     font-size: 14px !important;
