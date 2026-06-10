@@ -101,16 +101,14 @@ app-navbar {
 @media (max-width: 1200px), (orientation: portrait) {
 
   .app-shell {
-    flex-direction: column;
-
     height: 100dvh;
     min-height: 100dvh;
+
+    flex-direction: column;
 
     overflow: hidden;
 
     background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
     background-attachment: scroll;
   }
 
@@ -120,7 +118,6 @@ app-navbar {
 
   app-navbar {
     position: fixed;
-
     top: 0;
     left: 0;
     right: 0;
@@ -131,10 +128,7 @@ app-navbar {
   }
 
   app-footer {
-    display: block;
-
     position: fixed;
-
     left: 0;
     right: 0;
     bottom: 0;
@@ -146,7 +140,6 @@ app-navbar {
 
   .main-layout {
     width: 100%;
-
     height: 100dvh;
     min-height: 100dvh;
 
@@ -154,14 +147,12 @@ app-navbar {
   }
 
   .page-content {
-    flex: none;
-
     height: calc(100dvh - 76px - 76px);
 
     margin-top: 76px;
     margin-bottom: 76px;
 
-    padding: 16px;
+    padding: 0;
 
     overflow-y: auto;
     overflow-x: hidden;
