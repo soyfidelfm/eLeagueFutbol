@@ -1,3 +1,7 @@
+/* =========================================
+   APP SHELL
+========================================= */
+
 .app-shell {
   position: relative;
 
@@ -20,6 +24,10 @@
   background-attachment: fixed;
 }
 
+/* =========================================
+   BACKGROUND EFFECTS
+========================================= */
+
 .app-bg-overlay {
   position: fixed;
   inset: 0;
@@ -41,7 +49,9 @@
     );
 }
 
-/* MAIN LAYOUT */
+/* =========================================
+   MAIN LAYOUT
+========================================= */
 
 .main-layout {
   position: relative;
@@ -56,7 +66,9 @@
   min-height: 100vh;
 }
 
-/* PAGE CONTENT */
+/* =========================================
+   PAGE CONTENT
+========================================= */
 
 .page-content {
   position: relative;
@@ -65,11 +77,16 @@
   flex: 1;
 
   overflow-y: auto;
+  overflow-x: hidden;
 
   padding: 24px;
+
+  min-height: 0;
 }
 
-/* LAYERS */
+/* =========================================
+   LAYERS
+========================================= */
 
 app-sidebar,
 app-navbar {
@@ -77,15 +94,24 @@ app-navbar {
   z-index: 2;
 }
 
-/* MOBILE / TABLET PORTRAIT */
+/* =========================================
+   MOBILE / TABLET
+========================================= */
 
 @media (max-width: 1200px), (orientation: portrait) {
+
   .app-shell {
     flex-direction: column;
+
+    height: 100dvh;
+    min-height: 100dvh;
+
+    overflow: hidden;
+
     background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     background-attachment: scroll;
-    overflow-x: hidden;
-    overflow-y: auto;
   }
 
   app-sidebar {
@@ -94,33 +120,52 @@ app-navbar {
 
   app-navbar {
     position: fixed;
+
     top: 0;
     left: 0;
     right: 0;
+
+    height: 76px;
+
+    z-index: 1000;
+  }
+
+  app-footer {
+    display: block;
+
+    position: fixed;
+
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    height: 76px;
 
     z-index: 1000;
   }
 
   .main-layout {
     width: 100%;
-    min-height: 100vh;
+
+    height: 100dvh;
+    min-height: 100dvh;
+
+    overflow: hidden;
   }
 
   .page-content {
-    flex: 1;
+    flex: none;
+
+    height: calc(100dvh - 76px - 76px);
+
+    margin-top: 76px;
+    margin-bottom: 76px;
+
     padding: 16px;
-    padding-top: 92px; // espacio para navbar fija
-    padding-bottom: 95px; // espacio para footer fijo
-    overflow: visible;
-  }
 
-  app-footer {
-    display: block;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
 
-    z-index: 1000;
+    -webkit-overflow-scrolling: touch;
   }
 }
