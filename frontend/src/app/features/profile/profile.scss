@@ -23,7 +23,6 @@
   display: none !important;
 }
 
-/* Autocomplete input box */
 :host ::ng-deep .profile-select .mat-mdc-text-field-wrapper {
   height: 58px !important;
   min-height: 58px !important;
@@ -62,12 +61,10 @@
   font-size: 18px !important;
   font-weight: 800 !important;
   line-height: 58px !important;
-  letter-spacing: 0 !important;
 
   color: var(--text-main) !important;
 }
 
-/* Material outline */
 :host ::ng-deep .mdc-notched-outline__leading,
 :host ::ng-deep .mdc-notched-outline__notch,
 :host ::ng-deep .mdc-notched-outline__trailing {
@@ -80,7 +77,6 @@
   border-color: var(--neon-primary) !important;
 }
 
-/* Dropdown panel */
 :host ::ng-deep .cdk-overlay-pane {
   font-family: 'Rajdhani', sans-serif !important;
 }
@@ -111,8 +107,8 @@
 ========================================= */
 
 .profile-page {
-  min-height: 100%;
   width: 100%;
+  min-height: 100%;
 
   display: flex;
   justify-content: center;
@@ -146,7 +142,6 @@
   backdrop-filter: blur(18px);
 }
 
-/* Header: title left, avatar right */
 .profile-header {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -293,7 +288,6 @@ input {
   gap: 20px;
 }
 
-/* Normal inputs */
 form > label > input {
   height: 58px;
 
@@ -318,7 +312,6 @@ form > label > input:focus {
   box-shadow: 0 0 18px rgba(0, 255, 136, .18);
 }
 
-/* Timezone preview */
 .timezone-preview {
   width: 100%;
   min-width: 0;
@@ -365,7 +358,6 @@ form > label > input:focus {
   font-weight: 800;
 }
 
-/* Save button */
 button[type="submit"] {
   width: 100%;
   height: 64px;
@@ -446,32 +438,30 @@ button[type="submit"]:disabled {
 
 @media (max-width: 480px) {
 
-  @media (max-width: 480px) {
-
   .profile-page {
-    height: auto;
-    min-height: auto;
+    width: 100%;
+    min-height: 100%;
 
-    padding: 12px 12px 0;
+    padding: 12px;
 
     align-items: flex-start;
 
-    overflow-y: visible;
-    overflow-x: hidden;
+    overflow: visible;
   }
 
   .profile-card {
-  max-height: none;
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
 
-  padding: 24px 22px 24px;
+    padding: 24px 22px 120px;
 
-  margin-bottom: 50px;
+    margin-bottom: 0;
 
-  border-radius: 22px;
+    border-radius: 22px;
 
-  overflow: visible;
-}
-}
+    overflow: visible;
+  }
 
   .profile-header {
     grid-template-columns: 1fr auto;
@@ -523,10 +513,10 @@ button[type="submit"]:disabled {
   }
 
   label span {
-  font-size: 10px;
-  gap: 4px;
-  letter-spacing: 1px;
-}
+    font-size: 10px;
+    gap: 4px;
+    letter-spacing: 1px;
+  }
 
   label span i {
     font-size: 15px;
@@ -537,41 +527,41 @@ button[type="submit"]:disabled {
   }
 
   form > label > input {
-  height: 40px;
+    height: 40px;
 
-  padding: 0 14px;
+    padding: 0 14px;
 
-  border-radius: 14px;
+    border-radius: 14px;
 
-  font-size: 13px;
-  line-height: 46px;
-}
+    font-size: 13px;
+    line-height: 40px;
+  }
 
   :host ::ng-deep .profile-select .mat-mdc-text-field-wrapper {
-  height: 40px !important;
-  min-height: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
 
-  border-radius: 14px;
-}
+    border-radius: 14px;
+  }
 
-:host ::ng-deep .profile-select .mat-mdc-form-field-flex {
-  height: 46px !important;
-}
+  :host ::ng-deep .profile-select .mat-mdc-form-field-flex {
+    height: 40px !important;
+  }
 
-:host ::ng-deep .profile-select .mat-mdc-form-field-infix {
-  min-height: 0 !important;
-  padding: 0 !important;
-}
+  :host ::ng-deep .profile-select .mat-mdc-form-field-infix {
+    min-height: 0 !important;
+    padding: 0 !important;
+  }
 
-:host ::ng-deep .profile-select input.mat-mdc-input-element {
-  height: 46px !important;
+  :host ::ng-deep .profile-select input.mat-mdc-input-element {
+    height: 40px !important;
 
-  padding: 0 14px !important;
+    padding: 0 14px !important;
 
-  font-size: 15px !important;
-  font-weight: 800 !important;
-  line-height: 46px !important;
-}
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    line-height: 40px !important;
+  }
 
   .timezone-preview {
     padding: 14px 18px;
