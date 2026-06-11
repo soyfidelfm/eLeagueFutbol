@@ -78,9 +78,10 @@ export class Navbar implements OnInit {
   logout(): void {
   this.auth.logout({
     logoutParams: {
-      returnTo: window.location.origin + '/login'
+      returnTo: window.location.origin
     }
   });
+
 }
 
   onProfileSaved(): void {
