@@ -170,6 +170,10 @@ namespace backend.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
@@ -241,6 +245,158 @@ namespace backend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("PlayerRankings");
+                });
+
+            modelBuilder.Entity("backend.Entities.GameData.GameClub", b =>
+                {
+                    b.Property<Guid>("GameClubId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AttackRating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DefenseRating")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ExternalTeamId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("League")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LogoPublicId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LogoUrl")
+                        .HasColumnType("text");
+
+                    b.Property<int>("MidfieldRating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("OverallRating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StadiumName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("GameClubId");
+
+                    b.ToTable("GameClubs");
+                });
+
+            modelBuilder.Entity("backend.Entities.GameData.GamePlayer", b =>
+                {
+                    b.Property<Guid>("GamePlayerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Age")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("FutbinId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("GameClubId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("HeightCm")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Nation")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Overall")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Potential")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PreferredFoot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SofifaPlayerId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("WeightKg")
+                        .HasColumnType("integer");
+
+                    b.HasKey("GamePlayerId");
+
+                    b.HasIndex("GameClubId");
+
+                    b.ToTable("GamePlayers");
                 });
 
             modelBuilder.Entity("backend.Entities.Identity.User", b =>
@@ -321,17 +477,76 @@ namespace backend.Migrations
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<decimal>("DistanceCoveredKm")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("DistanceSprintedKm")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("DribbleSuccessRate")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("Dribbles")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FoulsCommitted")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Goals")
                         .HasColumnType("integer");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsPlayerOfTheMatch")
+                        .HasColumnType("boolean");
+
                     b.Property<Guid>("MatchId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("MinutesPlayed")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Offsides")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PassAccuracy")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("Passes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PlayerName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PossessionLost")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PossessionWon")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("Rating")
                         .HasColumnType("numeric");
+
+                    b.Property<int>("RedCards")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("ShotAccuracy")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("Shots")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TackleSuccessRate")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("Tackles")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAtUTC")
                         .HasColumnType("timestamp with time zone");
@@ -342,6 +557,9 @@ namespace backend.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("YellowCards")
+                        .HasColumnType("integer");
+
                     b.HasKey("MatchPlayerStatsId");
 
                     b.HasIndex("MatchId");
@@ -349,78 +567,6 @@ namespace backend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("MatchPlayerStats");
-                });
-
-            modelBuilder.Entity("backend.Entities.Teams.GameClub", b =>
-                {
-                    b.Property<Guid>("GameClubId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("AttackRating")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAtUTC")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("DefenseRating")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ExternalTeamId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("League")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("LogoUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("MidfieldRating")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("OverallRating")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("StadiumName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAtUTC")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UpdatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("GameClubId");
-
-                    b.ToTable("GameClubs");
                 });
 
             modelBuilder.Entity("backend.Entities.Teams.Team", b =>
@@ -594,7 +740,7 @@ namespace backend.Migrations
 
             modelBuilder.Entity("SeasonRegistration", b =>
                 {
-                    b.HasOne("backend.Entities.Teams.GameClub", "GameClub")
+                    b.HasOne("backend.Entities.GameData.GameClub", "GameClub")
                         .WithMany()
                         .HasForeignKey("GameClubId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -652,6 +798,17 @@ namespace backend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("backend.Entities.GameData.GamePlayer", b =>
+                {
+                    b.HasOne("backend.Entities.GameData.GameClub", "GameClub")
+                        .WithMany("Players")
+                        .HasForeignKey("GameClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GameClub");
+                });
+
             modelBuilder.Entity("backend.Entities.Stats.MatchPlayerStats", b =>
                 {
                     b.HasOne("Match", "Match")
@@ -673,7 +830,7 @@ namespace backend.Migrations
 
             modelBuilder.Entity("backend.Entities.Teams.Team", b =>
                 {
-                    b.HasOne("backend.Entities.Teams.GameClub", "GameClub")
+                    b.HasOne("backend.Entities.GameData.GameClub", "GameClub")
                         .WithMany()
                         .HasForeignKey("GameClubId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -717,6 +874,11 @@ namespace backend.Migrations
             modelBuilder.Entity("Tournament", b =>
                 {
                     b.Navigation("Matches");
+                });
+
+            modelBuilder.Entity("backend.Entities.GameData.GameClub", b =>
+                {
+                    b.Navigation("Players");
                 });
 
             modelBuilder.Entity("backend.Entities.Identity.User", b =>

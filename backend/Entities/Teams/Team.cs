@@ -1,6 +1,7 @@
 ﻿namespace backend.Entities.Teams;
 
 using backend.Entities.Common;
+using backend.Entities.GameData;
 using backend.Entities.Identity;
 
 public class Team : BaseEntity

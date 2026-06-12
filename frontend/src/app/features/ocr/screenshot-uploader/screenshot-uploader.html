@@ -1,0 +1,70 @@
+<section class="ocr-card">
+
+  <div class="ocr-header">
+    <div>
+      <span class="eyebrow">OFFICIAL MATCH OCR</span>
+      <h3>Upload Player Performance Screenshot</h3>
+      <p>Upload the FC26 player performance screen to extract official stats.</p>
+    </div>
+  </div>
+
+  <label class="upload-box">
+    <input
+      type="file"
+      accept="image/*"
+      (change)="onFileSelected($event)"
+    />
+
+    <i class="fa-solid fa-cloud-arrow-up"></i>
+
+    <strong>Choose Screenshot</strong>
+    <span>PNG, JPG or JPEG</span>
+  </label>
+
+  <div class="preview-layout" *ngIf="previewImageUrl">
+    <img [src]="previewImageUrl" alt="Screenshot preview" />
+
+    <div class="upload-actions">
+      <button
+        class="primary-action"
+        type="button"
+        [disabled]="isLoading"
+        (click)="readScreenshot()"
+      >
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        {{ isLoading ? 'Reading...' : 'Read Screenshot' }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="error">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <div *ngIf="ocrPreview" class="ocr-result">
+
+    <h4>Detected Player Stats</h4>
+
+    <div class="stats-list">
+      <div><span>Position</span><strong>{{ ocrPreview.position }}</strong></div>
+      <div><span>Player</span><strong>{{ ocrPreview.playerName }}</strong></div>
+      <div><span>Rating</span><strong>{{ ocrPreview.rating }}</strong></div>
+      <div><span>Goals</span><strong>{{ ocrPreview.goals }}</strong></div>
+      <div><span>Assists</span><strong>{{ ocrPreview.assists }}</strong></div>
+      <div><span>Shots</span><strong>{{ ocrPreview.shots }}</strong></div>
+      <div><span>Shot Accuracy</span><strong>{{ ocrPreview.shotAccuracy }}%</strong></div>
+      <div><span>Passes</span><strong>{{ ocrPreview.passes }}</strong></div>
+      <div><span>Pass Accuracy</span><strong>{{ ocrPreview.passAccuracy }}%</strong></div>
+      <div><span>Dribbles</span><strong>{{ ocrPreview.dribbles }}</strong></div>
+      <div><span>Dribble Success</span><strong>{{ ocrPreview.dribbleSuccessRate }}%</strong></div>
+      <div><span>Tackles</span><strong>{{ ocrPreview.tackles }}</strong></div>
+      <div><span>Tackle Success</span><strong>{{ ocrPreview.tackleSuccessRate }}%</strong></div>
+      <div><span>Minutes</span><strong>{{ ocrPreview.minutesPlayed }}</strong></div>
+      <div><span>Distance Covered</span><strong>{{ ocrPreview.distanceCoveredKm }} km</strong></div>
+      <div><span>Distance Sprinted</span><strong>{{ ocrPreview.distanceSprintedKm }} km</strong></div>
+    </div>
+
+  </div>
+
+</section>

@@ -1,35 +1,248 @@
-<div class="coming-soon">
+<section class="stats-page">
 
-  <div class="coming-card">
-
-    <div class="coming-icon">
-      <i class="fa-solid fa-chart-line"></i>
+  <div class="stats-header">
+    <div>
+      <span class="eyebrow">PLAYER ANALYTICS</span>
+      <h2>Stats Center</h2>
+      <p>Advanced player analytics and performance insights.</p>
     </div>
 
-    <span class="eyebrow">PLAYER ANALYTICS</span>
-
-    <h1>Stats Center</h1>
-
-    <p>
-      Advanced player analytics, heat maps, xG,
-      possession trends, passing accuracy and
-      seasonal performance tracking are currently
-      under development.
-    </p>
-
-    <div class="feature-list">
-      <span>✓ Goals & Assists</span>
-      <span>✓ Heat Maps</span>
-      <span>✓ xG / xA</span>
-      <span>✓ Passing Accuracy</span>
-      <span>✓ Seasonal Trends</span>
-      <span>✓ Performance Radar</span>
-    </div>
-
-    <div class="coming-badge">
-      COMING SOON
-    </div>
-
+    <button class="season-filter">
+      <i class="fa-solid fa-calendar-days"></i>
+      <span>Season 1</span>
+      <i class="fa-solid fa-chevron-down"></i>
+    </button>
   </div>
 
-</div>
+  <div *ngIf="isLoading" class="message">
+    <i class="fa-solid fa-circle-notch fa-spin"></i>
+    <span>Loading stats...</span>
+  </div>
+
+  <div *ngIf="!isLoading && errorMessage" class="error">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <ng-container *ngIf="!isLoading && !errorMessage && stats">
+
+    <div class="stats-tabs">
+      <button [class.active]="selectedTab === 'overview'" (click)="setTab('overview')">Overview</button>
+      <button [class.active]="selectedTab === 'my'" (click)="setTab('my')">My Stats</button>
+      <button [class.active]="selectedTab === 'team'" (click)="setTab('team')">Team Stats</button>
+      <button [class.active]="selectedTab === 'league'" (click)="setTab('league')">League Leaders</button>
+      <button [class.active]="selectedTab === 'heatmaps'" (click)="setTab('heatmaps')">Heat Maps</button>
+      <button [class.active]="selectedTab === 'trends'" (click)="setTab('trends')">Trends</button>
+    </div>
+
+    <div class="stats-kpis">
+      <div class="kpi-card" *ngFor="let kpi of stats.kpis">
+        <div class="kpi-icon">
+          <i [class]="kpi.icon"></i>
+        </div>
+
+        <div>
+          <span>{{ kpi.label }}</span>
+          <strong>{{ kpi.value }}</strong>
+          <small>
+            <i class="fa-solid fa-arrow-up"></i>
+            Current season
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid-main">
+
+      <div class="panel performance-panel">
+        <div class="panel-header">
+          <h3>Performance Over Time</h3>
+
+          <button class="mini-filter">
+            Last 10 Matches
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+        </div>
+
+        <div class="legend">
+          <span><i class="dot goals"></i> Goals</span>
+          <span><i class="dot assists"></i> Assists</span>
+          <span><i class="dot wins"></i> Rating</span>
+        </div>
+
+        <div class="chart-placeholder line-chart">
+          <svg viewBox="0 0 600 240" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="greenArea" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#00ff88" stop-opacity="0.35" />
+                <stop offset="100%" stop-color="#00ff88" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+
+            <path
+              d="M20 150 L80 150 L140 175 L200 185 L260 140 L320 140 L380 115 L440 150 L500 95 L580 70 L580 230 L20 230 Z"
+              fill="url(#greenArea)"
+            />
+
+            <polyline
+              points="20,150 80,150 140,175 200,185 260,140 320,140 380,115 440,150 500,95 580,70"
+              fill="none"
+              stroke="#00ff88"
+              stroke-width="4"
+            />
+
+            <polyline
+              points="20,165 80,165 140,175 200,195 260,175 320,175 380,165 440,175 500,145 580,125"
+              fill="none"
+              stroke="#18bfff"
+              stroke-width="3"
+            />
+
+            <polyline
+              points="20,215 80,213 140,215 200,214 260,205 320,190 380,195 440,190 500,175 580,178"
+              fill="none"
+              stroke="#8b5cf6"
+              stroke-width="3"
+            />
+          </svg>
+
+          <div class="chart-labels">
+            <span>M1</span>
+            <span>M2</span>
+            <span>M3</span>
+            <span>M4</span>
+            <span>M5</span>
+            <span>M6</span>
+            <span>M7</span>
+            <span>M8</span>
+            <span>M9</span>
+            <span>M10</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel top-players-panel">
+        <div class="panel-header">
+          <h3>Top Players</h3>
+        </div>
+
+        <div class="players-table">
+
+          <div class="table-row table-head">
+            <span>#</span>
+            <span>Player</span>
+            <span>Matches</span>
+            <span>Goals</span>
+            <span>Assists</span>
+            <span>Rating</span>
+          </div>
+
+          <div class="table-row" *ngFor="let player of stats.topPlayers">
+            <span>{{ player.rank }}</span>
+
+            <div class="player-cell">
+              <img [src]="player.avatarUrl || '/images/avatar-default.png'" alt="Player" />
+
+              <div>
+                <strong>{{ player.gamerTag }}</strong>
+                <small>{{ player.clubName }}</small>
+              </div>
+            </div>
+
+            <span>{{ player.matches }}</span>
+            <span>{{ player.goals }}</span>
+            <span>{{ player.assists }}</span>
+            <strong class="rating">{{ player.rating }}</strong>
+          </div>
+
+        </div>
+
+        <button class="ghost-action">View Full Rankings</button>
+      </div>
+
+    </div>
+
+    <div class="stats-grid-bottom">
+
+      <div class="panel">
+        <h3>Goals Breakdown</h3>
+
+        <div class="donut-layout">
+          <div class="donut-ring goals-ring">
+            <div>
+              <strong>{{ stats.goalsBreakdown.totalGoals }}</strong>
+              <span>Total</span>
+            </div>
+          </div>
+
+          <div class="donut-list">
+            <div>
+              <span class="color one"></span>
+              Goals
+              <strong>{{ stats.goalsBreakdown.totalGoals }}</strong>
+            </div>
+
+            <div>
+              <span class="color two"></span>
+              Assists
+              <strong>{{ stats.goalsBreakdown.assists }}</strong>
+            </div>
+
+            <div>
+              <span class="color four"></span>
+              Yellow Cards
+              <strong>{{ stats.goalsBreakdown.yellowCards }}</strong>
+            </div>
+
+            <div>
+              <span class="color five"></span>
+              Red Cards
+              <strong>{{ stats.goalsBreakdown.redCards }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel radar-panel">
+        <h3>Performance Radar</h3>
+
+        <div class="radar-wrap">
+          <svg viewBox="0 0 300 260">
+            <polygon points="150,20 255,80 255,185 150,240 45,185 45,80" class="radar-line" />
+            <polygon points="150,55 220,95 220,170 150,205 80,170 80,95" class="radar-line" />
+            <polygon points="150,90 185,110 185,155 150,170 115,155 115,110" class="radar-line" />
+
+            <polygon
+              points="150,35 215,105 230,175 150,190 75,165 95,105"
+              class="radar-fill"
+            />
+
+            <text x="150" y="14">Attack</text>
+            <text x="262" y="85">Passing</text>
+            <text x="262" y="190">Defense</text>
+            <text x="135" y="255">Physical</text>
+            <text x="10" y="190">Speed</text>
+            <text x="10" y="85">Dribbling</text>
+          </svg>
+
+          <div class="radar-score">
+            <div>
+              <span>Total Goals</span>
+              <strong>{{ stats.goalsBreakdown.totalGoals }}</strong>
+            </div>
+
+            <div>
+              <span>Total Assists</span>
+              <strong>{{ stats.goalsBreakdown.assists }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <button class="ghost-action">View Full Analysis</button>
+      </div>
+
+    </div>
+
+  </ng-container>
+
+</section>

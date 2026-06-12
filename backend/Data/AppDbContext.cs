@@ -2,6 +2,7 @@
 
 using backend.Entities.Common;
 using backend.Entities.Dashboard;
+using backend.Entities.GameData;
 using backend.Entities.Identity;
 using backend.Entities.Stats;
 using backend.Entities.Teams;
@@ -25,9 +26,11 @@ public class AppDbContext : DbContext
 
 	public DbSet<PlayerRanking> PlayerRankings => Set<PlayerRanking>();
 	public DbSet<ActivityFeed> ActivityFeeds => Set<ActivityFeed>();
-	public DbSet<NewsArticle> NewsArticles => Set<NewsArticle>();
-	public DbSet<GameClub> GameClubs { get; set; }
+	public DbSet<NewsArticle> NewsArticles => Set<NewsArticle>();	
 	public DbSet<SeasonRegistration> SeasonRegistrations => Set<SeasonRegistration>();
+	public DbSet<GameClub> GameClubs => Set<GameClub>();
+
+	public DbSet<GamePlayer> GamePlayers => Set<GamePlayer>();
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);

@@ -1,4 +1,4 @@
-﻿namespace backend.Features.GameClubs.Dtos;
+﻿namespace backend.Features.GameData.Dtos;
 
 public class ImportGameClubsDto
 {

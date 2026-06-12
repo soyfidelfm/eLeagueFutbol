@@ -8,6 +8,8 @@ public class ActivityFeed
 
 	public Guid UserId { get; set; }
 
+	public string Type { get; set; } = string.Empty;
+
 	public string Text { get; set; } = string.Empty;
 
 	public DateTime CreatedAtUTC { get; set; }

@@ -1,12 +1,11 @@
 ﻿using backend.Entities.Common;
 
-namespace backend.Entities.Teams;
+namespace backend.Entities.GameData;
 
 public class GameClub : BaseEntity
 {
 	public Guid GameClubId { get; set; }
 
-	// ID del juego FC/FIFA
 	public int ExternalTeamId { get; set; }
 
 	public string Name { get; set; } = string.Empty;
@@ -19,8 +18,6 @@ public class GameClub : BaseEntity
 
 	public string Country { get; set; } = string.Empty;
 
-	public string LogoUrl { get; set; } = string.Empty;
-
 	public string StadiumName { get; set; } = string.Empty;
 
 	public int OverallRating { get; set; }
@@ -32,4 +29,9 @@ public class GameClub : BaseEntity
 	public int DefenseRating { get; set; }
 
 	public bool IsActive { get; set; } = true;
+	public string? LogoUrl { get; set; }
+	public string? LogoPublicId { get; set; }
+
+	public ICollection<GamePlayer> Players { get; set; }
+		= new List<GamePlayer>();
 }

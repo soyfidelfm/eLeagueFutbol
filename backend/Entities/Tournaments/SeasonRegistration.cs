@@ -1,5 +1,5 @@
-﻿using backend.Entities.Identity;
-using backend.Entities.Teams;
+﻿using backend.Entities.GameData;
+using backend.Entities.Identity;
 using backend.Entities.Tournaments;
 
 public class SeasonRegistration
