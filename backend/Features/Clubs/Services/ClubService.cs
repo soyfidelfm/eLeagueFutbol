@@ -1,5 +1,7 @@
 ﻿using backend.Data;
 using backend.Entities.Enums;
+using backend.Entities.GameData;
+using backend.Features.ActivityFeed.Services;
 using backend.Features.Clubs.Dtos;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,10 +10,14 @@ namespace backend.Features.Clubs.Services;
 public class ClubService : IClubService
 {
 	private readonly AppDbContext _context;
+	private readonly IActivityFeedService _activityFeedService;
 
-	public ClubService(AppDbContext context)
+	public ClubService(
+		AppDbContext context,
+		IActivityFeedService activityFeedService)
 	{
 		_context = context;
+		_activityFeedService = activityFeedService;
 	}
 
 	public async Task<MyClubDto?> GetMyClubAsyncByAuth0Id(string auth0Id)
@@ -56,7 +62,7 @@ public class ClubService : IClubService
 		var members = await _context.Users
 			.AsNoTracking()
 			.CountAsync(x =>
-				x.UserId == userId &&
+				x.GameClubId == gameClubId &&
 				!x.IsDeleted &&
 				x.IsActive);
 
@@ -89,8 +95,7 @@ public class ClubService : IClubService
 			(teamIds.Contains(x.HomeTeamId) && x.HomeScore < x.AwayScore) ||
 			(teamIds.Contains(x.AwayTeamId) && x.AwayScore < x.HomeScore));
 
-		var draws = matches.Count(x =>
-			x.HomeScore == x.AwayScore);
+		var draws = matches.Count(x => x.HomeScore == x.AwayScore);
 
 		var goalsFor = matches.Sum(x =>
 			teamIds.Contains(x.HomeTeamId)
@@ -113,7 +118,6 @@ public class ClubService : IClubService
 				!x.IsDeleted &&
 				x.IsActive)
 			.OrderByDescending(x => x.Overall)
-			.Take(11)
 			.Select(x => new MyClubPlayerDto
 			{
 				PlayerId = x.GamePlayerId,
@@ -157,7 +161,6 @@ public class ClubService : IClubService
 		return new MyClubDto
 		{
 			ClubId = gameClub.GameClubId,
-
 			Name = string.IsNullOrWhiteSpace(user.ClubName)
 				? gameClub.Name
 				: user.ClubName,
@@ -213,8 +216,106 @@ public class ClubService : IClubService
 
 		await _context.SaveChangesAsync();
 
+		await _activityFeedService.AddAsync(
+			user.UserId,
+			"LOGO_UPDATED",
+			"Club logo updated"
+		);
+
 		return await GetMyClubAsync(user.UserId);
 	}
+
+	public async Task<MyClubDto?> UpdateMyClubLineupAsync(
+	string auth0Id,
+	UpdateMyClubLineupDto dto)
+	{
+		if (dto is null || string.IsNullOrWhiteSpace(dto.Formation))
+			return null;
+
+		if (dto.Players is null || dto.Players.Count != 11)
+			return null;
+
+		var user = await _context.Users
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == auth0Id &&
+				!x.IsDeleted &&
+				x.IsActive);
+
+		if (user is null || user.GameClubId is null)
+			return null;
+
+		var gameClubId = user.GameClubId.Value;
+
+		var playerIds = dto.Players
+			.Select(x => x.PlayerId)
+			.ToList();
+
+		var distinctPlayerIds = playerIds.Distinct().ToList();
+
+		if (distinctPlayerIds.Count != 11)
+			return null;
+
+		var validPlayersCount = await _context.GamePlayers
+			.CountAsync(x =>
+				distinctPlayerIds.Contains(x.GamePlayerId) &&
+				x.GameClubId == gameClubId &&
+				!x.IsDeleted &&
+				x.IsActive);
+
+		if (validPlayersCount != 11)
+			return null;
+
+		var lineup = await _context.ClubLineups
+			.Include(x => x.Players)
+			.FirstOrDefaultAsync(x =>
+				x.UserId == user.UserId &&
+				x.GameClubId == gameClubId);
+
+		if (lineup is null)
+		{
+			lineup = new ClubLineup
+			{
+				ClubLineupId = Guid.NewGuid(),
+				UserId = user.UserId,
+				GameClubId = gameClubId,
+				Formation = dto.Formation,
+				CreatedAtUTC = DateTime.UtcNow,
+				UpdatedAtUTC = DateTime.UtcNow
+			};
+
+			_context.ClubLineups.Add(lineup);
+		}
+		else
+		{
+			lineup.Formation = dto.Formation;
+			lineup.UpdatedAtUTC = DateTime.UtcNow;
+
+			_context.ClubLineupPlayers.RemoveRange(lineup.Players);
+		}
+
+		lineup.Players = dto.Players
+			.OrderBy(x => x.SlotIndex)
+			.Select(x => new ClubLineupPlayer
+			{
+				ClubLineupPlayerId = Guid.NewGuid(),
+				ClubLineupId = lineup.ClubLineupId,
+				GamePlayerId = x.PlayerId,
+				SlotIndex = x.SlotIndex,
+				Position = x.Position ?? string.Empty
+			})
+			.ToList();
+
+		await _context.SaveChangesAsync();
+
+		await _activityFeedService.AddAsync(
+			user.UserId,
+			"LINEUP_UPDATED",
+			$"Starting XI updated to {dto.Formation}"
+		);
+
+		return await GetMyClubAsync(user.UserId);
+	}
+
 	private static void SetFormationPositions(List<MyClubPlayerDto> players)
 	{
 		var positions = new[]
@@ -246,13 +347,16 @@ public class ClubService : IClubService
 	{
 		return type switch
 		{
-			"MatchWon" => "fa-solid fa-trophy",
-			"MatchLost" => "fa-solid fa-circle-xmark",
-			"MatchDraw" => "fa-solid fa-handshake",
-			"PlayerJoined" => "fa-solid fa-user-plus",
-			"PlayerLeft" => "fa-solid fa-user-minus",
-			"ClubCreated" => "fa-solid fa-shield-halved",
-			"TournamentRegistered" => "fa-solid fa-flag",
+			"LOGO_UPDATED" => "fa-solid fa-image",
+			"LINEUP_UPDATED" => "fa-solid fa-users",
+			"FORMATION_CHANGED" => "fa-solid fa-chess-board",
+			"MATCH_WON" => "fa-solid fa-trophy",
+			"MATCH_LOST" => "fa-solid fa-circle-xmark",
+			"MATCH_DRAW" => "fa-solid fa-handshake",
+			"PLAYER_JOINED" => "fa-solid fa-user-plus",
+			"PLAYER_LEFT" => "fa-solid fa-user-minus",
+			"CLUB_CREATED" => "fa-solid fa-shield-halved",
+			"TOURNAMENT_REGISTERED" => "fa-solid fa-flag",
 			_ => "fa-solid fa-bolt"
 		};
 	}

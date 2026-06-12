@@ -31,6 +31,8 @@ public class AppDbContext : DbContext
 	public DbSet<GameClub> GameClubs => Set<GameClub>();
 
 	public DbSet<GamePlayer> GamePlayers => Set<GamePlayer>();
+	public DbSet<ClubLineup> ClubLineups { get; set; }
+	public DbSet<ClubLineupPlayer> ClubLineupPlayers { get; set; }
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);

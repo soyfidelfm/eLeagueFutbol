@@ -115,22 +115,22 @@
             Starting XI
           </h2>
 
-          <button>
+          <button type="button" (click)="openSquadModal()">
             View Full Squad
             <i class="fa-solid fa-arrow-right"></i>
           </button>
         </div>
 
-        <div class="field" *ngIf="players.length > 0; else noPlayers">
+        <div class="field" *ngIf="startingPlayers.length > 0; else noPlayers">
           <div
             class="player-card"
-            *ngFor="let player of players"
-            [style.left.%]="player.x"
-            [style.top.%]="player.y"
+            *ngFor="let player of startingPlayers; let i = index"
+            [style.left.%]="selectedFormationLayout[i]?.left"
+            [style.top.%]="selectedFormationLayout[i]?.top"
           >
             <div class="player-top">
               <strong>{{ player.overall ?? '-' }}</strong>
-              <span>{{ player.position || 'N/A' }}</span>
+              <span>{{ selectedFormationLayout[i]?.position || player.position || 'N/A' }}</span>
             </div>
 
             <img
@@ -152,19 +152,21 @@
         </ng-template>
 
         <div class="formation-footer">
-          <div>
+
+          <div class="formation-summary">
             <span>Formation</span>
-            <strong>4-3-3 Control</strong>
+            <strong>{{ selectedFormation }}</strong>
           </div>
 
-          <div>
+          <div class="chemistry-info">
             <span>Team Chemistry</span>
-            <strong>92</strong>
+            <strong>{{ chemistry }}</strong>
 
             <div class="chemistry-bar">
-              <div [style.width.%]="92"></div>
+              <div [style.width.%]="chemistry"></div>
             </div>
           </div>
+
         </div>
 
       </div>
@@ -177,7 +179,7 @@
             Recent Activity
           </h2>
 
-          <button>
+          <button type="button">
             View All
             <i class="fa-solid fa-arrow-right"></i>
           </button>
@@ -210,5 +212,144 @@
     </div>
 
   </ng-container>
+
+  <div class="squad-modal-backdrop" *ngIf="isSquadModalOpen">
+
+    <div class="squad-modal">
+
+      <div class="squad-modal-header">
+        <div>
+          <span>Squad Management</span>
+          <h2>Edit Starting XI</h2>
+        </div>
+
+        <button type="button" (click)="closeSquadModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-formation-toolbar">
+
+        <button
+          type="button"
+          class="formation-arrow"
+          (click)="previousModalFormation()"
+        >
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <div class="formation-info">
+          <span>Formation</span>
+          <strong>{{ modalSelectedFormation }}</strong>
+        </div>
+
+        <button
+          type="button"
+          class="formation-arrow"
+          (click)="nextModalFormation()"
+        >
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+      </div>
+
+      <div class="squad-modal-body">
+
+        <div class="modal-field">
+          <div
+            class="player-card modal-card"
+            *ngFor="let player of modalStartingPlayers; let i = index"
+            [class.selected]="selectedSlotIndex === i"
+            [style.left.%]="modalFormationLayout[i]?.left"
+            [style.top.%]="modalFormationLayout[i]?.top"
+            (click)="selectSlot(i)"
+          >
+            <div class="player-top">
+              <strong>{{ player.overall ?? '-' }}</strong>
+              <span>{{ modalFormationLayout[i]?.position || player.position || 'N/A' }}</span>
+            </div>
+
+            <img
+              [src]="player.avatarUrl || '/images/avatar.png'"
+              alt=""
+              referrerpolicy="no-referrer"
+              (error)="onPlayerImageError($event)"
+            />
+
+            <small>{{ player.name }}</small>
+          </div>
+        </div>
+
+        <div class="mobile-lineup-list">
+          <button
+            type="button"
+            class="mobile-lineup-row"
+            *ngFor="let player of modalStartingPlayers; let i = index"
+            [class.selected]="selectedSlotIndex === i"
+            (click)="selectSlot(i)"
+          >
+            <span class="slot-position">
+              {{ modalFormationLayout[i]?.position || player.position || 'N/A' }}
+            </span>
+
+            <img
+              [src]="player.avatarUrl || '/images/avatar.png'"
+              alt=""
+              referrerpolicy="no-referrer"
+              (error)="onPlayerImageError($event)"
+            />
+
+            <div>
+              <strong>{{ player.name }}</strong>
+              <small>{{ player.overall ?? '-' }} OVR</small>
+            </div>
+
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="squad-list">
+          <h3>Available Players</h3>
+
+          <button
+            type="button"
+            class="squad-player-row"
+            *ngFor="let player of players"
+            (click)="replacePlayer(player)"
+          >
+            <img
+              [src]="player.avatarUrl || '/images/avatar.png'"
+              alt=""
+              referrerpolicy="no-referrer"
+              (error)="onPlayerImageError($event)"
+            />
+
+            <div>
+              <strong>{{ player.name }}</strong>
+              <span>{{ player.position || 'N/A' }} · {{ player.overall ?? '-' }} OVR</span>
+            </div>
+          </button>
+        </div>
+
+      </div>
+
+      <div class="squad-modal-footer">
+        <button type="button" (click)="closeSquadModal()">
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="save-lineup-btn"
+          [disabled]="modalStartingPlayers.length !== 11"
+          (click)="saveLineup()"
+        >
+          Save Lineup
+        </button>
+      </div>
+
+    </div>
+
+  </div>
 
 </section>

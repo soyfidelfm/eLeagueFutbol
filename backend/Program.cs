@@ -1,4 +1,5 @@
 using backend.Data;
+using backend.Features.ActivityFeed.Services;
 using backend.Features.Cloudinary.Services;
 using backend.Features.Clubs.Services;
 using backend.Features.Dashboard.Services;
@@ -33,6 +34,7 @@ builder.Services.Configure<CloudinarySettings>(
 	builder.Configuration.GetSection("Cloudinary"));
 
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddScoped<IActivityFeedService, ActivityFeedService>();
 
 builder.Services.AddCors(options =>
 {

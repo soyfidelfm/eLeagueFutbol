@@ -7,6 +7,17 @@ import { API_ENDPOINTS } from '../constants/api-endpoints';
 
 import { MyClubDto } from '../models/my-club.model';
 
+export interface UpdateMyClubLineupPlayerDto {
+  playerId: string;
+  slotIndex: number;
+  position?: string;
+}
+
+export interface UpdateMyClubLineupDto {
+  formation: string;
+  players: UpdateMyClubLineupPlayerDto[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,10 +34,18 @@ export class ClubService extends ApiService {
       `${API_ENDPOINTS.clubs}/my`
     );
   }
-  updateMyClubLogo(logoUrl: string) {
-  return this.http.put<MyClubDto>(
-     `${API_ENDPOINTS.clubs}/my/logo`,
-    { logoUrl }
-  );
-}
+
+  updateMyClubLogo(logoUrl: string): Observable<MyClubDto> {
+    return this.http.put<MyClubDto>(
+      `${API_ENDPOINTS.clubs}/my/logo`,
+      { logoUrl }
+    );
+  }
+
+  updateMyClubLineup(payload: UpdateMyClubLineupDto): Observable<MyClubDto> {
+    return this.http.put<MyClubDto>(
+      `${API_ENDPOINTS.clubs}/my/lineup`,
+      payload
+    );
+  }
 }

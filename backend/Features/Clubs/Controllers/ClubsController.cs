@@ -1,4 +1,5 @@
-﻿using backend.Features.Clubs.DTOs;
+﻿using backend.Features.Clubs.Dtos;
+using backend.Features.Clubs.DTOs;
 using backend.Features.Clubs.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,16 +27,17 @@ public class ClubsController : ControllerBase
 		if (string.IsNullOrWhiteSpace(auth0Id))
 			return Unauthorized();
 
-		var user = await _clubService.GetMyClubAsyncByAuth0Id(auth0Id);
+		var club = await _clubService.GetMyClubAsyncByAuth0Id(auth0Id);
 
-		if (user is null)
+		if (club is null)
 			return NotFound("No club found for this user.");
 
-		return Ok(user);
+		return Ok(club);
 	}
+
 	[HttpPut("my/logo")]
 	public async Task<IActionResult> UpdateMyClubLogo(
-	[FromBody] UpdateClubLogoDto request)
+		[FromBody] UpdateClubLogoDto request)
 	{
 		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -48,6 +50,25 @@ public class ClubsController : ControllerBase
 
 		if (club is null)
 			return NotFound("Club not found.");
+
+		return Ok(club);
+	}
+
+	[HttpPut("my/lineup")]
+	public async Task<IActionResult> UpdateMyClubLineup(
+		[FromBody] UpdateMyClubLineupDto request)
+	{
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		var club = await _clubService.UpdateMyClubLineupAsync(
+			auth0Id,
+			request);
+
+		if (club is null)
+			return BadRequest("Unable to update lineup.");
 
 		return Ok(club);
 	}

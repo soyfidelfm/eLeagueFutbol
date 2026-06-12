@@ -247,6 +247,59 @@ namespace backend.Migrations
                     b.ToTable("PlayerRankings");
                 });
 
+            modelBuilder.Entity("backend.Entities.GameData.ClubLineup", b =>
+                {
+                    b.Property<Guid>("ClubLineupId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Formation")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("GameClubId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ClubLineupId");
+
+                    b.ToTable("ClubLineups");
+                });
+
+            modelBuilder.Entity("backend.Entities.GameData.ClubLineupPlayer", b =>
+                {
+                    b.Property<Guid>("ClubLineupPlayerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClubLineupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GamePlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SlotIndex")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ClubLineupPlayerId");
+
+                    b.HasIndex("ClubLineupId");
+
+                    b.ToTable("ClubLineupPlayers");
+                });
+
             modelBuilder.Entity("backend.Entities.GameData.GameClub", b =>
                 {
                     b.Property<Guid>("GameClubId")
@@ -798,6 +851,17 @@ namespace backend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("backend.Entities.GameData.ClubLineupPlayer", b =>
+                {
+                    b.HasOne("backend.Entities.GameData.ClubLineup", "ClubLineup")
+                        .WithMany("Players")
+                        .HasForeignKey("ClubLineupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ClubLineup");
+                });
+
             modelBuilder.Entity("backend.Entities.GameData.GamePlayer", b =>
                 {
                     b.HasOne("backend.Entities.GameData.GameClub", "GameClub")
@@ -874,6 +938,11 @@ namespace backend.Migrations
             modelBuilder.Entity("Tournament", b =>
                 {
                     b.Navigation("Matches");
+                });
+
+            modelBuilder.Entity("backend.Entities.GameData.ClubLineup", b =>
+                {
+                    b.Navigation("Players");
                 });
 
             modelBuilder.Entity("backend.Entities.GameData.GameClub", b =>
