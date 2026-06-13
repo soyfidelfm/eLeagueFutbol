@@ -37,14 +37,15 @@ public class DashboardService : IDashboardService
 			: await _context.SeasonRegistrations
 				.CountAsync(x => x.SeasonId == currentSeason.SeasonId, ct);
 
-		var teamsCount = await _context.Teams
-			.CountAsync(ct);
-
 		var liveMatchesCount = await _context.Matches
-			.CountAsync(x => x.Status == MatchStatus.Live, ct);
+			.CountAsync(x =>
+				!x.IsDeleted &&
+				x.Status == MatchStatus.Live,
+				ct);
 
 		var matchesThisWeekCount = await _context.Matches
 			.CountAsync(x =>
+				!x.IsDeleted &&
 				x.MatchDate >= weekStartUtc &&
 				x.MatchDate < weekEndUtc,
 				ct);
@@ -58,29 +59,36 @@ public class DashboardService : IDashboardService
 
 		var featuredMatch = await _context.Matches
 			.Include(x => x.Tournament)
-			.Include(x => x.HomeTeam)
-			.Include(x => x.AwayTeam)
-			.Where(x => x.IsFeatured)
+			.Include(x => x.HomeGameClub)
+			.Include(x => x.AwayGameClub)
+			.Where(x =>
+				!x.IsDeleted &&
+				x.IsMatchOfTheWeek)
 			.OrderBy(x => x.MatchDate)
 			.FirstOrDefaultAsync(ct);
 
 		var activeMatches = await _context.Matches
 			.Include(x => x.Tournament)
-			.Include(x => x.HomeTeam)
-			.Include(x => x.AwayTeam)
+			.Include(x => x.HomeGameClub)
+			.Include(x => x.AwayGameClub)
 			.Where(x =>
-				x.Status == MatchStatus.Live ||
-				x.Status == MatchStatus.WarmingUp ||
-				x.Status == MatchStatus.Scheduled)
+				!x.IsDeleted &&
+				(
+					x.Status == MatchStatus.Live ||
+					x.Status == MatchStatus.WarmingUp ||
+					x.Status == MatchStatus.Scheduled
+				))
 			.OrderBy(x => x.MatchDate)
 			.Take(3)
 			.ToListAsync(ct);
 
 		var upcomingMatches = await _context.Matches
 			.Include(x => x.Tournament)
-			.Include(x => x.HomeTeam)
-			.Include(x => x.AwayTeam)
-			.Where(x => x.Status == MatchStatus.Scheduled)
+			.Include(x => x.HomeGameClub)
+			.Include(x => x.AwayGameClub)
+			.Where(x =>
+				!x.IsDeleted &&
+				x.Status == MatchStatus.Scheduled)
 			.OrderBy(x => x.MatchDate)
 			.Take(4)
 			.ToListAsync(ct);
@@ -126,35 +134,29 @@ public class DashboardService : IDashboardService
 			Kpis =
 			[
 				new()
-			{
-				Label = "Season",
-				Value = currentSeason?.Name ?? "No Season",
-				Sub = "Current Season"
-			},
-			new()
-			{
-				Label = "Players",
-				Value = registered.ToString("N0"),
-				Sub = "Registered"
-			},
-			//new()
-			//{
-			//	Label = "Teams",
-			//	Value = teamsCount.ToString("N0"),
-			//	Sub = "Active Clubs"
-			//},
-			new()
-			{
-				Label = "Live Now",
-				Value = liveMatchesCount.ToString("N0"),
-				Sub = "Matches"
-			},
-			new()
-			{
-				Label = "This Week",
-				Value = matchesThisWeekCount.ToString("N0"),
-				Sub = "Scheduled"
-			}
+				{
+					Label = "Season",
+					Value = currentSeason?.Name ?? "No Season",
+					Sub = "Current Season"
+				},
+				new()
+				{
+					Label = "Players",
+					Value = registered.ToString("N0"),
+					Sub = "Registered"
+				},
+				new()
+				{
+					Label = "Live Now",
+					Value = liveMatchesCount.ToString("N0"),
+					Sub = "Matches"
+				},
+				new()
+				{
+					Label = "This Week",
+					Value = matchesThisWeekCount.ToString("N0"),
+					Sub = "Scheduled"
+				}
 			],
 
 			Leaderboard = rankings
@@ -203,8 +205,8 @@ public class DashboardService : IDashboardService
 			UpcomingMatches = upcomingMatches
 				.Select(x => new UpcomingMatchDto
 				{
-					Home = x.HomeTeam.Name,
-					Away = x.AwayTeam.Name,
+					Home = x.HomeGameClub.Name,
+					Away = x.AwayGameClub.Name,
 					Date = DateTimeHelper.FormatLocal(x.MatchDate, timeZone),
 					Stage = x.Tournament?.Name ?? "Scheduled"
 				})
@@ -247,29 +249,33 @@ public class DashboardService : IDashboardService
 	{
 		return new MatchOfWeekDto
 		{
-			Arena = match.Tournament?.Name ?? "Champions Arena",
-			Stage = match.Status.ToString(),
+			Arena = match.Arena,
+			Stage = match.Tournament?.Name ?? match.Status.ToString(),
+
 			Date = DateTimeHelper.FormatLocal(
 				match.MatchDate,
 				timeZone,
 				"dddd, h:mm tt"),
+
 			Countdown = DateTimeHelper.GetCountdown(
 				match.MatchDate,
 				timeZone),
+
 			Home = new FeaturedPlayerDto
 			{
-				Name = match.HomeTeam.Name,
+				Name = match.HomeGameClub.Name,
 				Rank = 0,
-				Rating = 0,
-				Image = "",
+				Rating = match.HomeGameClub.OverallRating,
+				Image = match.HomeGameClub.LogoUrl ?? "",
 				Streak = $"{match.HomeScore} Goals"
 			},
+
 			Away = new FeaturedPlayerDto
 			{
-				Name = match.AwayTeam.Name,
+				Name = match.AwayGameClub.Name,
 				Rank = 0,
-				Rating = 0,
-				Image = "",
+				Rating = match.AwayGameClub.OverallRating,
+				Image = match.AwayGameClub.LogoUrl ?? "",
 				Streak = $"{match.AwayScore} Goals"
 			}
 		};

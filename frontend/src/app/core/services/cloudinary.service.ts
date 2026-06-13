@@ -31,4 +31,17 @@ export class CloudinaryService extends ApiService {
       formData
     );
   }
+  uploadAvatar(file: File): Observable<CloudinaryUploadResponse> {
+  const formData = new FormData();
+
+  formData.append(
+    'file',
+    file
+  );
+
+  return this.post<CloudinaryUploadResponse>(
+    `${API_ENDPOINTS.cloudinary}/upload-avatar`,
+    formData
+  );
+}
 }

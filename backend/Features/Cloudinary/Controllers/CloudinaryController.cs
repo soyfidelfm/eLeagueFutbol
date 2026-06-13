@@ -30,4 +30,18 @@ public class CloudinaryController : ControllerBase
 			publicId = result.PublicId
 		});
 	}
+	[HttpPost("upload-avatar")]
+	public async Task<IActionResult> UploadAvatar([FromForm] IFormFile file)
+	{
+		if (file is null || file.Length == 0)
+			return BadRequest("File is required.");
+
+		var result = await _cloudinaryService.UploadImageAsync(file, "avatars");
+
+		return Ok(new
+		{
+			secureUrl = result.Url,
+			publicId = result.PublicId
+		});
+	}
 }

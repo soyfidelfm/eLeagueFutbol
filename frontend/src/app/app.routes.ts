@@ -68,6 +68,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/stats/stats')
             .then(m => m.Stats)
+      },
+      {
+        path: 'matches',
+        loadComponent: () =>
+          import('./features/matches/matches')
+            .then(m => m.Matches)
       }
 
     ]

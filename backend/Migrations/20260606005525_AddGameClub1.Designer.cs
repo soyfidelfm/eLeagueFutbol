@@ -34,7 +34,7 @@ namespace backend.Migrations
                     b.Property<int>("AwayScore")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("AwayTeamId")
+                    b.Property<Guid>("AwayGameClubId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAtUTC")
@@ -46,7 +46,7 @@ namespace backend.Migrations
                     b.Property<int>("HomeScore")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("HomeTeamId")
+                    b.Property<Guid>("HomeGameClubId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
@@ -72,9 +72,9 @@ namespace backend.Migrations
 
                     b.HasKey("MatchId");
 
-                    b.HasIndex("AwayTeamId");
+                    b.HasIndex("AwayGameClubId");
 
-                    b.HasIndex("HomeTeamId");
+                    b.HasIndex("HomeGameClubId");
 
                     b.HasIndex("TournamentId");
 
@@ -502,13 +502,13 @@ namespace backend.Migrations
                 {
                     b.HasOne("backend.Entities.Teams.Team", "AwayTeam")
                         .WithMany()
-                        .HasForeignKey("AwayTeamId")
+                        .HasForeignKey("AwayGameClubId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("backend.Entities.Teams.Team", "HomeTeam")
                         .WithMany()
-                        .HasForeignKey("HomeTeamId")
+                        .HasForeignKey("HomeGameClubId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

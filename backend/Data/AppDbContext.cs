@@ -17,43 +17,59 @@ public class AppDbContext : DbContext
 	}
 
 	public DbSet<User> Users => Set<User>();
+
 	public DbSet<Team> Teams => Set<Team>();
 	public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
+
 	public DbSet<Season> Seasons => Set<Season>();
 	public DbSet<Tournament> Tournaments => Set<Tournament>();
 	public DbSet<Match> Matches => Set<Match>();
+
 	public DbSet<MatchPlayerStats> MatchPlayerStats => Set<MatchPlayerStats>();
 
 	public DbSet<PlayerRanking> PlayerRankings => Set<PlayerRanking>();
 	public DbSet<ActivityFeed> ActivityFeeds => Set<ActivityFeed>();
-	public DbSet<NewsArticle> NewsArticles => Set<NewsArticle>();	
-	public DbSet<SeasonRegistration> SeasonRegistrations => Set<SeasonRegistration>();
-	public DbSet<GameClub> GameClubs => Set<GameClub>();
+	public DbSet<NewsArticle> NewsArticles => Set<NewsArticle>();
 
+	public DbSet<SeasonRegistration> SeasonRegistrations => Set<SeasonRegistration>();
+
+	public DbSet<GameClub> GameClubs => Set<GameClub>();
 	public DbSet<GamePlayer> GamePlayers => Set<GamePlayer>();
-	public DbSet<ClubLineup> ClubLineups { get; set; }
-	public DbSet<ClubLineupPlayer> ClubLineupPlayers { get; set; }
+
+	public DbSet<ClubLineup> ClubLineups => Set<ClubLineup>();
+	public DbSet<ClubLineupPlayer> ClubLineupPlayers => Set<ClubLineupPlayer>();
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);
+
+		modelBuilder.Entity<User>()
+			.HasOne(x => x.GameClub)
+			.WithOne(x => x.User)
+			.HasForeignKey<User>(x => x.GameClubId)
+			.OnDelete(DeleteBehavior.SetNull);
+
 		modelBuilder.Entity<SeasonRegistration>()
-	.HasIndex(x => new { x.SeasonId, x.UserId })
-	.IsUnique();
+			.HasIndex(x => new { x.SeasonId, x.UserId })
+			.IsUnique();
 
 		modelBuilder.Entity<SeasonRegistration>()
 			.HasOne(x => x.Season)
 			.WithMany(x => x.Registrations)
-			.HasForeignKey(x => x.SeasonId);
+			.HasForeignKey(x => x.SeasonId)
+			.OnDelete(DeleteBehavior.Restrict);
 
 		modelBuilder.Entity<SeasonRegistration>()
 			.HasOne(x => x.User)
 			.WithMany()
-			.HasForeignKey(x => x.UserId);
+			.HasForeignKey(x => x.UserId)
+			.OnDelete(DeleteBehavior.Restrict);
 
 		modelBuilder.Entity<SeasonRegistration>()
 			.HasOne(x => x.GameClub)
 			.WithMany()
-			.HasForeignKey(x => x.GameClubId);
+			.HasForeignKey(x => x.GameClubId)
+			.OnDelete(DeleteBehavior.Restrict);
 
 		modelBuilder.Entity<PlayerRanking>(entity =>
 		{
@@ -92,20 +108,25 @@ public class AppDbContext : DbContext
 				.HasMaxLength(2000);
 		});
 
-		modelBuilder.Entity<Match>()
-			.HasKey(m => m.MatchId);
+		modelBuilder.Entity<Match>(entity =>
+		{
+			entity.HasKey(x => x.MatchId);
 
-		modelBuilder.Entity<Match>()
-			.HasOne(m => m.HomeTeam)
-			.WithMany()
-			.HasForeignKey(m => m.HomeTeamId)
-			.OnDelete(DeleteBehavior.Restrict);
+			entity.HasOne(x => x.Tournament)
+				.WithMany(x => x.Matches)
+				.HasForeignKey(x => x.TournamentId)
+				.OnDelete(DeleteBehavior.Restrict);
 
-		modelBuilder.Entity<Match>()
-			.HasOne(m => m.AwayTeam)
-			.WithMany()
-			.HasForeignKey(m => m.AwayTeamId)
-			.OnDelete(DeleteBehavior.Restrict);
+			entity.HasOne(x => x.HomeGameClub)
+				.WithMany()
+				.HasForeignKey(x => x.HomeGameClubId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			entity.HasOne(x => x.AwayGameClub)
+				.WithMany()
+				.HasForeignKey(x => x.AwayGameClubId)
+				.OnDelete(DeleteBehavior.Restrict);
+		});
 	}
 
 	public override Task<int> SaveChangesAsync(

@@ -11,6 +11,7 @@ public class UpdateSeasonDto
 	public DateTime EndDate { get; set; }
 
 	public string TimeZone { get; set; } = "UTC";
+	public int TotalWeeks { get; set; }
 
 	public bool IsCurrent { get; set; }
 

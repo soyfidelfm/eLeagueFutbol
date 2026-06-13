@@ -24,6 +24,7 @@ public class UserDto
 
 	public string GamerTag { get; set; } = string.Empty;
 	public DateTime? LastLoginAtUTC { get; set; }
+	public string Role { get; set; } = string.Empty;
 }
 
 public class UpdateUserDto
@@ -38,4 +39,5 @@ public class UpdateUserDto
 
 	public Guid? GameClubId { get; set; }
 	public string GamerTag { get; set; } = string.Empty;
+	public string Role { get; set; } = string.Empty;
 }

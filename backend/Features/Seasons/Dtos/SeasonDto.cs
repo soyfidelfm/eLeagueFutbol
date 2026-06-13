@@ -19,6 +19,7 @@ public class SeasonDto
 	public bool RegistrationOpen { get; set; }
 
 	public int MaxPlayers { get; set; }
+	public int TotalWeeks { get; set; }
 
 	public DateTime CreatedAtUTC { get; set; }
 

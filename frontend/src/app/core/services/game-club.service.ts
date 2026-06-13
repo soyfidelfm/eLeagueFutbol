@@ -20,19 +20,25 @@ export class GameClubService extends ApiService {
 
   getAll(): Observable<GameClub[]> {
     return this.get<GameClub[]>(
-      API_ENDPOINTS.gameClubs
+      `${API_ENDPOINTS.gameData}/clubs`
+    );
+  }
+
+  getById(gameClubId: string): Observable<GameClub> {
+    return this.get<GameClub>(
+      `${API_ENDPOINTS.gameData}/clubs/${gameClubId}`
     );
   }
 
   getLeagues(): Observable<string[]> {
     return this.get<string[]>(
-      `${API_ENDPOINTS.gameClubs}/leagues`
+      `${API_ENDPOINTS.gameData}/clubs/leagues`
     );
   }
 
   getByLeague(league: string): Observable<GameClub[]> {
     return this.get<GameClub[]>(
-      `${API_ENDPOINTS.gameClubs}/by-league?league=${encodeURIComponent(league)}`
+      `${API_ENDPOINTS.gameData}/clubs/by-league?league=${encodeURIComponent(league)}`
     );
   }
 }

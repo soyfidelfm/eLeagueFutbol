@@ -1,0 +1,364 @@
+.rankings-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 34px;
+  color: var(--text-main);
+}
+
+.rankings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 28px;
+
+  h1 {
+    margin: 8px 0 6px;
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 15px;
+  }
+}
+
+.eyebrow,
+.section-label {
+  color: var(--neon-primary);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.season-select {
+  min-width: 210px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border: 1px solid var(--border-primary);
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--neon-soft), rgba(0, 0, 0, 0.55));
+  box-shadow: var(--shadow-neon);
+
+  i {
+    color: var(--neon-primary);
+  }
+
+  select {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text-main);
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  option {
+    background: var(--bg-secondary);
+    color: var(--text-main);
+  }
+}
+
+.rankings-grids {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.ranking-card {
+  border: 1px solid var(--border-primary);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(7, 16, 12, 0.94), rgba(2, 4, 3, 0.94)),
+    radial-gradient(circle at top left, var(--neon-soft-strong), transparent 34%);
+  box-shadow: var(--shadow-panel);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px 26px 18px;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 10px 0 6px;
+    font-size: 23px;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  h2 i {
+    color: var(--neon-primary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+}
+
+.filter-btn {
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 16px;
+  border: 1px solid var(--border-primary);
+  border-radius: 11px;
+  background: var(--neon-soft);
+  color: var(--text-main);
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.22s;
+
+  &:hover {
+    background: var(--neon-soft-strong);
+    transform: translateY(-1px);
+  }
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 26px 18px;
+  overflow-x: auto;
+
+  button {
+    min-width: 92px;
+    padding: 10px 16px;
+    border: 1px solid var(--border-secondary);
+    border-radius: 999px;
+    background: var(--bg-button-secondary);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: 0.22s;
+
+    &.active {
+      background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+      color: var(--text-inverse);
+      border-color: transparent;
+      box-shadow: 0 0 24px var(--neon-glow);
+    }
+  }
+}
+
+.ranking-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  padding: 0 26px 24px;
+}
+
+.summary-card {
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border-secondary);
+  border-radius: 14px;
+  background: var(--bg-card);
+
+  i {
+    color: var(--neon-primary);
+    font-size: 30px;
+    filter: drop-shadow(0 0 12px var(--neon-glow));
+  }
+
+  span {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  strong {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-main);
+    font-size: 16px;
+    font-weight: 900;
+  }
+
+  &.crown i {
+    color: var(--gold);
+    filter: drop-shadow(0 0 13px rgba(255, 214, 107, 0.65));
+  }
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-top: 1px solid var(--border-secondary);
+}
+
+table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+
+  thead {
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  th {
+    padding: 15px 14px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-align: left;
+  }
+
+  td {
+    padding: 14px;
+    border-top: 1px solid var(--border-secondary);
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  tbody tr {
+    transition: 0.2s;
+
+    &:hover {
+      background: var(--neon-soft);
+    }
+  }
+}
+
+.rank-badge {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-button-secondary);
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 900;
+
+  &.gold {
+    background: linear-gradient(135deg, var(--gold), #ff9f1c);
+    color: #1d1200;
+    box-shadow: 0 0 16px rgba(255, 214, 107, 0.45);
+  }
+
+  &.silver {
+    background: linear-gradient(135deg, #f4f7ff, var(--silver));
+    color: #091018;
+  }
+
+  &.bronze {
+    background: linear-gradient(135deg, #ffb36b, var(--bronze));
+    color: #180900;
+  }
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border-primary);
+  }
+
+  &.club img {
+    border-radius: 6px;
+  }
+}
+
+.points {
+  color: var(--neon-primary);
+  font-weight: 950;
+}
+
+.form {
+  display: flex;
+  gap: 5px;
+
+  span {
+    font-size: 11px;
+    font-weight: 950;
+
+    &.win {
+      color: var(--success);
+    }
+
+    &.loss {
+      color: var(--danger);
+    }
+
+    &.draw {
+      color: var(--warning);
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .rankings-grids {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .rankings-page {
+    padding: 18px 14px 90px;
+  }
+
+  .rankings-header {
+    flex-direction: column;
+    gap: 16px;
+
+    h1 {
+      font-size: 26px;
+    }
+  }
+
+  .season-select {
+    width: 100%;
+  }
+
+  .card-header {
+    flex-direction: column;
+    padding: 22px 18px 16px;
+  }
+
+  .tabs {
+    padding: 0 18px 16px;
+  }
+
+  .ranking-summary-grid {
+    grid-template-columns: 1fr;
+    padding: 0 18px 20px;
+  }
+
+  table {
+    min-width: 820px;
+  }
+}

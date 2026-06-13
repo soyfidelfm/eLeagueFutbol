@@ -11,6 +11,7 @@ import {
 } from '../../core/models/season.model';
 
 import { SeasonService } from '../../core/services/season.service';
+import { MatchService } from '../../core/services/match.service';
 
 @Component({
   selector: 'app-season',
@@ -35,18 +36,20 @@ export class Seasons implements OnInit {
   errorMessage = '';
 
   form = {
-  name: '',
-  description: '',
-  startDate: '',
-  endDate: '',
-  isCurrent: false,
-  isActive: true,
-  registrationOpen: true,
-  maxPlayers: 20
-};
+    name: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    isCurrent: false,
+    isActive: true,
+    registrationOpen: true,
+    maxPlayers: 20,
+    totalWeeks: 8
+  };
 
   constructor(
     private seasonService: SeasonService,
+    private matchService: MatchService,
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef
@@ -54,18 +57,16 @@ export class Seasons implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(params => {
-  const viewParam = params.get('view');
+      const viewParam = params.get('view');
 
-  if (viewParam === 'create') {
-    this.view = 'create';
-  }
-  else if (viewParam === 'current') {
-    this.view = 'current';
-  }
-  else {
-    this.view = 'list';
-  }
-});
+      if (viewParam === 'create') {
+        this.view = 'create';
+      } else if (viewParam === 'current') {
+        this.view = 'current';
+      } else {
+        this.view = 'list';
+      }
+    });
 
     this.loadSeasons();
   }
@@ -86,10 +87,10 @@ export class Seasons implements OnInit {
         })
       )
       .subscribe({
-        next: (data) => {
+        next: data => {
           this.seasons = Array.isArray(data) ? data : [];
         },
-        error: (err) => {
+        error: err => {
           console.error('Error loading seasons:', err);
           this.seasons = [];
           this.errorMessage = 'Could not load seasons.';
@@ -115,6 +116,11 @@ export class Seasons implements OnInit {
 
     if (new Date(this.form.endDate) <= new Date(this.form.startDate)) {
       alert('End date must be greater than start date');
+      return;
+    }
+
+    if (!this.form.totalWeeks || Number(this.form.totalWeeks) < 1) {
+      alert('Total weeks must be at least 1');
       return;
     }
 
@@ -151,7 +157,7 @@ export class Seasons implements OnInit {
             }
           });
         },
-        error: (err) => {
+        error: err => {
           console.error('Error saving season:', err);
           alert('Error saving season');
         }
@@ -165,15 +171,18 @@ export class Seasons implements OnInit {
     this.selectedSeasonId = season.seasonId;
 
     this.form = {
-  name: season.name ?? '',
-  description: season.description ?? '',
-  startDate: this.toDateTimeLocal(season.startDate),
-  endDate: this.toDateTimeLocal(season.endDate),
-  isCurrent: !!season.isCurrent,
-  isActive: !!season.isActive,
-  registrationOpen: !!season.registrationOpen,
-  maxPlayers: season.maxPlayers ?? 20
-};
+      name: season.name ?? '',
+      description: season.description ?? '',
+      startDate: this.toDateTimeLocal(season.startDate),
+      endDate: this.toDateTimeLocal(season.endDate),
+      isCurrent: !!season.isCurrent,
+      isActive: !!season.isActive,
+      registrationOpen: !!season.registrationOpen,
+      maxPlayers: season.maxPlayers ?? 20,
+      totalWeeks: season.totalWeeks && season.totalWeeks > 0
+        ? season.totalWeeks
+        : 8
+    };
 
     this.router.navigate(['/seasons'], {
       queryParams: {
@@ -187,12 +196,42 @@ export class Seasons implements OnInit {
     });
   }
 
+  generateSchedule(season: Season): void {
+    if (!season?.seasonId) {
+      return;
+    }
+
+    if (!confirm(`Generate schedule for ${season.name}?`)) {
+      return;
+    }
+
+    this.isSaving = true;
+
+    this.matchService.generateSchedule(season.seasonId)
+      .pipe(
+        finalize(() => {
+          this.isSaving = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.loadSeasons();
+          alert('Schedule generated successfully.');
+        },
+        error: err => {
+          console.error('Error generating schedule:', err);
+          alert('Error generating schedule.');
+        }
+      });
+  }
+
   delete(seasonId: string): void {
     if (!confirm('Are you sure you want to delete this season?')) return;
 
     this.seasonService.remove(seasonId).subscribe({
       next: () => this.loadSeasons(),
-      error: (err) => {
+      error: err => {
         console.error('Error deleting season:', err);
         alert('Error deleting season');
       }
@@ -204,30 +243,32 @@ export class Seasons implements OnInit {
     this.selectedSeasonId = null;
 
     this.form = {
-  name: '',
-  description: '',
-  startDate: '',
-  endDate: '',
-  isCurrent: false,
-  isActive: true,
-  registrationOpen: true,
-  maxPlayers: 20
-};
+      name: '',
+      description: '',
+      startDate: '',
+      endDate: '',
+      isCurrent: false,
+      isActive: true,
+      registrationOpen: true,
+      maxPlayers: 20,
+      totalWeeks: 8
+    };
   }
 
   private buildDto(): CreateSeasonDto {
-  return {
-    name: this.form.name.trim(),
-    description: this.form.description.trim(),
-    startDate: this.form.startDate,
-    endDate: this.form.endDate,
-    timeZone: this.getClientTimeZone(),
-    isCurrent: this.form.isCurrent,
-    isActive: this.form.isActive,
-    registrationOpen: this.form.registrationOpen,
-    maxPlayers: Number(this.form.maxPlayers)
-  };
-}
+    return {
+      name: this.form.name.trim(),
+      description: this.form.description.trim(),
+      startDate: this.form.startDate,
+      endDate: this.form.endDate,
+      timeZone: this.getClientTimeZone(),
+      isCurrent: this.form.isCurrent,
+      isActive: this.form.isActive,
+      registrationOpen: this.form.registrationOpen,
+      maxPlayers: Number(this.form.maxPlayers),
+      totalWeeks: Number(this.form.totalWeeks)
+    };
+  }
 
   private getClientTimeZone(): string {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';

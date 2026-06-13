@@ -24,6 +24,8 @@ public class Season : BaseEntity
 	public bool RegistrationOpen { get; set; } = false;
 	public int MaxPlayers { get; set; } = 32;
 
+	public int TotalWeeks { get; set; } = 8;
+
 	public ICollection<SeasonRegistration> Registrations { get; set; }
 		= new List<SeasonRegistration>();
 

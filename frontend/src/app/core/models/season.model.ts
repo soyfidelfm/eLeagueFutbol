@@ -13,6 +13,8 @@ export interface Season {
   registrationOpen: boolean;
   maxPlayers: number;
 
+  totalWeeks: number;
+
   createdAtUTC: string;
   updatedAtUTC?: string | null;
 }
@@ -31,6 +33,8 @@ export interface CreateSeasonDto {
 
   registrationOpen: boolean;
   maxPlayers: number;
+
+  totalWeeks: number;
 }
 
 export interface UpdateSeasonDto {
@@ -47,6 +51,8 @@ export interface UpdateSeasonDto {
 
   registrationOpen: boolean;
   maxPlayers: number;
+
+  totalWeeks: number;
 }
 
 export interface RegisterSeasonDto {

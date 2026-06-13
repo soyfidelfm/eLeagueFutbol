@@ -240,9 +240,13 @@ export class Dashboard implements OnInit {
       )
       .subscribe({
         next: () => {
-          this.isRegistered = true;
-          this.showRegisterModal = false;
-        },
+  this.isRegistered = true;
+  this.showRegisterModal = false;
+  this.registerMessage = '';
+
+  this.loadMe();
+  this.loadDashboard();
+},
         error: err => {
           console.error('Error registering season', err);
           this.registerMessage = err?.error?.message ?? 'Could not register.';

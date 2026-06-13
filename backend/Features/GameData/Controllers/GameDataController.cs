@@ -26,6 +26,17 @@ public class GameDataController : ControllerBase
 		return Ok(clubs);
 	}
 
+	[HttpGet("clubs/{gameClubId:guid}")]
+	public async Task<ActionResult<GameClubDto>> GetClubById(Guid gameClubId)
+	{
+		var club = await _gameDataService.GetByIdAsync(gameClubId);
+
+		if (club is null)
+			return NotFound();
+
+		return Ok(club);
+	}
+
 	[HttpPost("clubs/import")]
 	public async Task<IActionResult> Import(ImportGameClubsDto dto)
 	{

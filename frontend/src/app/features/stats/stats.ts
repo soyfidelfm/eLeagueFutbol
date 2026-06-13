@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import { StatsService } from '../../core/services/stats.service';
@@ -22,8 +22,9 @@ export class Stats implements OnInit {
   selectedTab = 'overview';
 
   constructor(
-    private statsService: StatsService
-  ) {}
+  private statsService: StatsService,
+  private cdr: ChangeDetectorRef
+) {}
 
   ngOnInit(): void {
     this.loadStats();
@@ -34,24 +35,34 @@ export class Stats implements OnInit {
   }
 
   loadStats(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+  this.isLoading = true;
+  this.errorMessage = '';
+  this.stats = null;
 
-    this.statsService.getOverview()
-      .pipe(
-        finalize(() => {
-          this.isLoading = false;
-        })
-      )
-      .subscribe({
-        next: response => {
-          console.log('Stats response:', response);
-          this.stats = response;
-        },
-        error: err => {
-          console.error('Error loading stats:', err);
-          this.errorMessage = 'Could not load stats.';
-        }
-      });
-  }
+  this.cdr.detectChanges();
+
+  this.statsService.getOverview()
+    .pipe(
+      finalize(() => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      })
+    )
+    .subscribe({
+      next: response => {
+        console.log('Stats response:', response);
+
+        this.stats = response;
+
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        console.error('Error loading stats:', err);
+
+        this.errorMessage = 'Could not load stats.';
+
+        this.cdr.detectChanges();
+      }
+    });
+}
 }

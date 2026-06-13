@@ -7,11 +7,12 @@ export const API_ENDPOINTS = {
   matches: `${environment.api.baseUrl}/api/matches`,
   users: `${environment.api.baseUrl}/api/users`,
   dashboard: `${environment.api.baseUrl}/api/dashboard`,
-  gameClubs: `${environment.api.baseUrl}/api/game-clubs`,
+  gameData: `${environment.api.baseUrl}/api/game-data`,
   statsOverview: `${environment.api.baseUrl}/api/stats/overview`,
   // api-endpoints.ts
 matchStatsOcrPreview: `${environment.api.baseUrl}/api/match-stats/ocr-preview`,
 matchStatsConfirmPlayer: `${environment.api.baseUrl}/api/match-stats/confirm-player`,
 clubs: `${environment.api.baseUrl}/api/clubs`,
-cloudinary: `${environment.api.baseUrl}/api/cloudinary`
+cloudinary: `${environment.api.baseUrl}/api/cloudinary`,
+rankings: `${environment.api.baseUrl}/api/rankings`
 };

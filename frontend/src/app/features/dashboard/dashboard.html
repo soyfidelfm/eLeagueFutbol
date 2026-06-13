@@ -68,11 +68,11 @@
         <span>Selected Club</span>
 
         <div class="club-summary" *ngIf="selectedClub; else clubFallback">
-          <img
+          <!-- <img
             *ngIf="selectedClub.logoUrl"
             [src]="selectedClub.logoUrl"
             [alt]="selectedClub.name"
-          />
+          /> -->
 
           <strong>{{ selectedClub.name }}</strong>
         </div>

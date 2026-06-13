@@ -18,4 +18,5 @@ public interface IGameDataService
 
 	Task<List<GamePlayerDto>> GetPlayersAsync(string? search);
 	Task<GameClubLogoDto?> UploadLogoAsync(Guid gameClubId, IFormFile file);
+	Task<GameClubDto?> GetByIdAsync(Guid gameClubId);
 }

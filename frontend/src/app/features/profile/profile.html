@@ -49,19 +49,44 @@
           placeholder="Enter your player name" />
       </label>
 
-      <label class="full-width">
-        <span>
-          <i class="fa-regular fa-image"></i>
-          Avatar URL
-        </span>
+      <div class="avatar-upload-section full-width">
+
+        <div class="avatar-upload-preview">
+          <img
+            *ngIf="form.avatarUrl"
+            [src]="form.avatarUrl"
+            alt="Avatar" />
+
+          <div *ngIf="!form.avatarUrl" class="avatar-placeholder">
+            <i class="fa-regular fa-user"></i>
+          </div>
+        </div>
 
         <input
-          type="text"
-          name="avatarUrl"
-          [(ngModel)]="form.avatarUrl"
-          autocomplete="off"
-          placeholder="https://example.com/avatar.png" />
-      </label>
+          #avatarInput
+          type="file"
+          accept="image/*"
+          hidden
+          [disabled]="isUploadingAvatar"
+          (change)="onAvatarSelected($event)" />
+
+        <button
+          type="button"
+          class="btn-secondary"
+          [disabled]="isUploadingAvatar"
+          (click)="avatarInput.click()">
+
+          <i
+            class="fa-solid"
+            [ngClass]="isUploadingAvatar ? 'fa-circle-notch fa-spin' : 'fa-camera'">
+          </i>
+
+          <span>
+            {{ isUploadingAvatar ? 'Uploading Avatar...' : 'Change Avatar' }}
+          </span>
+        </button>
+
+      </div>
 
       <div class="team-selection-grid full-width">
 
@@ -116,6 +141,7 @@
 
             <mat-autocomplete
               #teamAuto="matAutocomplete"
+              [displayWith]="displayTeamName"
               (optionSelected)="selectTeam($event.option.value)">
 
               <mat-option
@@ -158,18 +184,10 @@
           placeholder="Enter your PS ID or Gamertag" />
       </label>
 
-      <!-- 
-      <div class="timezone-preview full-width">
-        <i class="fa-regular fa-clock"></i>
-        <span>Time Zone</span>
-        <strong>{{ form.timeZone }}</strong>
-      </div> 
-      -->
-
       <button
         class="btn-primary full-width"
         type="submit"
-        [disabled]="isSaving">
+        [disabled]="isSaving || isUploadingAvatar">
 
         <i
           class="fa-solid"

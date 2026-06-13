@@ -1,4 +1,5 @@
 ﻿using backend.Entities.Common;
+using backend.Entities.Identity;
 
 namespace backend.Entities.GameData;
 
@@ -34,4 +35,6 @@ public class GameClub : BaseEntity
 
 	public ICollection<GamePlayer> Players { get; set; }
 		= new List<GamePlayer>();
+
+	public User? User { get; set; }
 }

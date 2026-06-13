@@ -1,34 +1,234 @@
-<div class="coming-soon">
+<section class="rankings-page">
+  <div *ngIf="isLoading" class="dashboard-loading-overlay">
 
-  <div class="coming-card">
+  <div class="loading-card">
 
-    <div class="coming-icon">
-      <i class="fa-solid fa-chart-line"></i>
-    </div>
+    <div class="loading-ring"></div>
 
-    <span class="eyebrow">GLOBAL LEADERBOARDS</span>
-
-    <h1>Rankings Center</h1>
+    <h2>LOADING RANKINGS</h2>
 
     <p>
-      Follow the best players and clubs across the
-      league with advanced rankings, leaderboards
-      and seasonal standings.
+      Loading season standings, club statistics and leaderboard data...
     </p>
 
-    <div class="feature-list">
-      <span>✓ Player Rankings</span>
-      <span>✓ Club Rankings</span>
-      <span>✓ Seasonal Standings</span>
-      <span>✓ Win Streaks</span>
-      <span>✓ Division Tables</span>
-      <span>✓ Hall of Fame</span>
-    </div>
-
-    <div class="coming-badge">
-      COMING SOON
+    <div class="loading-bar">
+      <span></span>
     </div>
 
   </div>
 
 </div>
+
+  <div class="page-header">
+
+  <div class="page-header-content">
+    <span class="page-eyebrow">
+      SEASON LEADERBOARD
+    </span>
+
+    <h1>Rankings</h1>
+
+    <p>
+      Compare clubs and track league standings across all seasons.
+    </p>
+  </div>
+
+  <div class="page-header-actions">
+
+    <div class="season-select">
+      <i class="fa-solid fa-calendar-days"></i>
+
+      <select
+        [(ngModel)]="selectedSeasonId"
+        (change)="onSeasonChange()">
+
+        <option
+          *ngFor="let season of seasons"
+          [value]="season.seasonId">
+
+          {{ season.name }}
+
+        </option>
+
+      </select>
+    </div>
+
+  </div>
+
+</div>
+
+  
+
+  <div *ngIf="!isLoading && errorMessage" class="error">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <article
+  *ngIf="!isLoading && !errorMessage"
+  class="ranking-card league-table-card">
+
+    <div class="card-header">
+      <div>
+        <span class="section-label">Club Standings</span>
+
+        <h2>
+          <i class="fa-solid fa-trophy"></i>
+          {{ selectedSeasonName }} Table
+        </h2>
+
+        <p>
+          Registered clubs ranked by points,
+          goal difference and goals scored.
+        </p>
+      </div>
+    </div>
+
+    <div class="ranking-summary-grid">
+
+      <div class="summary-card crown">
+        <i class="fa-solid fa-crown"></i>
+
+        <div>
+          <span>League Leader</span>
+
+          <strong>
+            {{ clubRankings[0]?.clubName || 'N/A' }}
+          </strong>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <i class="fa-solid fa-users"></i>
+
+        <div>
+          <span>Registered Clubs</span>
+          <strong>{{ clubRankings.length }}</strong>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <i class="fa-solid fa-futbol"></i>
+
+        <div>
+          <span>Total Goals</span>
+          <strong>{{ getTotalGoals() }}</strong>
+        </div>
+      </div>
+
+    </div>
+
+    <div
+      *ngIf="clubRankings.length === 0"
+      class="empty-state">
+
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>No clubs registered for this season.</span>
+
+    </div>
+
+    <div
+      *ngIf="clubRankings.length > 0"
+      class="table-wrap">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Club</th>
+            <th>PTS</th>
+            <th>W</th>
+            <th>D</th>
+            <th>L</th>
+            <th>GF</th>
+            <th>GA</th>
+            <th>GD</th>
+            <th>Win %</th>
+            <th>Form</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let club of clubRankings">
+
+            <td>
+              <span
+                class="rank-badge"
+                [ngClass]="getRankClass(club.rank)">
+
+                {{ club.rank }}
+
+              </span>
+            </td>
+
+            <td>
+              <div class="identity">
+                <img
+                  [src]="club.clubLogoUrl || '/images/logo-clear.png'"
+                  [alt]="club.clubName" />
+
+                <span>
+                  {{ club.clubName }}
+                </span>
+              </div>
+            </td>
+
+            <td class="points">
+              {{ club.points }}
+            </td>
+
+            <td>{{ club.wins }}</td>
+
+            <td>{{ club.draws }}</td>
+
+            <td>{{ club.losses }}</td>
+
+            <td>{{ club.goalsFor }}</td>
+
+            <td>{{ club.goalsAgainst }}</td>
+
+            <td>
+              {{ club.goalDifference > 0 ? '+' : '' }}{{ club.goalDifference }}
+            </td>
+
+            <td>
+              {{ club.winRate }}%
+            </td>
+
+            <td>
+
+              <div
+                class="form"
+                *ngIf="club.form?.length; else noForm">
+
+                <span
+                  *ngFor="let result of club.form"
+                  [class.win]="result === 'W'"
+                  [class.loss]="result === 'L'"
+                  [class.draw]="result === 'D'">
+
+                  {{ result }}
+
+                </span>
+
+              </div>
+
+              <ng-template #noForm>
+                <span class="no-form">—</span>
+              </ng-template>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </article>
+
+</section>

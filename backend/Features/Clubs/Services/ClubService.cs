@@ -80,30 +80,30 @@ public class ClubService : IClubService
 				!x.IsDeleted &&
 				x.Status == MatchStatus.Finished &&
 				(
-					teamIds.Contains(x.HomeTeamId) ||
-					teamIds.Contains(x.AwayTeamId)
+					teamIds.Contains(x.HomeGameClubId) ||
+					teamIds.Contains(x.AwayGameClubId)
 				))
 			.ToListAsync();
 
 		var matchesPlayed = matches.Count;
 
 		var wins = matches.Count(x =>
-			(teamIds.Contains(x.HomeTeamId) && x.HomeScore > x.AwayScore) ||
-			(teamIds.Contains(x.AwayTeamId) && x.AwayScore > x.HomeScore));
+			(teamIds.Contains(x.HomeGameClubId) && x.HomeScore > x.AwayScore) ||
+			(teamIds.Contains(x.AwayGameClubId) && x.AwayScore > x.HomeScore));
 
 		var losses = matches.Count(x =>
-			(teamIds.Contains(x.HomeTeamId) && x.HomeScore < x.AwayScore) ||
-			(teamIds.Contains(x.AwayTeamId) && x.AwayScore < x.HomeScore));
+			(teamIds.Contains(x.HomeGameClubId) && x.HomeScore < x.AwayScore) ||
+			(teamIds.Contains(x.AwayGameClubId) && x.AwayScore < x.HomeScore));
 
 		var draws = matches.Count(x => x.HomeScore == x.AwayScore);
 
 		var goalsFor = matches.Sum(x =>
-			teamIds.Contains(x.HomeTeamId)
+			teamIds.Contains(x.HomeGameClubId)
 				? x.HomeScore
 				: x.AwayScore);
 
 		var goalsAgainst = matches.Sum(x =>
-			teamIds.Contains(x.HomeTeamId)
+			teamIds.Contains(x.HomeGameClubId)
 				? x.AwayScore
 				: x.HomeScore);
 

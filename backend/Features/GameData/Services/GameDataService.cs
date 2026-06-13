@@ -371,4 +371,23 @@ public class GameDataService : IGameDataService
 			LogoPublicId = club.LogoPublicId!
 		};
 	}
+	public async Task<GameClubDto?> GetByIdAsync(Guid gameClubId)
+	{
+		return await _context.GameClubs
+			.AsNoTracking()
+			.Where(x =>
+				x.GameClubId == gameClubId &&
+				!x.IsDeleted &&
+				x.IsActive)
+			.Select(x => new GameClubDto
+			{
+				GameClubId = x.GameClubId,
+				Name = x.Name,
+				Code = x.Code,
+				League = x.League,
+				Country = x.Country,
+				LogoUrl = x.LogoUrl
+			})
+			.FirstOrDefaultAsync();
+	}
 }

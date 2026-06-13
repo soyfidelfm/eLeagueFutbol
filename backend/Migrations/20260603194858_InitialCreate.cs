@@ -116,8 +116,8 @@ namespace backend.Migrations
                 {
                     MatchId = table.Column<Guid>(type: "uuid", nullable: false),
                     TournamentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    HomeTeamId = table.Column<Guid>(type: "uuid", nullable: false),
-                    AwayTeamId = table.Column<Guid>(type: "uuid", nullable: false),
+                    HomeGameClubId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AwayGameClubId = table.Column<Guid>(type: "uuid", nullable: false),
                     HomeScore = table.Column<int>(type: "integer", nullable: false),
                     AwayScore = table.Column<int>(type: "integer", nullable: false),
                     MatchDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -132,14 +132,14 @@ namespace backend.Migrations
                 {
                     table.PrimaryKey("PK_Matches", x => x.MatchId);
                     table.ForeignKey(
-                        name: "FK_Matches_Teams_AwayTeamId",
-                        column: x => x.AwayTeamId,
+                        name: "FK_Matches_Teams_AwayGameClubId",
+                        column: x => x.AwayGameClubId,
                         principalTable: "Teams",
                         principalColumn: "TeamId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Matches_Teams_HomeTeamId",
-                        column: x => x.HomeTeamId,
+                        name: "FK_Matches_Teams_HomeGameClubId",
+                        column: x => x.HomeGameClubId,
                         principalTable: "Teams",
                         principalColumn: "TeamId",
                         onDelete: ReferentialAction.Cascade);
@@ -217,14 +217,14 @@ namespace backend.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Matches_AwayTeamId",
+                name: "IX_Matches_AwayGameClubId",
                 table: "Matches",
-                column: "AwayTeamId");
+                column: "AwayGameClubId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Matches_HomeTeamId",
+                name: "IX_Matches_HomeGameClubId",
                 table: "Matches",
-                column: "HomeTeamId");
+                column: "HomeGameClubId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Matches_TournamentId",

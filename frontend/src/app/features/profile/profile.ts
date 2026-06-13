@@ -23,6 +23,10 @@ import { User } from '../../core/models/user.model';
 import { UserService } from '../../core/services/user.service';
 import { GameClub } from '../../core/models/game-club.model';
 import { GameClubService } from '../../core/services/game-club.service';
+import {
+  CloudinaryService,
+  CloudinaryUploadResponse
+} from '../../core/services/cloudinary.service';
 
 @Component({
   selector: 'app-profile',
@@ -55,29 +59,38 @@ export class Profile implements OnInit {
   teamSearchText = '';
 
   selectedLeague = '';
-  selectedGameClubId = '';
+  selectedGameClubId: string | null = null;
 
   user: User | null = null;
 
   isLoading = false;
   isSaving = false;
+  isUploadingAvatar = false;
 
   errorMessage = '';
   successMessage = '';
 
-  form = {
+  form: {
+    displayName: string;
+    avatarUrl: string;
+    timeZone: string;
+    clubName: string;
+    gameClubId: string | null;
+    gamerTag: string;
+  } = {
     displayName: '',
     avatarUrl: '',
     timeZone: '',
     clubName: '',
-    gameClubId: '',
+    gameClubId: null,
     gamerTag: ''
   };
 
   constructor(
     private userService: UserService,
     private cdr: ChangeDetectorRef,
-    private gameClubService: GameClubService
+    private gameClubService: GameClubService,
+    private cloudinaryService: CloudinaryService
   ) {}
 
   ngOnInit(): void {
@@ -85,6 +98,53 @@ export class Profile implements OnInit {
 
     this.loadLeagues();
     this.loadUser();
+  }
+
+  displayTeamName(club: GameClub | string | null): string {
+    if (!club) {
+      return '';
+    }
+
+    if (typeof club === 'string') {
+      return club;
+    }
+
+    return club.name;
+  }
+
+  onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    if (!input.files || input.files.length === 0) {
+      return;
+    }
+
+    const file = input.files[0];
+
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.isUploadingAvatar = true;
+
+    this.cloudinaryService.uploadAvatar(file)
+      .pipe(
+        finalize(() => {
+          this.isUploadingAvatar = false;
+          input.value = '';
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response: CloudinaryUploadResponse) => {
+          this.form.avatarUrl = response.secureUrl;
+          this.successMessage = 'Avatar uploaded. Save your profile to keep changes.';
+          this.cdr.detectChanges();
+        },
+        error: error => {
+          console.error('Error uploading avatar:', error);
+          this.errorMessage = 'Error uploading avatar.';
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   private getCurrentTimeZone(): string {
@@ -137,19 +197,21 @@ export class Profile implements OnInit {
             avatarUrl: user.avatarUrl ?? '',
             timeZone: currentTimeZone,
             clubName: user.clubName ?? '',
-            gameClubId: user.gameClubId ?? '',
+            gameClubId: user.gameClubId ?? null,
             gamerTag: user.gamerTag ?? ''
           };
 
-          this.selectedLeague = user.gameClubLeague ?? '';
-          this.leagueSearchText = user.gameClubLeague ?? '';
+          this.selectedGameClubId = user.gameClubId ?? null;
+this.form.gameClubId = this.selectedGameClubId;
 
-          this.selectedGameClubId = user.gameClubId ?? '';
-          this.form.gameClubId = this.selectedGameClubId;
+this.selectedLeague = user.gameClubLeague ?? '';
+this.leagueSearchText = user.gameClubLeague ?? '';
 
-          if (this.selectedLeague) {
-            this.loadClubsByLeague(this.selectedLeague, true);
-          }
+if (this.selectedLeague) {
+  this.loadClubsByLeague(this.selectedLeague, true);
+} else if (this.selectedGameClubId) {
+  this.loadSelectedClubById(this.selectedGameClubId);
+}
 
           this.cdr.detectChanges();
         },
@@ -170,8 +232,8 @@ export class Profile implements OnInit {
 
     if (this.selectedLeague !== this.leagueSearchText) {
       this.selectedLeague = '';
-      this.selectedGameClubId = '';
-      this.form.gameClubId = '';
+      this.selectedGameClubId = null;
+      this.form.gameClubId = null;
       this.teamSearchText = '';
       this.gameClubs = [];
       this.filteredGameClubs = [];
@@ -182,8 +244,8 @@ export class Profile implements OnInit {
     this.selectedLeague = league;
     this.leagueSearchText = league;
 
-    this.selectedGameClubId = '';
-    this.form.gameClubId = '';
+    this.selectedGameClubId = null;
+    this.form.gameClubId = null;
     this.teamSearchText = '';
     this.gameClubs = [];
     this.filteredGameClubs = [];
@@ -193,6 +255,29 @@ export class Profile implements OnInit {
 
     this.loadClubsByLeague(league, false);
   }
+
+  private loadSelectedClubById(gameClubId: string): void {
+  this.gameClubService.getById(gameClubId).subscribe({
+    next: club => {
+      this.selectedLeague = club.league ?? '';
+      this.leagueSearchText = club.league ?? '';
+
+      this.selectedGameClubId = club.gameClubId;
+      this.form.gameClubId = club.gameClubId;
+
+      this.teamSearchText = club.name ?? '';
+
+      if (this.selectedLeague) {
+        this.loadClubsByLeague(this.selectedLeague, true);
+      }
+
+      this.cdr.detectChanges();
+    },
+    error: error => {
+      console.error('Error loading selected club:', error);
+    }
+  });
+}
 
   private closeLeaguePanel(): void {
     this.leagueTrigger?.closePanel();
@@ -242,8 +327,8 @@ export class Profile implements OnInit {
     );
 
     if (selectedClub?.name !== this.teamSearchText) {
-      this.selectedGameClubId = '';
-      this.form.gameClubId = '';
+      this.selectedGameClubId = null;
+      this.form.gameClubId = null;
     }
   }
 
@@ -299,14 +384,14 @@ export class Profile implements OnInit {
             avatarUrl: user.avatarUrl ?? '',
             timeZone: currentTimeZone,
             clubName: user.clubName ?? '',
-            gameClubId: user.gameClubId ?? '',
+            gameClubId: user.gameClubId ?? null,
             gamerTag: user.gamerTag ?? ''
           };
 
           this.selectedLeague = user.gameClubLeague ?? '';
           this.leagueSearchText = user.gameClubLeague ?? '';
 
-          this.selectedGameClubId = user.gameClubId ?? '';
+          this.selectedGameClubId = user.gameClubId ?? null;
           this.form.gameClubId = this.selectedGameClubId;
 
           if (this.selectedLeague) {

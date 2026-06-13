@@ -22,6 +22,7 @@ public class MeUserDto
 	public DateTime? LastLoginAtUTC { get; set; }
 
 	public List<ClaimDto> Claims { get; set; } = new();
+	public string Role { get; set; } = string.Empty;
 }
 
 public class ClaimDto

@@ -12,6 +12,8 @@ export interface User {
   gameClubId?: string | null;
   gamerTag: string;
   gameClubLeague: string;
+
+  role: string;
 }
 
 export interface SyncUserDto {
@@ -39,13 +41,18 @@ export interface MeUserDto {
   displayName: string;
   avatarUrl: string;
   timeZone: string;
+
   gamerTag?: string | null;
+
   isActive: boolean;
   lastLoginAtUTC?: string | null;
-  claims: ClaimDto[];
 
   clubName?: string | null;
   gameClubId?: string | null;
+
+  role: string;
+
+  claims: ClaimDto[];
 }
 
 export interface ClaimDto {

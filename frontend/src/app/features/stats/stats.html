@@ -1,12 +1,39 @@
 <section class="stats-page">
+  <div *ngIf="isLoading" class="dashboard-loading-overlay">
 
-  <div class="stats-header">
-    <div>
-      <span class="eyebrow">PLAYER ANALYTICS</span>
-      <h2>Stats Center</h2>
-      <p>Advanced player analytics and performance insights.</p>
+  <div class="loading-card">
+
+    <div class="loading-ring"></div>
+
+    <h2>LOADING STATS</h2>
+
+    <p>
+      Loading player analytics, performance trends and league statistics...
+    </p>
+
+    <div class="loading-bar">
+      <span></span>
     </div>
 
+  </div>
+
+</div>
+
+  <div class="page-header">
+
+  <div class="page-header-content">
+    <span class="page-eyebrow">
+      Stats
+    </span>
+
+    <h1>Stats</h1>
+
+    <p>
+      Advanced player analytics and performance insights.
+    </p>
+  </div>
+
+  <div class="page-header-actions">
     <button class="season-filter">
       <i class="fa-solid fa-calendar-days"></i>
       <span>Season 1</span>
@@ -14,10 +41,8 @@
     </button>
   </div>
 
-  <div *ngIf="isLoading" class="message">
-    <i class="fa-solid fa-circle-notch fa-spin"></i>
-    <span>Loading stats...</span>
-  </div>
+</div>
+
 
   <div *ngIf="!isLoading && errorMessage" class="error">
     <i class="fa-solid fa-triangle-exclamation"></i>

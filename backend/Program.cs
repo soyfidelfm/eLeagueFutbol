@@ -1,9 +1,12 @@
+using backend.Application.Rankings.Services;
 using backend.Data;
 using backend.Features.ActivityFeed.Services;
 using backend.Features.Cloudinary.Services;
 using backend.Features.Clubs.Services;
 using backend.Features.Dashboard.Services;
 using backend.Features.GameData.Services;
+using backend.Features.Matches.Services;
+using backend.Features.Rankings.Services;
 using backend.Features.Seasons.Services;
 using backend.Features.Stats.Services;
 using backend.Features.Users.Services;
@@ -35,6 +38,8 @@ builder.Services.Configure<CloudinarySettings>(
 
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IActivityFeedService, ActivityFeedService>();
+builder.Services.AddScoped<IRankingService, RankingService>();
+builder.Services.AddScoped<IMatchService, MatchService>();
 
 builder.Services.AddCors(options =>
 {

@@ -51,6 +51,7 @@ public class SeasonService : ISeasonService
 			EndDate = endDateUtc,
 			IsCurrent = dto.IsCurrent,
 			IsActive = dto.IsActive,
+			TotalWeeks = dto.TotalWeeks,
 			RegistrationOpen = dto.RegistrationOpen,
 			MaxPlayers = dto.MaxPlayers
 		};
@@ -78,6 +79,7 @@ public class SeasonService : ISeasonService
 		season.EndDate = endDateUtc;
 		season.IsCurrent = dto.IsCurrent;
 		season.IsActive = dto.IsActive;
+		season.TotalWeeks = dto.TotalWeeks;
 		season.RegistrationOpen = dto.RegistrationOpen;
 		season.MaxPlayers = dto.MaxPlayers;
 
@@ -211,7 +213,8 @@ public class SeasonService : ISeasonService
 			RegistrationOpen = season.RegistrationOpen,
 			MaxPlayers = season.MaxPlayers,
 			CreatedAtUTC = season.CreatedAtUTC,
-			UpdatedAtUTC = season.UpdatedAtUTC
+			UpdatedAtUTC = season.UpdatedAtUTC,
+			TotalWeeks = season.TotalWeeks
 		};
 	}
 }

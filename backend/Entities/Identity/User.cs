@@ -1,6 +1,7 @@
 ﻿namespace backend.Entities.Identity;
 
 using backend.Entities.Common;
+using backend.Entities.GameData;
 using backend.Entities.Stats;
 using backend.Entities.Teams;
 
@@ -25,9 +26,12 @@ public class User : BaseEntity
 	public string ClubName { get; set; } = string.Empty;
 
 	public Guid? GameClubId { get; set; }
+
+	public GameClub? GameClub { get; set; }
+
 	public string GamerTag { get; set; } = string.Empty;
 
-	// Navigation
+	public string Role { get; set; } = string.Empty;
 
 	public ICollection<TeamMember> TeamMemberships { get; set; }
 		= new List<TeamMember>();
