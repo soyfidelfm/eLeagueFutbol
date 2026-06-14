@@ -29,29 +29,29 @@ builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddHttpClient<IGameDataService, GameDataService>();
-builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<IMatchStatsOcrService, MatchStatsOcrService>();
 builder.Services.AddScoped<IClubService, ClubService>();
-builder.Services.Configure<CloudinarySettings>(
-	builder.Configuration.GetSection("Cloudinary"));
-
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IActivityFeedService, ActivityFeedService>();
 builder.Services.AddScoped<IRankingService, RankingService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
+
+builder.Services.Configure<CloudinarySettings>(
+	builder.Configuration.GetSection("Cloudinary"));
 
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AngularPolicy", policy =>
 	{
 		policy
-	.WithOrigins(
-		"http://localhost:4200",
-		"https://eleaguefutbol.fidelfm.com"
-	)
-	.AllowAnyHeader()
-	.AllowAnyMethod();
+			.WithOrigins(
+				"http://localhost:4200",
+				"https://eleaguefutbol.com",
+				"https://www.eleaguefutbol.com"
+			)
+			.AllowAnyHeader()
+			.AllowAnyMethod();
 	});
 });
 
@@ -70,13 +70,11 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-//if (app.Environment.IsDevelopment())
-//{
-	app.UseSwagger();
-	app.UseSwaggerUI();
-//}
+app.UseSwagger();
+app.UseSwaggerUI();
 
-//app.UseHttpsRedirection();
+// Render maneja HTTPS afuera.
+// No usar app.UseHttpsRedirection() en Render.
 
 app.UseCors("AngularPolicy");
 
