@@ -1,0 +1,25 @@
+{
+  "name": "eLeagueFutbol",
+  "short_name": "eLeague",
+  "description": "eLeagueFutbol esports league app",
+  "theme_color": "#00ff88",
+  "background_color": "#050505",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/images/iOSicon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/iOSicon-clear.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
