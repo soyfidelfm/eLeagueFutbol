@@ -117,6 +117,16 @@ public class AppDbContext : DbContext
 				.HasForeignKey(x => x.TournamentId)
 				.OnDelete(DeleteBehavior.Restrict);
 
+			entity.HasOne(x => x.HomeUser)
+				.WithMany(x => x.HomeMatches)
+				.HasForeignKey(x => x.HomeUserId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			entity.HasOne(x => x.AwayUser)
+				.WithMany(x => x.AwayMatches)
+				.HasForeignKey(x => x.AwayUserId)
+				.OnDelete(DeleteBehavior.Restrict);
+
 			entity.HasOne(x => x.HomeGameClub)
 				.WithMany()
 				.HasForeignKey(x => x.HomeGameClubId)

@@ -49,6 +49,7 @@ export interface MeUserDto {
 
   clubName?: string | null;
   gameClubId?: string | null;
+  gameClubLeague?: string | null;
 
   role: string;
 

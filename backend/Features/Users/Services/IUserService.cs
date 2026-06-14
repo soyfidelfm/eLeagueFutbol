@@ -9,7 +9,7 @@ public interface IUserService
 
 	Task<UserDto?> GetByIdAsync(Guid userId);
 
-	Task<UserDto> SyncAsync(SyncUserDto dto);
+	Task<UserDto?> SyncAsync(SyncUserDto dto, ClaimsPrincipal principal);
 
 	Task<UserDto?> UpdateAsync(Guid userId, UpdateUserDto dto);
 	Task<MeUserDto?> GetMeAsync(ClaimsPrincipal principal);

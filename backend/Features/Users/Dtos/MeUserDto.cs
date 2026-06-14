@@ -1,4 +1,6 @@
-﻿namespace backend.Features.Users.Dtos;
+﻿using CloudinaryDotNet.Actions;
+
+namespace backend.Features.Users.Dtos;
 
 public class MeUserDto
 {
@@ -20,6 +22,7 @@ public class MeUserDto
 	public bool IsActive { get; set; }
 
 	public DateTime? LastLoginAtUTC { get; set; }
+	public string? GameClubLeague { get; set; }
 
 	public List<ClaimDto> Claims { get; set; } = new();
 	public string Role { get; set; } = string.Empty;

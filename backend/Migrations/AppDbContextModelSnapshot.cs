@@ -460,6 +460,9 @@ namespace backend.Migrations
 
                     b.HasKey("UserId");
 
+                    b.HasIndex("GameClubId")
+                        .IsUnique();
+
                     b.ToTable("Users");
                 });
 
@@ -681,6 +684,9 @@ namespace backend.Migrations
                     b.Property<int>("AwayScore")
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("AwayUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreatedAtUTC")
                         .HasColumnType("timestamp with time zone");
 
@@ -692,6 +698,9 @@ namespace backend.Migrations
 
                     b.Property<int>("HomeScore")
                         .HasColumnType("integer");
+
+                    b.Property<Guid>("HomeUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -725,7 +734,11 @@ namespace backend.Migrations
 
                     b.HasIndex("AwayGameClubId");
 
+                    b.HasIndex("AwayUserId");
+
                     b.HasIndex("HomeGameClubId");
+
+                    b.HasIndex("HomeUserId");
 
                     b.HasIndex("TournamentId");
 
@@ -869,6 +882,16 @@ namespace backend.Migrations
                     b.Navigation("GameClub");
                 });
 
+            modelBuilder.Entity("backend.Entities.Identity.User", b =>
+                {
+                    b.HasOne("backend.Entities.GameData.GameClub", "GameClub")
+                        .WithOne("User")
+                        .HasForeignKey("backend.Entities.Identity.User", "GameClubId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("GameClub");
+                });
+
             modelBuilder.Entity("backend.Entities.Stats.MatchPlayerStats", b =>
                 {
                     b.HasOne("backend.Entities.Tournaments.Match", "Match")
@@ -942,9 +965,21 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("backend.Entities.Identity.User", "AwayUser")
+                        .WithMany("AwayMatches")
+                        .HasForeignKey("AwayUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("backend.Entities.GameData.GameClub", "HomeGameClub")
                         .WithMany()
                         .HasForeignKey("HomeGameClubId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Identity.User", "HomeUser")
+                        .WithMany("HomeMatches")
+                        .HasForeignKey("HomeUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -956,7 +991,11 @@ namespace backend.Migrations
 
                     b.Navigation("AwayGameClub");
 
+                    b.Navigation("AwayUser");
+
                     b.Navigation("HomeGameClub");
+
+                    b.Navigation("HomeUser");
 
                     b.Navigation("Tournament");
                 });
@@ -974,10 +1013,16 @@ namespace backend.Migrations
             modelBuilder.Entity("backend.Entities.GameData.GameClub", b =>
                 {
                     b.Navigation("Players");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend.Entities.Identity.User", b =>
                 {
+                    b.Navigation("AwayMatches");
+
+                    b.Navigation("HomeMatches");
+
                     b.Navigation("MatchStats");
 
                     b.Navigation("TeamMemberships");

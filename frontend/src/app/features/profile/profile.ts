@@ -78,20 +78,20 @@ export class Profile implements OnInit {
     gameClubId: string | null;
     gamerTag: string;
   } = {
-    displayName: '',
-    avatarUrl: '',
-    timeZone: '',
-    clubName: '',
-    gameClubId: null,
-    gamerTag: ''
-  };
+      displayName: '',
+      avatarUrl: '',
+      timeZone: '',
+      clubName: '',
+      gameClubId: null,
+      gamerTag: ''
+    };
 
   constructor(
     private userService: UserService,
     private cdr: ChangeDetectorRef,
     private gameClubService: GameClubService,
     private cloudinaryService: CloudinaryService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.form.timeZone = this.getCurrentTimeZone();
@@ -165,63 +165,56 @@ export class Profile implements OnInit {
   }
 
   loadUser(): void {
-    const userId = localStorage.getItem('userId');
+  this.errorMessage = '';
+  this.successMessage = '';
+  this.user = null;
+  this.isLoading = true;
 
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.user = null;
-    this.isLoading = true;
+  this.userService.getMe()
+    .pipe(
+      finalize(() => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      })
+    )
+    .subscribe({
+      next: user => {
+        this.user = user as unknown as User;
 
-    if (!userId) {
-      this.isLoading = false;
-      this.errorMessage = 'User not found. Please login again.';
-      this.cdr.detectChanges();
-      return;
-    }
+        const currentTimeZone = this.getCurrentTimeZone();
 
-    this.userService.getById(userId)
-      .pipe(
-        finalize(() => {
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        })
-      )
-      .subscribe({
-        next: user => {
-          this.user = user;
+        this.form = {
+          displayName: user.displayName ?? '',
+          avatarUrl: user.avatarUrl ?? '',
+          timeZone: currentTimeZone,
+          clubName: user.clubName ?? '',
+          gameClubId: user.gameClubId ?? null,
+          gamerTag: user.gamerTag ?? ''
+        };
 
-          const currentTimeZone = this.getCurrentTimeZone();
+        this.selectedGameClubId = user.gameClubId ?? null;
+        this.form.gameClubId = this.selectedGameClubId;
 
-          this.form = {
-            displayName: user.displayName ?? '',
-            avatarUrl: user.avatarUrl ?? '',
-            timeZone: currentTimeZone,
-            clubName: user.clubName ?? '',
-            gameClubId: user.gameClubId ?? null,
-            gamerTag: user.gamerTag ?? ''
-          };
+        this.selectedLeague = user.gameClubLeague ?? '';
+        this.leagueSearchText = user.gameClubLeague ?? '';
 
-          this.selectedGameClubId = user.gameClubId ?? null;
-this.form.gameClubId = this.selectedGameClubId;
+        this.teamSearchText = '';
 
-this.selectedLeague = user.gameClubLeague ?? '';
-this.leagueSearchText = user.gameClubLeague ?? '';
-
-if (this.selectedLeague) {
-  this.loadClubsByLeague(this.selectedLeague, true);
-} else if (this.selectedGameClubId) {
-  this.loadSelectedClubById(this.selectedGameClubId);
-}
-
-          this.cdr.detectChanges();
-        },
-        error: error => {
-          console.error('Error loading profile:', error);
-          this.errorMessage = 'Error loading profile.';
-          this.cdr.detectChanges();
+        if (this.selectedLeague) {
+          this.loadClubsByLeague(this.selectedLeague, true);
+        } else if (this.selectedGameClubId) {
+          this.loadSelectedClubById(this.selectedGameClubId);
         }
-      });
-  }
+
+        this.cdr.detectChanges();
+      },
+      error: error => {
+        console.error('Error loading profile:', error);
+        this.errorMessage = 'Error loading profile.';
+        this.cdr.detectChanges();
+      }
+    });
+}
 
   filterLeagues(): void {
     const value = this.leagueSearchText.toLowerCase().trim();
@@ -257,27 +250,27 @@ if (this.selectedLeague) {
   }
 
   private loadSelectedClubById(gameClubId: string): void {
-  this.gameClubService.getById(gameClubId).subscribe({
-    next: club => {
-      this.selectedLeague = club.league ?? '';
-      this.leagueSearchText = club.league ?? '';
+    this.gameClubService.getById(gameClubId).subscribe({
+      next: club => {
+        this.selectedLeague = club.league ?? '';
+        this.leagueSearchText = club.league ?? '';
 
-      this.selectedGameClubId = club.gameClubId;
-      this.form.gameClubId = club.gameClubId;
+        this.selectedGameClubId = club.gameClubId;
+        this.form.gameClubId = club.gameClubId;
 
-      this.teamSearchText = club.name ?? '';
+        this.teamSearchText = club.name ?? '';
 
-      if (this.selectedLeague) {
-        this.loadClubsByLeague(this.selectedLeague, true);
+        if (this.selectedLeague) {
+          this.loadClubsByLeague(this.selectedLeague, true);
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: error => {
+        console.error('Error loading selected club:', error);
       }
-
-      this.cdr.detectChanges();
-    },
-    error: error => {
-      console.error('Error loading selected club:', error);
-    }
-  });
-}
+    });
+  }
 
   private closeLeaguePanel(): void {
     this.leagueTrigger?.closePanel();

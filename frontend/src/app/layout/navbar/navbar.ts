@@ -1,7 +1,8 @@
-import { Component, HostListener, OnInit,ChangeDetectorRef  } from '@angular/core';
+import { Component, HostListener, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
+import { take } from 'rxjs';
 
 import { Profile } from '../../features/profile/profile';
 import { UserService } from '../../core/services/user.service';
@@ -32,32 +33,42 @@ export class Navbar implements OnInit {
     public auth: AuthService,
     private userService: UserService,
     private cdr: ChangeDetectorRef
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.loadMe();
   }
 
   loadMe(): void {
-  this.userService.getMe().subscribe({
-    next: me => {
-      this.me = me;
+    this.userService.getMe()
+      .pipe(take(1))
+      .subscribe({
+        next: me => {
+          this.me = me;
 
-      if (
-        !this.firstProfileCheckDone &&
-        !me.gamerTag?.trim()
-      ) {
-        this.showProfileModal = true;
-        this.firstProfileCheckDone = true;
-      }
+          const profileIncomplete =
+            !me.gamerTag?.trim() ||
+            !me.clubName?.trim() ||
+            !me.gameClubId;
 
-      this.cdr.detectChanges();
-    },
-    error: err => {
-      console.error('Error loading me', err);
-    }
-  });
-}
+          if (!this.firstProfileCheckDone && profileIncomplete) {
+            this.showProfileModal = true;
+            this.firstProfileCheckDone = true;
+          }
+
+          this.cdr.detectChanges();
+        },
+        error: err => {
+          console.error('Error loading me', err);
+
+          if (err.status === 404 && !this.firstProfileCheckDone) {
+            this.showProfileModal = true;
+            this.firstProfileCheckDone = true;
+            this.cdr.detectChanges();
+          }
+        }
+      });
+  }
 
   toggleUserMenu(event: MouseEvent): void {
     event.stopPropagation();
@@ -66,7 +77,6 @@ export class Navbar implements OnInit {
 
   openProfileModal(event?: MouseEvent): void {
     event?.stopPropagation();
-
     this.showUserMenu = false;
     this.showProfileModal = true;
   }
@@ -76,16 +86,16 @@ export class Navbar implements OnInit {
   }
 
   logout(): void {
-  this.auth.logout({
-    logoutParams: {
-      returnTo: window.location.origin
-    }
-  });
-
-}
+    this.auth.logout({
+      logoutParams: {
+        returnTo: window.location.origin
+      }
+    });
+  }
 
   onProfileSaved(): void {
     this.showProfileModal = false;
+    this.firstProfileCheckDone = true;
 
     this.loadMe();
 
@@ -94,6 +104,7 @@ export class Navbar implements OnInit {
 
     setTimeout(() => {
       this.showToast = false;
+      this.cdr.detectChanges();
     }, 3000);
   }
 

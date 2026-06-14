@@ -35,9 +35,13 @@ public class UsersController : ControllerBase
 	}
 
 	[HttpPost("sync")]
-	public async Task<IActionResult> Sync(SyncUserDto dto)
+	[Authorize]
+	public async Task<ActionResult<UserDto>> Sync([FromBody] SyncUserDto dto)
 	{
-		var user = await _service.SyncAsync(dto);
+		var user = await _service.SyncAsync(dto, User);
+
+		if (user == null)
+			return Unauthorized();
 
 		return Ok(user);
 	}

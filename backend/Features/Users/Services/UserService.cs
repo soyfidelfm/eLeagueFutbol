@@ -70,21 +70,28 @@ public class UserService : IUserService
 		return user;
 	}
 
-	public async Task<UserDto> SyncAsync(SyncUserDto dto)
+	public async Task<UserDto?> SyncAsync(SyncUserDto dto, ClaimsPrincipal principal)
 	{
+		var auth0Id =
+			principal.FindFirstValue(ClaimTypes.NameIdentifier)
+			?? principal.FindFirstValue("sub");
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return null;
+
 		var timeZone = string.IsNullOrWhiteSpace(dto.TimeZone)
 			? "UTC"
 			: dto.TimeZone;
 
 		var user = await _context.Users
-			.FirstOrDefaultAsync(x => x.Auth0Id == dto.Auth0Id);
+			.FirstOrDefaultAsync(x => x.Auth0Id == auth0Id && !x.IsDeleted);
 
 		if (user == null)
 		{
 			user = new User
 			{
 				UserId = Guid.NewGuid(),
-				Auth0Id = dto.Auth0Id,
+				Auth0Id = auth0Id,
 				Email = dto.Email,
 				DisplayName = dto.DisplayName,
 				AvatarUrl = dto.AvatarUrl,
@@ -103,23 +110,18 @@ public class UserService : IUserService
 		{
 			user.Email = dto.Email;
 			user.DisplayName = dto.DisplayName;
-			user.AvatarUrl = dto.AvatarUrl;
 			user.TimeZone = timeZone;
 			user.LastLoginAtUTC = DateTime.UtcNow;
 			user.IsActive = true;
+
+			if (string.IsNullOrWhiteSpace(user.AvatarUrl))
+				user.AvatarUrl = dto.AvatarUrl;
 
 			if (string.IsNullOrWhiteSpace(user.Role))
 				user.Role = "Player";
 		}
 
 		await _context.SaveChangesAsync();
-
-		var gameClubLeague = user.GameClubId == null
-			? string.Empty
-			: await _context.GameClubs
-				.Where(x => x.GameClubId == user.GameClubId)
-				.Select(x => x.League)
-				.FirstOrDefaultAsync() ?? string.Empty;
 
 		return new UserDto
 		{
@@ -135,7 +137,7 @@ public class UserService : IUserService
 			GameClubId = user.GameClubId,
 			GamerTag = user.GamerTag,
 			Role = user.Role,
-			GameClubLeague = gameClubLeague
+			GameClubLeague = string.Empty
 		};
 	}
 
@@ -200,6 +202,14 @@ public class UserService : IUserService
 		if (user == null)
 			return null;
 
+		var gameClubLeague = user.GameClubId == null
+			? string.Empty
+			: await _context.GameClubs
+				.AsNoTracking()
+				.Where(x => x.GameClubId == user.GameClubId)
+				.Select(x => x.League)
+				.FirstOrDefaultAsync() ?? string.Empty;
+
 		return new MeUserDto
 		{
 			UserId = user.UserId,
@@ -210,6 +220,7 @@ public class UserService : IUserService
 			TimeZone = user.TimeZone,
 			ClubName = user.ClubName,
 			GameClubId = user.GameClubId,
+			GameClubLeague = gameClubLeague,
 			GamerTag = user.GamerTag,
 			IsActive = user.IsActive,
 			LastLoginAtUTC = user.LastLoginAtUTC,

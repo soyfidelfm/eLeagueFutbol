@@ -4,6 +4,7 @@ using backend.Entities.Common;
 using backend.Entities.GameData;
 using backend.Entities.Stats;
 using backend.Entities.Teams;
+using backend.Entities.Tournaments;
 
 public class User : BaseEntity
 {
@@ -38,4 +39,10 @@ public class User : BaseEntity
 
 	public ICollection<MatchPlayerStats> MatchStats { get; set; }
 		= new List<MatchPlayerStats>();
+
+	public ICollection<Match> HomeMatches { get; set; }
+= new List<Match>();
+
+	public ICollection<Match> AwayMatches { get; set; }
+		= new List<Match>();
 }

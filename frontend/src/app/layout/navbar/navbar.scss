@@ -170,6 +170,7 @@
   flex-shrink: 0;
   border-radius: 50%;
   object-fit: cover;
+  object-position: top center;
   border: 1px solid rgba(0, 255, 136, .4);
 }
 
@@ -396,13 +397,10 @@
 @media (max-width: 900px) and (orientation: portrait) {
   .navbar {
     height: calc(92px + env(safe-area-inset-top));
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     padding: env(safe-area-inset-top) 22px 0 22px;
-
     gap: 14px;
   }
 
@@ -460,6 +458,8 @@
     opacity: 1;
     visibility: visible;
     flex-shrink: 0;
+    object-fit: cover;
+    object-position: top center;
   }
 
   .profile-box.loading img {

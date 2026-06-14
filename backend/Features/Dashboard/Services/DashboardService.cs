@@ -58,14 +58,16 @@ public class DashboardService : IDashboardService
 			.ToListAsync(ct);
 
 		var featuredMatch = await _context.Matches
-			.Include(x => x.Tournament)
-			.Include(x => x.HomeGameClub)
-			.Include(x => x.AwayGameClub)
-			.Where(x =>
-				!x.IsDeleted &&
-				x.IsMatchOfTheWeek)
-			.OrderBy(x => x.MatchDate)
-			.FirstOrDefaultAsync(ct);
+	.Include(x => x.Tournament)
+	.Include(x => x.HomeUser)
+	.Include(x => x.AwayUser)
+	.Include(x => x.HomeGameClub)
+	.Include(x => x.AwayGameClub)
+	.Where(x =>
+		!x.IsDeleted &&
+		x.IsMatchOfTheWeek)
+	.OrderBy(x => x.MatchDate)
+	.FirstOrDefaultAsync(ct);
 
 		var activeMatches = await _context.Matches
 			.Include(x => x.Tournament)
@@ -244,12 +246,25 @@ public class DashboardService : IDashboardService
 	}
 
 	private static MatchOfWeekDto BuildMatchOfWeek(
-		Match match,
-		string timeZone)
+	Match match,
+	string timeZone)
 	{
+		var homeName = string.IsNullOrWhiteSpace(match.HomeUser?.ClubName)
+			? match.HomeGameClub.Name
+			: match.HomeUser.ClubName;
+
+		var awayName = string.IsNullOrWhiteSpace(match.AwayUser?.ClubName)
+			? match.AwayGameClub.Name
+			: match.AwayUser.ClubName;
+
 		return new MatchOfWeekDto
 		{
-			Arena = match.Arena,
+			Arena = !string.IsNullOrWhiteSpace(match.HomeGameClub.StadiumName)
+	? match.HomeGameClub.StadiumName
+	: !string.IsNullOrWhiteSpace(match.AwayGameClub.StadiumName)
+		? match.AwayGameClub.StadiumName
+		: "Champions Arena",
+
 			Stage = match.Tournament?.Name ?? match.Status.ToString(),
 
 			Date = DateTimeHelper.FormatLocal(
@@ -263,19 +278,23 @@ public class DashboardService : IDashboardService
 
 			Home = new FeaturedPlayerDto
 			{
-				Name = match.HomeGameClub.Name,
+				Name = homeName,
 				Rank = 0,
 				Rating = match.HomeGameClub.OverallRating,
-				Image = match.HomeGameClub.LogoUrl ?? "",
+				Image = !string.IsNullOrWhiteSpace(match.HomeUser?.AvatarUrl)
+					? match.HomeUser.AvatarUrl
+					: match.HomeGameClub.LogoUrl ?? "",
 				Streak = $"{match.HomeScore} Goals"
 			},
 
 			Away = new FeaturedPlayerDto
 			{
-				Name = match.AwayGameClub.Name,
+				Name = awayName,
 				Rank = 0,
 				Rating = match.AwayGameClub.OverallRating,
-				Image = match.AwayGameClub.LogoUrl ?? "",
+				Image = !string.IsNullOrWhiteSpace(match.AwayUser?.AvatarUrl)
+					? match.AwayUser.AvatarUrl
+					: match.AwayGameClub.LogoUrl ?? "",
 				Streak = $"{match.AwayScore} Goals"
 			}
 		};
