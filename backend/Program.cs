@@ -8,6 +8,7 @@ using backend.Features.GameData.Services;
 using backend.Features.Matches.Services;
 using backend.Features.Rankings.Services;
 using backend.Features.Seasons.Services;
+using backend.Features.Sidebar.Services;
 using backend.Features.Stats.Services;
 using backend.Features.Users.Services;
 using eLeagueFutbol.Application.Stats;
@@ -36,6 +37,7 @@ builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IActivityFeedService, ActivityFeedService>();
 builder.Services.AddScoped<IRankingService, RankingService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
+builder.Services.AddScoped<ISidebarService, SidebarService>();
 
 builder.Services.Configure<CloudinarySettings>(
 	builder.Configuration.GetSection("Cloudinary"));
