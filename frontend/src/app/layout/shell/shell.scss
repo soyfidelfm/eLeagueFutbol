@@ -4,11 +4,8 @@
 
 .app-shell {
   position: relative;
-
   display: flex;
-
   min-height: 100vh;
-
   overflow: hidden;
 
   background:
@@ -31,9 +28,7 @@
 .app-bg-overlay {
   position: fixed;
   inset: 0;
-
   pointer-events: none;
-
   z-index: 0;
 
   background:
@@ -105,7 +100,6 @@ app-navbar {
     min-height: 100dvh;
 
     flex-direction: column;
-
     overflow: hidden;
 
     background-size: cover;
@@ -122,7 +116,7 @@ app-navbar {
     left: 0;
     right: 0;
 
-    height: 76px;
+    height: calc(92px + env(safe-area-inset-top));
 
     z-index: 1000;
   }
@@ -133,7 +127,7 @@ app-navbar {
     right: 0;
     bottom: 0;
 
-    height: 76px;
+    height: calc(76px + env(safe-area-inset-bottom));
 
     z-index: 1000;
   }
@@ -142,15 +136,16 @@ app-navbar {
     width: 100%;
     height: 100dvh;
     min-height: 100dvh;
-
     overflow: hidden;
   }
 
   .page-content {
-    height: calc(100dvh - 76px - 76px);
+    height: calc(
+      100dvh - 92px - env(safe-area-inset-top) - 76px - env(safe-area-inset-bottom)
+    );
 
-    margin-top: 76px;
-    margin-bottom: 76px;
+    margin-top: calc(92px + env(safe-area-inset-top));
+    margin-bottom: calc(76px + env(safe-area-inset-bottom));
 
     padding: 0;
 
