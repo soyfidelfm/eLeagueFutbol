@@ -587,13 +587,14 @@
 @media (max-width: 900px) and (orientation: portrait) {
 
   .navbar {
-    height: 92px;
+    height: calc(104px + env(safe-area-inset-top));
+    padding: calc(env(safe-area-inset-top) + 8px) 22px 0 22px;
 
     display: flex;
     align-items: center;
     justify-content: space-between;
 
-    padding: 0 22px;
+    
     gap: 14px;
   }
 

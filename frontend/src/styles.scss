@@ -898,3 +898,14 @@ td {
     font-size: 14px;
   }
 }
+@supports (padding-top: env(safe-area-inset-top)) {
+  @media (max-width: 768px) {
+    .navbar,
+    .app-navbar,
+    .topbar,
+    .mobile-topbar {
+      padding-top: env(safe-area-inset-top);
+      min-height: calc(82px + env(safe-area-inset-top));
+    }
+  }
+}
