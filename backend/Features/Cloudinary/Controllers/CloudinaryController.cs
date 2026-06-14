@@ -1,4 +1,4 @@
-﻿using backend.Features.Cloudinary.Services;
+using backend.Features.Cloudinary.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +17,8 @@ public class CloudinaryController : ControllerBase
 	}
 
 	[HttpPost("upload")]
-	public async Task<IActionResult> Upload([FromForm] IFormFile file)
+	[Consumes("multipart/form-data")]
+	public async Task<IActionResult> Upload(IFormFile file)
 	{
 		if (file is null || file.Length == 0)
 			return BadRequest("File is required.");
@@ -30,8 +31,10 @@ public class CloudinaryController : ControllerBase
 			publicId = result.PublicId
 		});
 	}
+
 	[HttpPost("upload-avatar")]
-	public async Task<IActionResult> UploadAvatar([FromForm] IFormFile file)
+	[Consumes("multipart/form-data")]
+	public async Task<IActionResult> UploadAvatar(IFormFile file)
 	{
 		if (file is null || file.Length == 0)
 			return BadRequest("File is required.");
