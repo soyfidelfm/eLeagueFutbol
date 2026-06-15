@@ -1,277 +1,294 @@
 <section class="matches-page">
 
-  <div *ngIf="isLoading" class="dashboard-loading-overlay">
+  <div class="dashboard-loading-overlay" *ngIf="isLoading">
+    <div class="loading-card">
+      <div class="loading-ring"></div>
 
-  <div class="loading-card">
+      <h2>LOADING MATCHES</h2>
 
-    <div class="loading-ring"></div>
+      <p>
+        Loading match schedule, standings and weekly fixtures...
+      </p>
 
-    <h2>LOADING MATCHES</h2>
-
-    <p>
-      Loading match schedule, standings and weekly fixtures...
-    </p>
-
-    <div class="loading-bar">
-      <span></span>
+      <div class="loading-bar">
+        <span></span>
+      </div>
     </div>
-
   </div>
 
-</div>
-
-  <div class="page-header">
-
-  <div class="page-header-content">
-    <span class="page-eyebrow">
-      MATCH MANAGEMENT
-    </span>
-
-    <h1>Matches</h1>
-
-    <p>
-      Select a week and manage all scheduled matches.
-    </p>
+  <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>{{ errorMessage }}</span>
   </div>
 
-  <div class="page-header-actions">
+  <ng-container *ngIf="!isLoading && !errorMessage">
 
-    <div class="week-filter">
-      <label for="weekSelect">
-        Week
-      </label>
+    <div class="page-header">
 
-      <select
-        id="weekSelect"
-        [(ngModel)]="selectedWeek"
-        (ngModelChange)="onWeekChange()">
+      <div class="page-header-content">
+        <span class="page-eyebrow">
+          MATCH MANAGEMENT
+        </span>
 
-        <option
-          *ngFor="let week of weeks"
-          [ngValue]="week.value">
+        <h1>Matches</h1>
 
-          {{ week.label }}
+        <p>
+          Select a week and manage all scheduled matches.
+        </p>
+      </div>
 
-        </option>
+      <div class="page-header-actions">
 
-      </select>
-    </div>
+        <div class="week-filter">
+          <label for="weekSelect">
+            Week
+          </label>
 
-  </div>
+          <select
+            id="weekSelect"
+            [(ngModel)]="selectedWeek"
+            (ngModelChange)="onWeekChange()"
+          >
 
-</div>
+            <option
+              *ngFor="let week of weeks"
+              [ngValue]="week.value"
+            >
+              {{ week.label }}
+            </option>
 
-
-
-  <div class="matches-layout">
-
-    <div class="matches-list">
-
-      <article class="match-card match-of-week" *ngIf="matchOfTheWeek as match"
-        [class.selected]="selectedMatch?.id === match.id" (click)="selectMatch(match)">
-        <div class="match-week-badge">
-          <i class="fa-solid fa-star"></i>
-          Match of the Week
+          </select>
         </div>
 
-        <div class="team">
-          <div>
-            <h3>{{ match.home.name }}</h3>
-            <span>{{ match.home.club }}</span>
-          </div>
-
-          <img [src]="match.home.logo" alt="Home logo">
-        </div>
-
-        <div class="match-center">
-          <span>{{ match.arena }}</span>
-          <small>{{ match.mode }}</small>
-
-          <strong *ngIf="match.homeScore === undefined">
-            {{ match.time }}
-          </strong>
-
-          <strong *ngIf="match.homeScore !== undefined">
-            {{ match.homeScore }} - {{ match.awayScore }}
-          </strong>
-
-          <em>{{ match.date }}</em>
-        </div>
-
-        <div class="team away">
-          <img [src]="match.away.logo" alt="Away logo">
-
-          <div>
-            <h3>{{ match.away.name }}</h3>
-            <span>{{ match.away.club }}</span>
-          </div>
-        </div>
-
-        <i class="fa-solid fa-chevron-right"></i>
-      </article>
-
-      <article class="match-card" *ngFor="let match of regularMatches" [class.selected]="selectedMatch?.id === match.id"
-        (click)="selectMatch(match)">
-        <div class="team">
-          <div>
-            <h3>{{ match.home.name }}</h3>
-            <span>{{ match.home.club }}</span>
-          </div>
-
-          <img [src]="match.home.logo" alt="Home logo">
-        </div>
-
-        <div class="match-center">
-          <span>{{ match.arena }}</span>
-          <small>{{ match.mode }}</small>
-
-          <strong *ngIf="match.homeScore === undefined">
-            {{ match.time }}
-          </strong>
-
-          <strong *ngIf="match.homeScore !== undefined">
-            {{ match.homeScore }} - {{ match.awayScore }}
-          </strong>
-
-          <em>{{ match.date }}</em>
-        </div>
-
-        <div class="team away">
-          <img [src]="match.away.logo" alt="Away logo">
-
-          <div>
-            <h3>{{ match.away.name }}</h3>
-            <span>{{ match.away.club }}</span>
-          </div>
-        </div>
-
-        <i class="fa-solid fa-chevron-right"></i>
-      </article>
-
-      <div class="empty-state" *ngIf="filteredMatches.length === 0">
-        <i class="fa-regular fa-calendar-xmark"></i>
-        <h3>No matches found</h3>
-        <p>There are no matches scheduled for this week.</p>
       </div>
 
     </div>
 
-    <aside class="match-details" *ngIf="selectedMatch">
+    <div class="matches-layout">
 
-      <div class="details-head">
-        <div>
-          <h2>MATCH DETAILS</h2>
-          <p>{{ selectedMatch.arena }} - {{ selectedMatch.mode }}</p>
-        </div>
-      </div>
+      <div class="matches-list">
 
-      <div class="versus">
-
-        <div class="versus-team">
-          <img [src]="selectedMatch.home.logo" alt="Home logo">
-          <h3>{{ selectedMatch.home.name }}</h3>
-          <span>{{ selectedMatch.home.club }}</span>
-        </div>
-
-        <div class="vs">VS</div>
-
-        <div class="versus-team">
-          <img [src]="selectedMatch.away.logo" alt="Away logo">
-          <h3>{{ selectedMatch.away.name }}</h3>
-          <span>{{ selectedMatch.away.club }}</span>
-        </div>
-
-      </div>
-
-      <div class="stat-box">
-        <h4>
-          <i class="fa-solid fa-futbol"></i>
-          TOP SCORER
-        </h4>
-
-        <div class="stat-row">
-          <div>
-            <strong>{{ selectedMatch.home.stats.topScorer }}</strong>
-            <span>{{ selectedMatch.home.stats.goals }} Goals</span>
+        <article
+          class="match-card match-of-week"
+          *ngIf="matchOfTheWeek as match"
+          [class.selected]="selectedMatch?.id === match.id"
+          (click)="selectMatch(match)"
+        >
+          <div class="match-week-badge">
+            <i class="fa-solid fa-star"></i>
+            Match of the Week
           </div>
 
-          <div>
-            <strong>{{ selectedMatch.away.stats.topScorer }}</strong>
-            <span>{{ selectedMatch.away.stats.goals }} Goals</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-box">
-        <h4>
-          <i class="fa-solid fa-share-nodes"></i>
-          TOP ASSISTS
-        </h4>
-
-        <div class="stat-row">
-          <div>
-            <strong>{{ selectedMatch.home.stats.topAssist }}</strong>
-            <span>{{ selectedMatch.home.stats.assists }} Assists</span>
-          </div>
-
-          <div>
-            <strong>{{ selectedMatch.away.stats.topAssist }}</strong>
-            <span>{{ selectedMatch.away.stats.assists }} Assists</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-box">
-        <h4>
-          <i class="fa-solid fa-fire"></i>
-          WIN STREAK
-        </h4>
-
-        <div class="streak-row">
-          <div>
-            <div class="streak">
-              <span *ngFor="let item of selectedMatch.home.stats.streak" [class.loss]="item === 'L'">
-                {{ item }}
-              </span>
+          <div class="team">
+            <div>
+              <h3>{{ match.home.name }}</h3>
+              <span>{{ match.home.club }}</span>
             </div>
 
-            <strong>{{ selectedMatch.home.stats.streak.length }} Games</strong>
+            <img [src]="match.home.logo" alt="Home logo" />
+          </div>
+
+          <div class="match-center">
+            <span>{{ match.arena }}</span>
+            <small>{{ match.mode }}</small>
+
+            <strong *ngIf="match.homeScore === undefined">
+              {{ match.time }}
+            </strong>
+
+            <strong *ngIf="match.homeScore !== undefined">
+              {{ match.homeScore }} - {{ match.awayScore }}
+            </strong>
+
+            <em>{{ match.date }}</em>
+          </div>
+
+          <div class="team away">
+            <img [src]="match.away.logo" alt="Away logo" />
+
+            <div>
+              <h3>{{ match.away.name }}</h3>
+              <span>{{ match.away.club }}</span>
+            </div>
+          </div>
+
+          <i class="fa-solid fa-chevron-right"></i>
+        </article>
+
+        <article
+          class="match-card"
+          *ngFor="let match of regularMatches"
+          [class.selected]="selectedMatch?.id === match.id"
+          (click)="selectMatch(match)"
+        >
+          <div class="team">
+            <div>
+              <h3>{{ match.home.name }}</h3>
+              <span>{{ match.home.club }}</span>
+            </div>
+
+            <img [src]="match.home.logo" alt="Home logo" />
+          </div>
+
+          <div class="match-center">
+            <span>{{ match.arena }}</span>
+            <small>{{ match.mode }}</small>
+
+            <strong *ngIf="match.homeScore === undefined">
+              {{ match.time }}
+            </strong>
+
+            <strong *ngIf="match.homeScore !== undefined">
+              {{ match.homeScore }} - {{ match.awayScore }}
+            </strong>
+
+            <em>{{ match.date }}</em>
+          </div>
+
+          <div class="team away">
+            <img [src]="match.away.logo" alt="Away logo" />
+
+            <div>
+              <h3>{{ match.away.name }}</h3>
+              <span>{{ match.away.club }}</span>
+            </div>
+          </div>
+
+          <i class="fa-solid fa-chevron-right"></i>
+        </article>
+
+        <div class="empty-state" *ngIf="filteredMatches.length === 0">
+          <i class="fa-regular fa-calendar-xmark"></i>
+          <h3>No matches found</h3>
+          <p>There are no matches scheduled for this week.</p>
+        </div>
+
+      </div>
+
+      <aside class="match-details" *ngIf="selectedMatch">
+
+        <div class="details-head">
+          <div>
+            <h2>MATCH DETAILS</h2>
+            <p>{{ selectedMatch.arena }} - {{ selectedMatch.mode }}</p>
+          </div>
+        </div>
+
+        <div class="versus">
+
+          <div class="versus-team">
+            <img [src]="selectedMatch.home.logo" alt="Home logo" />
+            <h3>{{ selectedMatch.home.name }}</h3>
+            <span>{{ selectedMatch.home.club }}</span>
+          </div>
+
+          <div class="vs">VS</div>
+
+          <div class="versus-team">
+            <img [src]="selectedMatch.away.logo" alt="Away logo" />
+            <h3>{{ selectedMatch.away.name }}</h3>
+            <span>{{ selectedMatch.away.club }}</span>
+          </div>
+
+        </div>
+
+        <div class="stat-box">
+          <h4>
+            <i class="fa-solid fa-futbol"></i>
+            TOP SCORER
+          </h4>
+
+          <div class="stat-row">
+            <div>
+              <strong>{{ selectedMatch.home.stats.topScorer }}</strong>
+              <span>{{ selectedMatch.home.stats.goals }} Goals</span>
+            </div>
+
+            <div>
+              <strong>{{ selectedMatch.away.stats.topScorer }}</strong>
+              <span>{{ selectedMatch.away.stats.goals }} Goals</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-box">
+          <h4>
+            <i class="fa-solid fa-share-nodes"></i>
+            TOP ASSISTS
+          </h4>
+
+          <div class="stat-row">
+            <div>
+              <strong>{{ selectedMatch.home.stats.topAssist }}</strong>
+              <span>{{ selectedMatch.home.stats.assists }} Assists</span>
+            </div>
+
+            <div>
+              <strong>{{ selectedMatch.away.stats.topAssist }}</strong>
+              <span>{{ selectedMatch.away.stats.assists }} Assists</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-box">
+          <h4>
+            <i class="fa-solid fa-fire"></i>
+            WIN STREAK
+          </h4>
+
+          <div class="streak-row">
+            <div>
+              <div class="streak">
+                <span
+                  *ngFor="let item of selectedMatch.home.stats.streak"
+                  [class.loss]="item === 'L'"
+                >
+                  {{ item }}
+                </span>
+              </div>
+
+              <strong>{{ selectedMatch.home.stats.streak.length }} Games</strong>
+            </div>
+
+            <div>
+              <div class="streak">
+                <span
+                  *ngFor="let item of selectedMatch.away.stats.streak"
+                  [class.loss]="item === 'L'"
+                >
+                  {{ item }}
+                </span>
+              </div>
+
+              <strong>{{ selectedMatch.away.stats.streak.length }} Games</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="upload-card">
+          <div class="upload-icon">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
           </div>
 
           <div>
-            <div class="streak">
-              <span *ngFor="let item of selectedMatch.away.stats.streak" [class.loss]="item === 'L'">
-                {{ item }}
-              </span>
-            </div>
-
-            <strong>{{ selectedMatch.away.stats.streak.length }} Games</strong>
+            <h3>UPLOAD RESULT</h3>
+            <p>Submit the match result once the game is finished.</p>
           </div>
-        </div>
-      </div>
 
-      <div class="upload-card">
-        <div class="upload-icon">
-          <i class="fa-solid fa-cloud-arrow-up"></i>
-        </div>
+          <button (click)="uploadResult()">
+            Upload Result
+          </button>
 
-        <div>
-          <h3>UPLOAD RESULT</h3>
-          <p>Submit the match result once the game is finished.</p>
+          <small>
+            <i class="fa-regular fa-circle-question"></i>
+            Only team captains can upload results.
+          </small>
         </div>
 
-        <button (click)="uploadResult()">
-          Upload Result
-        </button>
+      </aside>
 
-        <small>
-          <i class="fa-regular fa-circle-question"></i>
-          Only team captains can upload results.
-        </small>
-      </div>
+    </div>
 
-    </aside>
-
-  </div>
+  </ng-container>
 
 </section>

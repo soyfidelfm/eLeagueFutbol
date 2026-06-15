@@ -339,10 +339,14 @@
               (error)="onPlayerImageError($event)"
             />
 
-            <div>
-              <strong>{{ player.name }}</strong>
-              <span>{{ player.position || 'N/A' }} · {{ player.overall ?? '-' }} OVR</span>
-            </div>
+            <div class="player-info">
+  <strong>{{ player.name }}</strong>
+
+  <div class="player-meta">
+    <span>{{ player.position || 'N/A' }}</span>
+    <span>{{ player.overall ?? '-' }} OVR</span>
+  </div>
+</div>
           </button>
         </div>
 

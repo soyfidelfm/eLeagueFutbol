@@ -1,0 +1,346 @@
+<div class="draft-page">
+
+  <div *ngIf="isLoading" class="dashboard-loading-overlay">
+    <div class="loading-card">
+      <div class="loading-ring"></div>
+
+      <h2>LOADING DRAFT</h2>
+
+      <p>
+        Loading draft order, available players and squad data...
+      </p>
+
+      <div class="loading-bar">
+        <span></span>
+      </div>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
+
+    <a class="back-link">
+      <i class="fa-solid fa-arrow-left"></i>
+      Draft Center
+    </a>
+
+    <section class="draft-hero">
+      <div class="hero-content">
+        <span class="eyebrow">FC26 SEASON 1</span>
+
+        <h1>E-LEAGUE DRAFT</h1>
+
+        <p>
+          Build the best squad. Pick smart before your turn expires.
+        </p>
+
+        <div class="hero-meta">
+          <span>
+            <i class="fa-solid fa-shuffle"></i>
+            Snake Draft
+          </span>
+
+          <span>
+            <i class="fa-solid fa-users"></i>
+            12 Teams
+          </span>
+
+          <span>
+            <i class="fa-regular fa-circle-dot"></i>
+            15 Rounds
+          </span>
+
+          <span>
+            <i class="fa-regular fa-clock"></i>
+            2:00 per pick
+          </span>
+        </div>
+      </div>
+
+      <div class="hero-status">
+        <div class="timer-card">
+          <span>Your turn in:</span>
+          <strong>{{ timerText }}</strong>
+          <small>Time remaining</small>
+        </div>
+
+        <div class="pick-card">
+          <span>Your current pick:</span>
+          <strong>Round 1 · Pick 12</strong>
+          <small>Next: Round 1 · Pick 1</small>
+        </div>
+
+        <button type="button">
+          It is your turn to pick
+        </button>
+      </div>
+
+      <div class="hero-trophy">
+        <i class="fa-solid fa-trophy"></i>
+      </div>
+    </section>
+
+    <section class="draft-layout">
+      <aside class="panel draft-order-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Draft Order</h2>
+            <p>Round 1 of 15</p>
+          </div>
+        </div>
+
+        <div class="draft-order-list">
+          <div
+            class="draft-order-item"
+            *ngFor="let team of draftOrder"
+            [class.current]="team.isCurrent">
+
+            <span class="pick-number">{{ team.pick }}</span>
+            <span class="team-logo">{{ team.logo }}</span>
+            <span class="team-name">{{ team.name }}</span>
+
+            <span class="current-badge" *ngIf="team.isCurrent">
+              Your pick
+            </span>
+          </div>
+        </div>
+
+        <div class="round-divider">
+          Round 1 reverse
+        </div>
+
+        <div class="draft-order-list reverse">
+          <div
+            class="draft-order-item"
+            *ngFor="let team of draftOrder.slice().reverse()">
+
+            <span class="pick-number">{{ team.pick }}</span>
+            <span class="team-logo">{{ team.logo }}</span>
+            <span class="team-name">{{ team.name }}</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="panel players-panel">
+        <div class="panel-header players-header">
+          <div>
+            <h2>Available Players</h2>
+            <p>{{ filteredPlayers.length }} players found</p>
+          </div>
+
+          <button class="ghost-icon" type="button">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            placeholder="Search player..." />
+        </div>
+
+        <div class="filters-row">
+          <div class="position-tabs">
+            <button
+              type="button"
+              *ngFor="let position of positions"
+              [class.active]="selectedPosition === position"
+              (click)="setPosition(position)">
+              {{ position }}
+            </button>
+          </div>
+
+          <div class="sort-box">
+            Sort:
+            <strong>Overall</strong>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+        </div>
+
+        <div class="player-grid" *ngIf="pagedPlayers.length > 0; else noPlayers">
+          <article class="player-card" *ngFor="let player of pagedPlayers">
+            <div class="card-top">
+              <div>
+                <strong>{{ player.rating }}</strong>
+                <span>{{ player.position }}</span>
+              </div>
+
+              <button type="button" (click)="draftPlayer(player)">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+
+            <div class="player-image">
+              <img [src]="player.imageUrl" [alt]="player.name" />
+            </div>
+
+            <div class="player-info">
+              <h3>{{ player.name }}</h3>
+              <p>{{ player.club }}</p>
+            </div>
+
+            <div class="player-stats">
+              <span>
+                <strong>{{ player.pac }}</strong>
+                PAC
+              </span>
+
+              <span>
+                <strong>{{ player.sho }}</strong>
+                SHO
+              </span>
+
+              <span>
+                <strong>{{ player.pas }}</strong>
+                PAS
+              </span>
+
+              <span>
+                <strong>{{ player.dri }}</strong>
+                DRI
+              </span>
+
+              <span>
+                <strong>{{ player.def }}</strong>
+                DEF
+              </span>
+
+              <span>
+                <strong>{{ player.phy }}</strong>
+                PHY
+              </span>
+            </div>
+          </article>
+        </div>
+
+        <ng-template #noPlayers>
+          <div class="empty-state">
+            <i class="fa-solid fa-user-slash"></i>
+            <span>No players found.</span>
+          </div>
+        </ng-template>
+
+        <div class="pagination" *ngIf="totalPages > 1">
+          <button type="button" (click)="previousPage()">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+
+          <span class="active">{{ currentPage }}</span>
+          <span>of</span>
+          <span>{{ totalPages }}</span>
+
+          <button type="button" (click)="nextPage()">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </main>
+
+      <aside class="panel squad-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Your Squad</h2>
+            <p>{{ draftedCount }}/{{ squadSlots.length }} players</p>
+          </div>
+        </div>
+
+        <div class="pitch">
+          <div
+            class="squad-slot"
+            *ngFor="let slot of squadSlots"
+            [class.filled]="slot.player">
+
+            <span *ngIf="!slot.player">{{ slot.position }}</span>
+
+            <div class="mini-player" *ngIf="slot.player">
+              <strong>{{ slot.player.rating }}</strong>
+              <small>{{ slot.player.position }}</small>
+              <span>{{ slot.player.name }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="position-summary">
+          <h3>Position Summary</h3>
+
+          <div class="summary-row">
+            <span>ST</span>
+            <div><span style="width: 20%"></span></div>
+            <small>0/2</small>
+          </div>
+
+          <div class="summary-row">
+            <span>CM</span>
+            <div><span style="width: 35%"></span></div>
+            <small>0/6</small>
+          </div>
+
+          <div class="summary-row">
+            <span>CB</span>
+            <div><span style="width: 50%"></span></div>
+            <small>0/4</small>
+          </div>
+
+          <div class="summary-row">
+            <span>GK</span>
+            <div><span style="width: 15%"></span></div>
+            <small>0/1</small>
+          </div>
+        </div>
+
+        <div class="last-picks">
+          <h3>Last Picks</h3>
+          <p>Round 1</p>
+
+          <div class="last-pick-item" *ngFor="let pick of lastPicks">
+            <span>Pick {{ pick.pick }}</span>
+            <strong>{{ pick.team }}</strong>
+            <small>{{ pick.player }}</small>
+            <em>{{ pick.rating }}</em>
+          </div>
+
+          <button type="button">
+            View all picks
+          </button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="draft-info panel">
+      <h2>Draft Information</h2>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <i class="fa-regular fa-calendar"></i>
+          <span>Draft Start</span>
+          <strong>May 12, 2024 · 8:00 PM</strong>
+          <small>30 minutes ago</small>
+        </div>
+
+        <div class="info-card">
+          <i class="fa-solid fa-clover"></i>
+          <span>Format</span>
+          <strong>Snake Draft</strong>
+          <small>Forward and reverse order</small>
+        </div>
+
+        <div class="info-card">
+          <i class="fa-solid fa-users"></i>
+          <span>Participants</span>
+          <strong>12 Teams</strong>
+          <small>Elite League</small>
+        </div>
+
+        <div class="info-card">
+          <i class="fa-regular fa-clock"></i>
+          <span>Pick Timer</span>
+          <strong>2:00 minutes</strong>
+          <small>Time limit</small>
+        </div>
+      </div>
+    </section>
+
+  </ng-container>
+
+</div>

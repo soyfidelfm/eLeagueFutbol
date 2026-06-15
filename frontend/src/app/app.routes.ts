@@ -74,6 +74,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/matches/matches')
             .then(m => m.Matches)
+      },
+      {
+        path: 'draft',
+        loadComponent: () =>
+          import('./features/draft/draft')
+            .then(m => m.Draft)
       }
 
     ]

@@ -1,45 +1,39 @@
 <section class="seasons-page">
-  <div *ngIf="isLoading" class="dashboard-loading-overlay">
 
-  <div class="loading-card">
+  <div class="dashboard-loading-overlay" *ngIf="isLoading">
+    <div class="loading-card">
+      <div class="loading-ring"></div>
 
-    <div class="loading-ring"></div>
+      <h2>LOADING SEASONS</h2>
+      <p>Loading season information, schedules and league configuration...</p>
 
-    <h2>LOADING SEASONS</h2>
+      <div class="loading-bar">
+        <span></span>
+      </div>
+    </div>
+  </div>
 
-    <p>
-      Loading season information, schedules and league configuration...
-    </p>
+  <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
+    {{ errorMessage }}
+  </div>
 
-    <div class="loading-bar">
-      <span></span>
+  <ng-container *ngIf="!isLoading && !errorMessage">
+
+    <div class="page-header">
+      <div class="page-header-content">
+        <span class="page-eyebrow">
+          LEAGUE MANAGEMENT
+        </span>
+
+        <h1>Seasons</h1>
+
+        <p>
+          Create, manage and track league seasons.
+        </p>
+      </div>
     </div>
 
-  </div>
-
-</div>
-
-  <div class="page-header">
-
-  <div class="page-header-content">
-    <span class="page-eyebrow">
-      LEAGUE MANAGEMENT
-    </span>
-
-    <h1>Seasons</h1>
-
-    <p>
-      Create, manage and track league seasons.
-    </p>
-  </div>
-
-</div>
-
-  <ng-container *ngIf="view === 'current'">
-
-    
-
-    <ng-template #currentSeasonContent>
+    <ng-container *ngIf="view === 'current'">
 
       <div
         class="empty-state"
@@ -111,7 +105,6 @@
         </div>
 
         <div class="form-actions">
-
           <button
             type="button"
             class="primary-action"
@@ -119,228 +112,217 @@
           >
             Edit Current Season
           </button>
-
         </div>
 
       </div>
 
-    </ng-template>
-
-  </ng-container>
-
-  <div
-    class="season-panel"
-    id="create-season"
-    *ngIf="view === 'create'"
-  >
-
-    <div class="panel-title">
-      <div class="title-icon">
-        📅
-      </div>
-
-      <div>
-        <h2>{{ isEditMode ? 'Edit Season' : 'Create New Season' }}</h2>
-        <p>Configure your eLeagueFutbol competitive season.</p>
-      </div>
-    </div>
-
-    <form
-      (ngSubmit)="save()"
-      class="season-form"
-    >
-
-      <div class="top-grid">
-
-        <div class="field-card">
-          <label>Season Name</label>
-
-          <div class="input-wrapper">
-            <span>🏆</span>
-
-            <input
-              type="text"
-              name="name"
-              placeholder="Enter season name"
-              [(ngModel)]="form.name"
-            />
-          </div>
-        </div>
-
-        <div class="field-card">
-          <label>Description</label>
-
-          <div class="input-wrapper">
-            <span>📝</span>
-
-            <input
-              type="text"
-              name="description"
-              placeholder="Enter season description"
-              [(ngModel)]="form.description"
-            />
-          </div>
-        </div>
-
-      </div>
-
-      <div class="date-grid">
-
-        <div class="date-card">
-          <label>
-            <span>📅</span>
-            Start Date & Time
-          </label>
-
-          <input
-            type="datetime-local"
-            name="startDate"
-            [(ngModel)]="form.startDate"
-          />
-
-          <div class="date-preview">
-            🕒 {{ form.startDate ? (form.startDate | date:'medium') : 'Not selected' }}
-          </div>
-        </div>
-
-        <div class="date-card">
-          <label>
-            <span>📅</span>
-            End Date & Time
-          </label>
-
-          <input
-            type="datetime-local"
-            name="endDate"
-            [(ngModel)]="form.endDate"
-          />
-
-          <div class="date-preview">
-            🕒 {{ form.endDate ? (form.endDate | date:'medium') : 'Not selected' }}
-          </div>
-        </div>
-
-      </div>
-
-      <div class="top-grid">
-
-        <div class="field-card">
-          <label>Max Players</label>
-
-          <div class="input-wrapper">
-            <span>🎮</span>
-
-            <input
-              type="number"
-              name="maxPlayers"
-              min="2"
-              max="100"
-              [(ngModel)]="form.maxPlayers"
-            />
-          </div>
-        </div>
-
-        <div class="field-card">
-          <label>Total Weeks</label>
-
-          <div class="input-wrapper">
-            <span>🗓️</span>
-
-            <input
-              type="number"
-              name="totalWeeks"
-              min="1"
-              max="52"
-              [(ngModel)]="form.totalWeeks"
-            />
-          </div>
-        </div>
-
-      </div>
-
-      <div class="toggle-grid">
-
-        <label class="toggle-card">
-          <input
-            type="checkbox"
-            name="isCurrent"
-            [(ngModel)]="form.isCurrent"
-          />
-
-          <span class="custom-check"></span>
-
-          <div>
-            <strong>Set as current season</strong>
-            <p>This season will be marked as the active current season.</p>
-          </div>
-        </label>
-
-        <label class="toggle-card">
-          <input
-            type="checkbox"
-            name="isActive"
-            [(ngModel)]="form.isActive"
-          />
-
-          <span class="custom-check"></span>
-
-          <div>
-            <strong>Active season</strong>
-            <p>Allow this season to appear in the platform.</p>
-          </div>
-        </label>
-
-        <label class="toggle-card">
-          <input
-            type="checkbox"
-            name="registrationOpen"
-            [(ngModel)]="form.registrationOpen"
-          />
-
-          <span class="custom-check"></span>
-
-          <div>
-            <strong>Registration open</strong>
-            <p>Allow players to register for this season.</p>
-          </div>
-        </label>
-
-      </div>
-
-      <div class="form-actions">
-
-        <button
-          type="submit"
-          class="primary-action"
-          [disabled]="isSaving"
-        >
-          {{ isSaving ? 'Saving...' : (isEditMode ? 'Update Season' : 'Create Season') }}
-        </button>
-
-        <button
-          type="button"
-          class="secondary-action"
-          (click)="resetForm()"
-          *ngIf="isEditMode"
-        >
-          Cancel
-        </button>
-
-      </div>
-
-    </form>
-
-  </div>
-
-  <ng-container *ngIf="view === 'list'">
-
-    <ng-container *ngIf="isLoading; else seasonsContent">
-      <div class="loading-state">
-        Loading seasons...
-      </div>
     </ng-container>
 
-    <ng-template #seasonsContent>
+    <div
+      class="season-panel"
+      id="create-season"
+      *ngIf="view === 'create'"
+    >
+
+      <div class="panel-title">
+        <div class="title-icon">
+          📅
+        </div>
+
+        <div>
+          <h2>{{ isEditMode ? 'Edit Season' : 'Create New Season' }}</h2>
+          <p>Configure your eLeagueFutbol competitive season.</p>
+        </div>
+      </div>
+
+      <form
+        (ngSubmit)="save()"
+        class="season-form"
+      >
+
+        <div class="top-grid">
+
+          <div class="field-card">
+            <label>Season Name</label>
+
+            <div class="input-wrapper">
+              <span>🏆</span>
+
+              <input
+                type="text"
+                name="name"
+                placeholder="Enter season name"
+                [(ngModel)]="form.name"
+              />
+            </div>
+          </div>
+
+          <div class="field-card">
+            <label>Description</label>
+
+            <div class="input-wrapper">
+              <span>📝</span>
+
+              <input
+                type="text"
+                name="description"
+                placeholder="Enter season description"
+                [(ngModel)]="form.description"
+              />
+            </div>
+          </div>
+
+        </div>
+
+        <div class="date-grid">
+
+          <div class="date-card">
+            <label>
+              <span>📅</span>
+              Start Date & Time
+            </label>
+
+            <input
+              type="datetime-local"
+              name="startDate"
+              [(ngModel)]="form.startDate"
+            />
+
+            <div class="date-preview">
+              🕒 {{ form.startDate ? (form.startDate | date:'medium') : 'Not selected' }}
+            </div>
+          </div>
+
+          <div class="date-card">
+            <label>
+              <span>📅</span>
+              End Date & Time
+            </label>
+
+            <input
+              type="datetime-local"
+              name="endDate"
+              [(ngModel)]="form.endDate"
+            />
+
+            <div class="date-preview">
+              🕒 {{ form.endDate ? (form.endDate | date:'medium') : 'Not selected' }}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="top-grid">
+
+          <div class="field-card">
+            <label>Max Players</label>
+
+            <div class="input-wrapper">
+              <span>🎮</span>
+
+              <input
+                type="number"
+                name="maxPlayers"
+                min="2"
+                max="100"
+                [(ngModel)]="form.maxPlayers"
+              />
+            </div>
+          </div>
+
+          <div class="field-card">
+            <label>Total Weeks</label>
+
+            <div class="input-wrapper">
+              <span>🗓️</span>
+
+              <input
+                type="number"
+                name="totalWeeks"
+                min="1"
+                max="52"
+                [(ngModel)]="form.totalWeeks"
+              />
+            </div>
+          </div>
+
+        </div>
+
+        <div class="toggle-grid">
+
+          <label class="toggle-card">
+            <input
+              type="checkbox"
+              name="isCurrent"
+              [(ngModel)]="form.isCurrent"
+            />
+
+            <span class="custom-check"></span>
+
+            <div>
+              <strong>Set as current season</strong>
+              <p>This season will be marked as the active current season.</p>
+            </div>
+          </label>
+
+          <label class="toggle-card">
+            <input
+              type="checkbox"
+              name="isActive"
+              [(ngModel)]="form.isActive"
+            />
+
+            <span class="custom-check"></span>
+
+            <div>
+              <strong>Active season</strong>
+              <p>Allow this season to appear in the platform.</p>
+            </div>
+          </label>
+
+          <label class="toggle-card">
+            <input
+              type="checkbox"
+              name="registrationOpen"
+              [(ngModel)]="form.registrationOpen"
+            />
+
+            <span class="custom-check"></span>
+
+            <div>
+              <strong>Registration open</strong>
+              <p>Allow players to register for this season.</p>
+            </div>
+          </label>
+
+        </div>
+
+        <div class="form-actions">
+
+          <button
+            type="submit"
+            class="primary-action"
+            [disabled]="isSaving"
+          >
+            {{ isSaving ? 'Saving...' : (isEditMode ? 'Update Season' : 'Create Season') }}
+          </button>
+
+          <button
+            type="button"
+            class="secondary-action"
+            (click)="resetForm()"
+            *ngIf="isEditMode"
+          >
+            Cancel
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+    <ng-container *ngIf="view === 'list'">
 
       <div
         class="empty-state"
@@ -462,7 +444,7 @@
 
       </div>
 
-    </ng-template>
+    </ng-container>
 
   </ng-container>
 

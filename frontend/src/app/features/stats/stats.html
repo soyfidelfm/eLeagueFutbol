@@ -1,55 +1,51 @@
 <section class="stats-page">
-  <div *ngIf="isLoading" class="dashboard-loading-overlay">
 
-  <div class="loading-card">
+  <div class="dashboard-loading-overlay" *ngIf="isLoading">
+    <div class="loading-card">
+      <div class="loading-ring"></div>
 
-    <div class="loading-ring"></div>
+      <h2>LOADING STATS</h2>
 
-    <h2>LOADING STATS</h2>
+      <p>
+        Loading player analytics, performance trends and league statistics...
+      </p>
 
-    <p>
-      Loading player analytics, performance trends and league statistics...
-    </p>
-
-    <div class="loading-bar">
-      <span></span>
+      <div class="loading-bar">
+        <span></span>
+      </div>
     </div>
-
   </div>
 
-</div>
-
-  <div class="page-header">
-
-  <div class="page-header-content">
-    <span class="page-eyebrow">
-      Stats
-    </span>
-
-    <h1>Stats</h1>
-
-    <p>
-      Advanced player analytics and performance insights.
-    </p>
-  </div>
-
-  <div class="page-header-actions">
-    <button class="season-filter">
-      <i class="fa-solid fa-calendar-days"></i>
-      <span>Season 1</span>
-      <i class="fa-solid fa-chevron-down"></i>
-    </button>
-  </div>
-
-</div>
-
-
-  <div *ngIf="!isLoading && errorMessage" class="error">
+  <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
     <i class="fa-solid fa-triangle-exclamation"></i>
     <span>{{ errorMessage }}</span>
   </div>
 
   <ng-container *ngIf="!isLoading && !errorMessage && stats">
+
+    <div class="page-header">
+
+      <div class="page-header-content">
+        <span class="page-eyebrow">
+          Stats
+        </span>
+
+        <h1>Stats</h1>
+
+        <p>
+          Advanced player analytics and performance insights.
+        </p>
+      </div>
+
+      <div class="page-header-actions">
+        <button class="season-filter">
+          <i class="fa-solid fa-calendar-days"></i>
+          <span>Season 1</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+      </div>
+
+    </div>
 
     <div class="stats-tabs">
       <button [class.active]="selectedTab === 'overview'" (click)="setTab('overview')">Overview</button>
