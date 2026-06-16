@@ -1,6 +1,8 @@
 ﻿using backend.Entities.Common;
+using backend.Entities.Draft;
 
 namespace backend.Entities.GameData;
+
 
 public class GamePlayer : BaseEntity
 {
@@ -41,4 +43,5 @@ public class GamePlayer : BaseEntity
 
 	// Navigation Property
 	public GameClub GameClub { get; set; } = null!;
+	public ICollection<DraftPick> DraftPicks { get; set; } = [];
 }

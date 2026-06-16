@@ -1,5 +1,6 @@
 ﻿namespace backend.Entities.Tournaments;
 
+using backend.Entities.Draft;
 using backend.Entities.Common;
 public class Season : BaseEntity
 
@@ -33,4 +34,8 @@ public class Season : BaseEntity
 
 	public ICollection<Tournament> Tournaments { get; set; }
 		= new List<Tournament>();
+
+	public ICollection<DraftSession> DraftSessions { get; set; } = [];
+	public ICollection<DraftOrder> DraftOrders { get; set; } = [];
+	public ICollection<DraftPick> DraftPicks { get; set; } = [];
 }

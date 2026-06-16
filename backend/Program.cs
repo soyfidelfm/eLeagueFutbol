@@ -4,6 +4,7 @@ using backend.Features.ActivityFeed.Services;
 using backend.Features.Cloudinary.Services;
 using backend.Features.Clubs.Services;
 using backend.Features.Dashboard.Services;
+using backend.Features.Draft.Services;
 using backend.Features.GameData.Services;
 using backend.Features.Matches.Services;
 using backend.Features.Rankings.Services;
@@ -38,6 +39,7 @@ builder.Services.AddScoped<IActivityFeedService, ActivityFeedService>();
 builder.Services.AddScoped<IRankingService, RankingService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<ISidebarService, SidebarService>();
+builder.Services.AddScoped<IDraftService, DraftService>();
 
 builder.Services.Configure<CloudinarySettings>(
 	builder.Configuration.GetSection("Cloudinary"));

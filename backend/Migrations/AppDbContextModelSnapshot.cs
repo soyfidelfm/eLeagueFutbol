@@ -191,6 +191,81 @@ namespace backend.Migrations
                     b.ToTable("PlayerRankings");
                 });
 
+            modelBuilder.Entity("backend.Entities.Draft.DraftOrder", b =>
+                {
+                    b.Property<Guid>("DraftOrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("PickOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("DraftOrderId");
+
+                    b.ToTable("DraftOrders");
+                });
+
+            modelBuilder.Entity("backend.Entities.Draft.DraftPick", b =>
+                {
+                    b.Property<Guid>("DraftPickId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GamePlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("PickNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("PickedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RoundNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("DraftPickId");
+
+                    b.ToTable("DraftPicks");
+                });
+
+            modelBuilder.Entity("backend.Entities.Draft.DraftSession", b =>
+                {
+                    b.Property<Guid>("DraftSessionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CurrentPickNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("PlayersPerTeam")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("DraftSessionId");
+
+                    b.ToTable("DraftSessions");
+                });
+
             modelBuilder.Entity("backend.Entities.GameData.ClubLineup", b =>
                 {
                     b.Property<Guid>("ClubLineupId")

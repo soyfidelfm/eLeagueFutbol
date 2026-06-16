@@ -19,6 +19,7 @@ import { MyStats } from '../../core/models/mystats.model';
 import { NewsItem } from '../../core/models/newsitem.model';
 import { Player } from '../../core/models/player.model';
 import { UpcomingMatch } from '../../core/models/upcomingmatch.model';
+import { ActivatedRoute, Router } from '@angular/router';
 
 interface CurrentSeasonView {
   seasonId: string;
@@ -80,12 +81,13 @@ export class Dashboard implements OnInit {
   }
 
   constructor(
-    private dashboardService: DashboardService,
-    private seasonService: SeasonService,
-    private userService: UserService,
-    private gameClubService: GameClubService,
-    private cdr: ChangeDetectorRef
-  ) {}
+  private dashboardService: DashboardService,
+  private seasonService: SeasonService,
+  private userService: UserService,
+  private gameClubService: GameClubService,
+  private router: Router,
+  private cdr: ChangeDetectorRef
+) {}
 
   ngOnInit(): void {
     this.loadMe();

@@ -35,42 +35,42 @@
 
         <div class="hero-meta">
           <span>
-            <i class="fa-solid fa-shuffle"></i>
-            Snake Draft
+            <i class="fa-solid fa-list-ol"></i>
+            Linear Draft
           </span>
 
           <span>
             <i class="fa-solid fa-users"></i>
-            12 Teams
+            {{ totalTeams }} Teams
           </span>
 
           <span>
             <i class="fa-regular fa-circle-dot"></i>
-            15 Rounds
+            {{ playersPerTeam }} Rounds
           </span>
 
           <span>
             <i class="fa-regular fa-clock"></i>
-            2:00 per pick
+            Pick Timer
           </span>
         </div>
       </div>
 
       <div class="hero-status">
         <div class="timer-card">
-          <span>Your turn in:</span>
+          <span>Time remaining:</span>
           <strong>{{ timerText }}</strong>
-          <small>Time remaining</small>
+          <small>Current pick timer</small>
         </div>
 
         <div class="pick-card">
-          <span>Your current pick:</span>
-          <strong>Round 1 · Pick 12</strong>
-          <small>Next: Round 1 · Pick 1</small>
+          <span>Current pick:</span>
+          <strong>Round {{ currentRound }} · Pick {{ currentPickNumber }}</strong>
+          <small>Current: {{ currentClubName }}</small>
         </div>
 
-        <button type="button">
-          It is your turn to pick
+        <button type="button" [disabled]="!isDraftActive || isPicking">
+          {{ isDraftActive ? 'Draft is active' : 'Draft is not active' }}
         </button>
       </div>
 
@@ -84,7 +84,7 @@
         <div class="panel-header">
           <div>
             <h2>Draft Order</h2>
-            <p>Round 1 of 15</p>
+            <p>Round {{ currentRound }} of {{ playersPerTeam }}</p>
           </div>
         </div>
 
@@ -92,30 +92,52 @@
           <div
             class="draft-order-item"
             *ngFor="let team of draftOrder"
-            [class.current]="team.isCurrent">
+            [class.current]="team.isCurrentPick">
 
-            <span class="pick-number">{{ team.pick }}</span>
-            <span class="team-logo">{{ team.logo }}</span>
-            <span class="team-name">{{ team.name }}</span>
+            <span class="pick-number">{{ team.pickOrder }}</span>
 
-            <span class="current-badge" *ngIf="team.isCurrent">
-              Your pick
+            <span class="team-logo">
+              <img
+                *ngIf="team.logoUrl; else teamLogoFallback"
+                [src]="team.logoUrl"
+                [alt]="team.clubName" />
+
+              <ng-template #teamLogoFallback>
+                ⚽
+              </ng-template>
+            </span>
+
+            <span class="team-name">{{ team.clubName }}</span>
+
+            <span class="current-badge" *ngIf="team.isCurrentPick">
+              Current pick
             </span>
           </div>
         </div>
 
         <div class="round-divider">
-          Round 1 reverse
+          Linear order
         </div>
 
         <div class="draft-order-list reverse">
           <div
             class="draft-order-item"
-            *ngFor="let team of draftOrder.slice().reverse()">
+            *ngFor="let team of draftOrder">
 
-            <span class="pick-number">{{ team.pick }}</span>
-            <span class="team-logo">{{ team.logo }}</span>
-            <span class="team-name">{{ team.name }}</span>
+            <span class="pick-number">{{ team.pickOrder }}</span>
+
+            <span class="team-logo">
+              <img
+                *ngIf="team.logoUrl; else reverseLogoFallback"
+                [src]="team.logoUrl"
+                [alt]="team.clubName" />
+
+              <ng-template #reverseLogoFallback>
+                ⚽
+              </ng-template>
+            </span>
+
+            <span class="team-name">{{ team.clubName }}</span>
           </div>
         </div>
       </aside>
@@ -127,8 +149,8 @@
             <p>{{ filteredPlayers.length }} players found</p>
           </div>
 
-          <button class="ghost-icon" type="button">
-            <i class="fa-solid fa-chevron-right"></i>
+          <button class="ghost-icon" type="button" (click)="loadPlayers()">
+            <i class="fa-solid fa-rotate-right"></i>
           </button>
         </div>
 
@@ -138,6 +160,7 @@
           <input
             type="text"
             [(ngModel)]="searchTerm"
+            (keyup.enter)="loadPlayers()"
             placeholder="Search player..." />
         </div>
 
@@ -160,59 +183,62 @@
         </div>
 
         <div class="player-grid" *ngIf="pagedPlayers.length > 0; else noPlayers">
-          <article class="player-card" *ngFor="let player of pagedPlayers">
-            <div class="card-top">
-              <div>
-                <strong>{{ player.rating }}</strong>
-                <span>{{ player.position }}</span>
-              </div>
+          <article
+  class="player-card"
+  *ngFor="let player of pagedPlayers">
 
-              <button type="button" (click)="draftPlayer(player)">
-                <i class="fa-solid fa-plus"></i>
-              </button>
-            </div>
+  <img
+    class="card-background"
+    src="https://res.cloudinary.com/dwgojz5cu/image/upload/v1781595337/cardRegular_ivakii.png"
+    alt="Assist Card" />
 
-            <div class="player-image">
-              <img [src]="player.imageUrl" [alt]="player.name" />
-            </div>
+  <div class="player-rating">
+    {{ player.overall }}
+  </div>
 
-            <div class="player-info">
-              <h3>{{ player.name }}</h3>
-              <p>{{ player.club }}</p>
-            </div>
+  <div class="player-position">
+  {{ getPrimaryPosition(player.position) }}
+</div>
 
-            <div class="player-stats">
-              <span>
-                <strong>{{ player.pac }}</strong>
-                PAC
-              </span>
+  <div class="player-image">
+    <img
+      [src]="getPlayerImageUrl(player)"
+      [alt]="player.name"
+      referrerpolicy="no-referrer"
+      loading="lazy"
+      (error)="onPlayerImageError($event)" />
+  </div>
 
-              <span>
-                <strong>{{ player.sho }}</strong>
-                SHO
-              </span>
+  <div class="player-name">
+    {{ player.name }}
+  </div>
 
-              <span>
-                <strong>{{ player.pas }}</strong>
-                PAS
-              </span>
+  <div class="player-card-stats">
+    <div>
+      <strong>{{ player.overall }}</strong>
+      <span>OVR</span>
+    </div>
 
-              <span>
-                <strong>{{ player.dri }}</strong>
-                DRI
-              </span>
+    <div>
+      <strong>{{ player.potential }}</strong>
+      <span>POT</span>
+    </div>
 
-              <span>
-                <strong>{{ player.def }}</strong>
-                DEF
-              </span>
+    <div>
+      <strong>{{ player.age }}</strong>
+      <span>AGE</span>
+    </div>
+  </div>
 
-              <span>
-                <strong>{{ player.phy }}</strong>
-                PHY
-              </span>
-            </div>
-          </article>
+  <button
+    class="draft-button"
+    type="button"
+    [disabled]="isPicking || !isDraftActive"
+    (click)="draftPlayer(player)">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+
+</article>
         </div>
 
         <ng-template #noPlayers>
@@ -223,7 +249,7 @@
         </ng-template>
 
         <div class="pagination" *ngIf="totalPages > 1">
-          <button type="button" (click)="previousPage()">
+          <button type="button" (click)="previousPage()" [disabled]="currentPage <= 1">
             <i class="fa-solid fa-chevron-left"></i>
           </button>
 
@@ -254,7 +280,7 @@
             <span *ngIf="!slot.player">{{ slot.position }}</span>
 
             <div class="mini-player" *ngIf="slot.player">
-              <strong>{{ slot.player.rating }}</strong>
+              <strong>{{ slot.player.overall }}</strong>
               <small>{{ slot.player.position }}</small>
               <span>{{ slot.player.name }}</span>
             </div>
@@ -291,13 +317,13 @@
 
         <div class="last-picks">
           <h3>Last Picks</h3>
-          <p>Round 1</p>
+          <p>Round {{ currentRound }}</p>
 
           <div class="last-pick-item" *ngFor="let pick of lastPicks">
-            <span>Pick {{ pick.pick }}</span>
-            <strong>{{ pick.team }}</strong>
-            <small>{{ pick.player }}</small>
-            <em>{{ pick.rating }}</em>
+            <span>Pick {{ pick.pickNumber }}</span>
+            <strong>{{ pick.clubName }}</strong>
+            <small>{{ pick.playerName }}</small>
+            <em>{{ pick.overall }}</em>
           </div>
 
           <button type="button">
@@ -314,28 +340,28 @@
         <div class="info-card">
           <i class="fa-regular fa-calendar"></i>
           <span>Draft Start</span>
-          <strong>May 12, 2024 · 8:00 PM</strong>
-          <small>30 minutes ago</small>
+          <strong>Current Season</strong>
+          <small>FC26 Season 1</small>
         </div>
 
         <div class="info-card">
-          <i class="fa-solid fa-clover"></i>
+          <i class="fa-solid fa-list-ol"></i>
           <span>Format</span>
-          <strong>Snake Draft</strong>
-          <small>Forward and reverse order</small>
+          <strong>Linear Draft</strong>
+          <small>Same order every round</small>
         </div>
 
         <div class="info-card">
           <i class="fa-solid fa-users"></i>
           <span>Participants</span>
-          <strong>12 Teams</strong>
+          <strong>{{ totalTeams }} Teams</strong>
           <small>Elite League</small>
         </div>
 
         <div class="info-card">
           <i class="fa-regular fa-clock"></i>
           <span>Pick Timer</span>
-          <strong>2:00 minutes</strong>
+          <strong>{{ timerText }}</strong>
           <small>Time limit</small>
         </div>
       </div>

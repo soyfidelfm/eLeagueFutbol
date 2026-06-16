@@ -1,41 +1,23 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { finalize, forkJoin, take } from 'rxjs';
 
-interface DraftTeam {
-  pick: number;
-  name: string;
-  logo: string;
-  isCurrent?: boolean;
-}
+import { DraftService } from '../../core/services/draft.service';
+import { SeasonService } from '../../core/services/season.service';
 
-interface DraftPlayer {
-  id: number;
-  name: string;
-  rating: number;
-  position: string;
-  club: string;
-  country: string;
-  imageUrl: string;
-  pac: number;
-  sho: number;
-  pas: number;
-  dri: number;
-  def: number;
-  phy: number;
-}
-
-interface DraftPick {
-  pick: number;
-  team: string;
-  player: string;
-  rating: number;
-  imageUrl: string;
-}
+import {
+  DraftCenter,
+  DraftOrder,
+  DraftPick,
+  DraftPlayer,
+  DraftSquadPlayer
+} from '../../core/models/draft.model';
 
 interface SquadSlot {
   position: string;
-  player?: DraftPlayer;
+  player?: DraftSquadPlayer;
 }
 
 @Component({
@@ -47,172 +29,30 @@ interface SquadSlot {
 })
 export class Draft implements OnInit, OnDestroy {
   isLoading = true;
+  isPicking = false;
+  errorMessage = '';
 
   searchTerm = '';
   selectedPosition = 'All';
   currentPage = 1;
   pageSize = 9;
 
-  secondsRemaining = 151;
-  timerText = '00:02:31';
+  secondsRemaining = 0;
+  timerText = '00:00:00';
+
+  draftCenter: DraftCenter | null = null;
+
+  draftOrder: DraftOrder[] = [];
+  players: DraftPlayer[] = [];
+  lastPicks: DraftPick[] = [];
+
+  seasonId = '';
 
   private timerId?: number;
-  private loadingTimeoutId?: number;
+
+  readonly playerImageFallback = 'https://cdn.sofifa.net/players/239/085/26_120.png';
 
   positions = ['All', 'ST', 'LW', 'RW', 'CM', 'CDM', 'CB', 'LB', 'RB', 'GK'];
-
-  draftOrder: DraftTeam[] = [
-    { pick: 1, name: 'Titans FC', logo: '🟣' },
-    { pick: 2, name: 'Legends FC', logo: '🔵' },
-    { pick: 3, name: 'Galaxy United', logo: '🟡' },
-    { pick: 4, name: 'Kings FC', logo: '⚫' },
-    { pick: 5, name: 'Elite FC', logo: '🔴' },
-    { pick: 6, name: 'Warriors United', logo: '⚪' },
-    { pick: 7, name: 'Black Panthers', logo: '⚫' },
-    { pick: 8, name: 'Red Devils', logo: '🔴' },
-    { pick: 9, name: 'Royal Club', logo: '⚪' },
-    { pick: 10, name: 'Storm FC', logo: '⚫' },
-    { pick: 11, name: 'Venom Team', logo: '⚪' },
-    { pick: 12, name: 'E-League FC', logo: '🟢', isCurrent: true }
-  ];
-
-  players: DraftPlayer[] = [
-    {
-      id: 1,
-      name: 'K. Mbappé',
-      rating: 92,
-      position: 'ST',
-      club: 'Real Madrid',
-      country: 'France',
-      imageUrl: '/images/players/player-placeholder.png',
-      pac: 98,
-      sho: 91,
-      pas: 83,
-      dri: 93,
-      def: 37,
-      phy: 79
-    },
-    {
-      id: 2,
-      name: 'Rodri',
-      rating: 91,
-      position: 'CDM',
-      club: 'Manchester City',
-      country: 'Spain',
-      imageUrl: '/images/players/player-placeholder.png',
-      pac: 75,
-      sho: 80,
-      pas: 89,
-      dri: 84,
-      def: 87,
-      phy: 85
-    },
-    {
-      id: 3,
-      name: 'Vini Jr.',
-      rating: 90,
-      position: 'LW',
-      club: 'Real Madrid',
-      country: 'Brazil',
-      imageUrl: '/images/players/player-placeholder.png',
-      pac: 96,
-      sho: 84,
-      pas: 81,
-      dri: 91,
-      def: 29,
-      phy: 69
-    },
-    {
-      id: 4,
-      name: 'Mohamed Salah',
-      rating: 90,
-      position: 'RW',
-      club: 'Liverpool',
-      country: 'Egypt',
-      imageUrl: '/images/players/player-placeholder.png',
-      pac: 90,
-      sho: 89,
-      pas: 82,
-      dri: 90,
-      def: 45,
-      phy: 75
-    },
-    {
-      id: 5,
-      name: 'Bellingham',
-      rating: 89,
-      position: 'CM',
-      club: 'Real Madrid',
-      country: 'England',
-      imageUrl: '/images/players/player-placeholder.png',
-      pac: 79,
-      sho: 82,
-      pas: 85,
-      dri: 90,
-      def: 78,
-      phy: 82
-    },
-    {
-      id: 6,
-      name: 'Haaland',
-      rating: 89,
-      position: 'ST',
-      club: 'Manchester City',
-      country: 'Norway',
-      imageUrl: '/images/players/player-placeholder.png',
-      pac: 90,
-      sho: 92,
-      pas: 67,
-      dri: 81,
-      def: 45,
-      phy: 88
-    },
-    {
-      id: 7,
-      name: 'Rúben Dias',
-      rating: 88,
-      position: 'CB',
-      club: 'Manchester City',
-      country: 'Portugal',
-      imageUrl: '/images/players/player-placeholder.png',
-      pac: 67,
-      sho: 39,
-      pas: 70,
-      dri: 69,
-      def: 89,
-      phy: 87
-    },
-    {
-      id: 8,
-      name: 'Alisson',
-      rating: 88,
-      position: 'GK',
-      club: 'Liverpool',
-      country: 'Brazil',
-      imageUrl: '/images/players/player-placeholder.png',
-      pac: 86,
-      sho: 85,
-      pas: 85,
-      dri: 89,
-      def: 56,
-      phy: 89
-    },
-    {
-      id: 9,
-      name: 'Pedri',
-      rating: 87,
-      position: 'CM',
-      club: 'Barcelona',
-      country: 'Spain',
-      imageUrl: '/images/players/player-placeholder.png',
-      pac: 78,
-      sho: 69,
-      pas: 87,
-      dri: 89,
-      def: 70,
-      phy: 74
-    }
-  ];
 
   squadSlots: SquadSlot[] = [
     { position: 'ST' },
@@ -228,148 +68,335 @@ export class Draft implements OnInit, OnDestroy {
     { position: 'GK' }
   ];
 
-  lastPicks: DraftPick[] = [
-    {
-      pick: 11,
-      team: 'Black Panthers',
-      player: 'F. Valverde',
-      rating: 88,
-      imageUrl: '/images/players/player-placeholder.png'
-    },
-    {
-      pick: 10,
-      team: 'Storm FC',
-      player: 'T. Alexander-Arnold',
-      rating: 87,
-      imageUrl: '/images/players/player-placeholder.png'
-    },
-    {
-      pick: 9,
-      team: 'Royal Club',
-      player: 'K. De Bruyne',
-      rating: 87,
-      imageUrl: '/images/players/player-placeholder.png'
-    },
-    {
-      pick: 8,
-      team: 'Red Devils',
-      player: 'A. Griezmann',
-      rating: 86,
-      imageUrl: '/images/players/player-placeholder.png'
-    }
-  ];
+  constructor(
+    private route: ActivatedRoute,
+    private draftService: DraftService,
+    private seasonService: SeasonService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.loadDraft();
+    this.route.queryParamMap
+      .pipe(take(1))
+      .subscribe(params => {
+        this.seasonId = params.get('seasonId') ?? '';
+
+        if (this.seasonId) {
+          this.loadDraft();
+          return;
+        }
+
+        this.loadCurrentSeasonAndDraft();
+      });
   }
 
   ngOnDestroy(): void {
     if (this.timerId) {
       window.clearInterval(this.timerId);
     }
-
-    if (this.loadingTimeoutId) {
-      window.clearTimeout(this.loadingTimeoutId);
-    }
   }
 
   get draftedCount(): number {
-    return this.squadSlots.filter(slot => slot.player).length;
+    return this.draftCenter?.mySquad.totalPlayers ?? 0;
   }
 
   get filteredPlayers(): DraftPlayer[] {
-    const term = this.searchTerm.trim().toLowerCase();
-
-    return this.players.filter(player => {
-      const matchesPosition =
-        this.selectedPosition === 'All' ||
-        player.position === this.selectedPosition;
-
-      const matchesSearch =
-        !term ||
-        player.name.toLowerCase().includes(term) ||
-        player.club.toLowerCase().includes(term) ||
-        player.country.toLowerCase().includes(term);
-
-      return matchesPosition && matchesSearch;
-    });
+    return this.players;
   }
 
   get pagedPlayers(): DraftPlayer[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredPlayers.slice(start, start + this.pageSize);
+    return this.players;
   }
 
   get totalPages(): number {
-    return Math.max(1, Math.ceil(this.filteredPlayers.length / this.pageSize));
+    return this.players.length < this.pageSize
+      ? this.currentPage
+      : this.currentPage + 1;
+  }
+
+  get currentRound(): number {
+    return this.draftCenter?.state.currentRound ?? 1;
+  }
+
+  get playersPerTeam(): number {
+    return this.draftCenter?.state.playersPerTeam ?? this.squadSlots.length;
+  }
+
+  get totalTeams(): number {
+    return this.draftCenter?.state.totalTeams ?? 0;
+  }
+
+  get currentPickNumber(): number {
+    return this.draftCenter?.state.currentPickNumber ?? 1;
+  }
+
+  get currentClubName(): string {
+    return this.draftCenter?.state.currentClubName || 'Waiting...';
+  }
+
+  get isDraftActive(): boolean {
+    return this.draftCenter?.state.isActive ?? false;
+  }
+
+  getPlayerImageUrl(player: DraftPlayer): string {
+    return player.imageUrl?.trim() || this.playerImageFallback;
+  }
+
+  onPlayerImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+
+    if (img.src !== this.playerImageFallback) {
+      img.src = this.playerImageFallback;
+    }
+  }
+
+  loadCurrentSeasonAndDraft(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.seasonService.getAll()
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: seasons => {
+          const currentSeason = (seasons ?? []).find(
+            x => x.isCurrent && x.isActive
+          );
+
+          if (!currentSeason?.seasonId) {
+            this.isLoading = false;
+            this.errorMessage = 'No active season found.';
+            this.cdr.detectChanges();
+            return;
+          }
+
+          this.seasonId = currentSeason.seasonId;
+          this.loadDraft();
+        },
+        error: err => {
+          console.error('Error loading current season:', err);
+          this.isLoading = false;
+          this.errorMessage = 'Could not load current season.';
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   loadDraft(): void {
-    this.isLoading = true;
+    if (!this.seasonId) {
+      this.loadCurrentSeasonAndDraft();
+      return;
+    }
 
-    this.loadingTimeoutId = window.setTimeout(() => {
-      this.isLoading = false;
-      this.startTimer();
-    }, 800);
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    forkJoin({
+      center: this.draftService.getCenter(this.seasonId),
+      players: this.draftService.getPlayers(
+        this.seasonId,
+        this.searchTerm,
+        this.selectedPosition === 'All' ? '' : this.selectedPosition,
+        this.currentPage,
+        this.pageSize
+      )
+    })
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: ({ center, players }) => {
+          this.draftCenter = center;
+          this.draftOrder = center.draftOrder ?? [];
+          this.lastPicks = center.recentPicks ?? [];
+          this.players = players ?? [];
+
+          this.mapMySquadToSlots();
+          this.startTimer(center.state.secondsRemaining);
+
+          this.cdr.detectChanges();
+        },
+        error: err => {
+          console.error('Error loading draft:', err);
+          this.errorMessage = err?.error?.message || 'Error loading draft.';
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  loadPlayers(): void {
+    if (!this.seasonId) {
+      return;
+    }
+
+    this.draftService.getPlayers(
+      this.seasonId,
+      this.searchTerm,
+      this.selectedPosition === 'All' ? '' : this.selectedPosition,
+      this.currentPage,
+      this.pageSize
+    )
+      .pipe(
+        finalize(() => {
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: players => {
+          this.players = players ?? [];
+        },
+        error: err => {
+          console.error('Error loading players:', err);
+          this.errorMessage = err?.error?.message || 'Error loading players.';
+        }
+      });
   }
 
   setPosition(position: string): void {
     this.selectedPosition = position;
     this.currentPage = 1;
+    this.loadPlayers();
   }
 
   nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-    }
+    this.currentPage++;
+    this.loadPlayers();
   }
 
   previousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-    }
-  }
-
-  draftPlayer(player: DraftPlayer): void {
-    const emptySlot = this.squadSlots.find(slot => !slot.player);
-
-    if (!emptySlot) {
+    if (this.currentPage <= 1) {
       return;
     }
 
-    emptySlot.player = player;
-    this.players = this.players.filter(x => x.id !== player.id);
-
-    if (this.currentPage > this.totalPages) {
-      this.currentPage = this.totalPages;
-    }
+    this.currentPage--;
+    this.loadPlayers();
   }
 
-  private startTimer(): void {
+  draftPlayer(player: DraftPlayer): void {
+  if (!this.isMyTurn) {
+    this.errorMessage =
+      `⏳ You're on deck. ${this.currentClubName} is currently on the clock.`;
+
+    this.cdr.detectChanges();
+    return;
+  }
+
+  if (!this.seasonId) {
+    this.errorMessage = 'Season was not found.';
+    this.cdr.detectChanges();
+    return;
+  }
+
+  if (!this.isDraftActive) {
+    this.errorMessage = 'The draft is not active right now.';
+    this.cdr.detectChanges();
+    return;
+  }
+
+  if (this.isPicking) {
+    return;
+  }
+
+  this.isPicking = true;
+  this.errorMessage = '';
+  this.cdr.detectChanges();
+
+  this.draftService.makePick(this.seasonId, player.gamePlayerId)
+    .pipe(
+      finalize(() => {
+        this.isPicking = false;
+        this.cdr.detectChanges();
+      })
+    )
+    .subscribe({
+      next: () => {
+        this.loadDraft();
+      },
+      error: err => {
+        console.error('Error making draft pick:', err);
+
+        this.errorMessage =
+          err?.error?.message ||
+          `Could not draft ${player.name}. Please try again.`;
+
+        this.cdr.detectChanges();
+      }
+    });
+}
+
+  private mapMySquadToSlots(): void {
+    this.squadSlots = this.squadSlots.map(slot => ({
+      position: slot.position
+    }));
+
+    const squadPlayers = this.draftCenter?.mySquad.players ?? [];
+
+    squadPlayers.forEach(player => {
+      const slot =
+        this.squadSlots.find(x => !x.player && x.position === player.position) ??
+        this.squadSlots.find(x => !x.player);
+
+      if (slot) {
+        slot.player = player;
+      }
+    });
+  }
+
+  private startTimer(seconds: number): void {
     if (this.timerId) {
       window.clearInterval(this.timerId);
     }
 
+    this.secondsRemaining = Math.max(0, seconds);
     this.timerText = this.formatTime(this.secondsRemaining);
+    this.cdr.detectChanges();
 
     this.timerId = window.setInterval(() => {
       if (this.secondsRemaining <= 0) {
         window.clearInterval(this.timerId);
         this.timerText = '00:00:00';
+        this.cdr.detectChanges();
         return;
       }
 
       this.secondsRemaining--;
       this.timerText = this.formatTime(this.secondsRemaining);
+      this.cdr.detectChanges();
     }, 1000);
   }
 
   private formatTime(totalSeconds: number): string {
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
+    const safeSeconds = Math.max(0, totalSeconds);
+    const minutes = Math.floor(safeSeconds / 60);
+    const seconds = safeSeconds % 60;
 
     return `00:${minutes.toString().padStart(2, '0')}:${seconds
       .toString()
       .padStart(2, '0')}`;
   }
+
+  getPrimaryPosition(position: string): string {
+  if (!position) {
+    return '';
+  }
+
+  return position.split(',')[0].trim();
+}
+get isMyTurn(): boolean {
+  if (!this.draftCenter) {
+    return false;
+  }
+
+  return this.draftCenter.myUserId ===
+         this.draftCenter.state.currentUserId;
+}
 }

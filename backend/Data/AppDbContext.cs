@@ -2,6 +2,7 @@
 
 using backend.Entities.Common;
 using backend.Entities.Dashboard;
+using backend.Entities.Draft;
 using backend.Entities.GameData;
 using backend.Entities.Identity;
 using backend.Entities.Stats;
@@ -38,6 +39,9 @@ public class AppDbContext : DbContext
 
 	public DbSet<ClubLineup> ClubLineups => Set<ClubLineup>();
 	public DbSet<ClubLineupPlayer> ClubLineupPlayers => Set<ClubLineupPlayer>();
+	public DbSet<DraftSession> DraftSessions => Set<DraftSession>();
+	public DbSet<DraftOrder> DraftOrders => Set<DraftOrder>();
+	public DbSet<DraftPick> DraftPicks => Set<DraftPick>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{

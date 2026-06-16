@@ -15,5 +15,6 @@ matchStatsConfirmPlayer: `${environment.api.baseUrl}/api/match-stats/confirm-pla
 clubs: `${environment.api.baseUrl}/api/clubs`,
 cloudinary: `${environment.api.baseUrl}/api/cloudinary`,
 rankings: `${environment.api.baseUrl}/api/rankings`,
-sidebar: `${environment.api.baseUrl}/api/sidebar`
+sidebar: `${environment.api.baseUrl}/api/sidebar`,
+draft: `${environment.api.baseUrl}/api/draft`
 };

@@ -1,5 +1,6 @@
 ﻿namespace backend.Entities.Identity;
 
+using backend.Entities.Draft;
 using backend.Entities.Common;
 using backend.Entities.GameData;
 using backend.Entities.Stats;
@@ -45,4 +46,7 @@ public class User : BaseEntity
 
 	public ICollection<Match> AwayMatches { get; set; }
 		= new List<Match>();
+
+	public ICollection<DraftOrder> DraftOrders { get; set; } = [];
+	public ICollection<DraftPick> DraftPicks { get; set; } = [];
 }

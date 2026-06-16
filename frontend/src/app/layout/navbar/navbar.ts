@@ -1,11 +1,12 @@
 import { Component, HostListener, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
 import { take } from 'rxjs';
 
 import { Profile } from '../../features/profile/profile';
 import { UserService } from '../../core/services/user.service';
+import { SeasonService } from '../../core/services/season.service';
 import { MeUserDto } from '../../core/models/user.model';
 
 @Component({
@@ -32,6 +33,8 @@ export class Navbar implements OnInit {
   constructor(
     public auth: AuthService,
     private userService: UserService,
+    private seasonService: SeasonService,
+    private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -66,6 +69,37 @@ export class Navbar implements OnInit {
             this.firstProfileCheckDone = true;
             this.cdr.detectChanges();
           }
+        }
+      });
+  }
+
+  openDraft(): void {
+    this.seasonService.getAll()
+      .pipe(take(1))
+      .subscribe({
+        next: seasons => {
+          const currentSeason = (seasons ?? []).find(
+            x => x.isCurrent && x.isActive
+          );
+
+          if (!currentSeason?.seasonId) {
+            this.toastMessage = 'No active season found.';
+            this.showToast = true;
+            this.cdr.detectChanges();
+            return;
+          }
+
+          this.router.navigate(['/draft'], {
+            queryParams: {
+              seasonId: currentSeason.seasonId
+            }
+          });
+        },
+        error: err => {
+          console.error('Error loading current season', err);
+          this.toastMessage = 'Could not open draft.';
+          this.showToast = true;
+          this.cdr.detectChanges();
         }
       });
   }
