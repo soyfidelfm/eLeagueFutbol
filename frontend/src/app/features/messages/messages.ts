@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 
 import { MessageService } from '../../core/services/message.service';
 import { UserService } from '../../core/services/user.service';
@@ -25,7 +25,7 @@ interface MessageUserResult {
   templateUrl: './messages.html',
   styleUrl: './messages.scss'
 })
-export class Messages implements OnInit {
+export class Messages implements OnInit, OnDestroy {
 
   isLoading = false;
   isLoadingConversation = false;
@@ -48,6 +48,9 @@ export class Messages implements OnInit {
   isSearchingUsers = false;
   userResults: MessageUserResult[] = [];
 
+  private messageListener?: EventListener;
+  private subscription = new Subscription();
+
   constructor(
     private messageService: MessageService,
     private userService: UserService,
@@ -56,6 +59,32 @@ export class Messages implements OnInit {
 
   ngOnInit(): void {
     this.loadConversations();
+
+    this.messageListener = () => {
+      this.loadConversations();
+
+      if (this.selectedUserId) {
+        this.loadConversation(this.selectedUserId);
+      }
+
+      this.cdr.detectChanges();
+    };
+
+    window.addEventListener(
+      'eleague-message-received',
+      this.messageListener
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+
+    if (this.messageListener) {
+      window.removeEventListener(
+        'eleague-message-received',
+        this.messageListener
+      );
+    }
   }
 
   get filteredConversations(): ConversationDto[] {
@@ -74,8 +103,9 @@ export class Messages implements OnInit {
   loadConversations(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    this.cdr.detectChanges();
 
-    this.messageService.getConversations()
+    const sub = this.messageService.getConversations()
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -84,13 +114,19 @@ export class Messages implements OnInit {
       )
       .subscribe({
         next: response => {
-          this.conversations = response;
+          this.conversations = response ?? [];
+          this.cdr.detectChanges();
         },
         error: error => {
           this.errorMessage =
             error?.error?.message || 'Unable to load conversations.';
+
+          this.conversations = [];
+          this.cdr.detectChanges();
         }
       });
+
+    this.subscription.add(sub);
   }
 
   openConversation(item: ConversationDto): void {
@@ -98,14 +134,16 @@ export class Messages implements OnInit {
     this.selectedUserId = item.userId;
     this.messages = [];
     this.errorMessage = '';
+    this.cdr.detectChanges();
 
     this.loadConversation(item.userId);
   }
 
   loadConversation(userId: string): void {
     this.isLoadingConversation = true;
+    this.cdr.detectChanges();
 
-    this.messageService.getConversation(userId)
+    const sub = this.messageService.getConversation(userId)
       .pipe(
         finalize(() => {
           this.isLoadingConversation = false;
@@ -114,26 +152,46 @@ export class Messages implements OnInit {
       )
       .subscribe({
         next: response => {
-          this.messages = response;
+          this.messages = response ?? [];
 
-          const unreadMessages = response.filter(x =>
+          const unreadMessages = this.messages.filter(x =>
             !x.isMine &&
             !x.isRead
           );
 
           unreadMessages.forEach(message => {
-            this.messageService.markAsRead(message.messageId).subscribe();
+            const readSub = this.messageService
+              .markAsRead(message.messageId)
+              .subscribe({
+                next: () => {
+                  message.isRead = true;
+                  this.cdr.detectChanges();
+                },
+                error: error => {
+                  console.error('Error marking message as read:', error);
+                }
+              });
+
+            this.subscription.add(readSub);
           });
 
           if (this.selectedConversation) {
             this.selectedConversation.unreadCount = 0;
           }
+
+          this.loadConversations();
+          this.cdr.detectChanges();
         },
         error: error => {
           this.errorMessage =
             error?.error?.message || 'Unable to load conversation.';
+
+          this.messages = [];
+          this.cdr.detectChanges();
         }
       });
+
+    this.subscription.add(sub);
   }
 
   sendMessage(): void {
@@ -149,8 +207,9 @@ export class Messages implements OnInit {
     };
 
     this.isSending = true;
+    this.cdr.detectChanges();
 
-    this.messageService.sendMessage(dto)
+    const sub = this.messageService.sendMessage(dto)
       .pipe(
         finalize(() => {
           this.isSending = false;
@@ -159,17 +218,27 @@ export class Messages implements OnInit {
       )
       .subscribe({
         next: message => {
-          this.messages.push(message);
+          this.messages = [
+            ...this.messages,
+            message
+          ];
+
           this.newMessageText = '';
 
           this.upsertConversationAfterSend(message);
           this.loadConversations();
+
+          this.cdr.detectChanges();
         },
         error: error => {
           this.errorMessage =
             error?.error?.message || 'Unable to send message.';
+
+          this.cdr.detectChanges();
         }
       });
+
+    this.subscription.add(sub);
   }
 
   sendOnEnter(event: Event): void {
@@ -188,10 +257,7 @@ export class Messages implements OnInit {
     this.userSearchTerm = '';
     this.userResults = [];
     this.errorMessage = '';
-
-    setTimeout(() => {
-      this.cdr.detectChanges();
-    });
+    this.cdr.detectChanges();
   }
 
   closeNewMessageModal(): void {
@@ -199,35 +265,42 @@ export class Messages implements OnInit {
     this.userSearchTerm = '';
     this.userResults = [];
     this.isSearchingUsers = false;
+    this.cdr.detectChanges();
   }
 
   searchUsers(): void {
-  const term = this.userSearchTerm.trim();
+    const term = this.userSearchTerm.trim();
 
-  if (term.length < 4) {
-    this.userResults = [];
-    return;
+    if (term.length < 4) {
+      this.userResults = [];
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.isSearchingUsers = true;
+    this.cdr.detectChanges();
+
+    const sub = this.userService.searchUsers(term)
+      .pipe(
+        finalize(() => {
+          this.isSearchingUsers = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: response => {
+          this.userResults = response ?? [];
+          this.cdr.detectChanges();
+        },
+        error: error => {
+          console.error('Error searching users', error);
+          this.userResults = [];
+          this.cdr.detectChanges();
+        }
+      });
+
+    this.subscription.add(sub);
   }
-
-  this.isSearchingUsers = true;
-
-  this.userService.searchUsers(term)
-    .pipe(
-      finalize(() => {
-        this.isSearchingUsers = false;
-        this.cdr.detectChanges();
-      })
-    )
-    .subscribe({
-      next: response => {
-        this.userResults = response ?? [];
-      },
-      error: error => {
-        console.error('Error searching users', error);
-        this.userResults = [];
-      }
-    });
-}
 
   startConversationWith(user: MessageUserResult): void {
     const existingConversation = this.conversations.find(x =>
@@ -256,6 +329,7 @@ export class Messages implements OnInit {
     this.errorMessage = '';
 
     this.closeNewMessageModal();
+    this.cdr.detectChanges();
   }
 
   private upsertConversationAfterSend(message: MessageDto): void {
@@ -271,16 +345,22 @@ export class Messages implements OnInit {
       existing.lastMessage = message.text;
       existing.lastMessageAtUTC = message.sentAtUTC;
       existing.unreadCount = 0;
+      this.cdr.detectChanges();
       return;
     }
 
-    this.conversations.unshift({
-      userId: this.selectedConversation.userId,
-      displayName: this.selectedConversation.displayName,
-      avatarUrl: this.selectedConversation.avatarUrl,
-      lastMessage: message.text,
-      lastMessageAtUTC: message.sentAtUTC,
-      unreadCount: 0
-    });
+    this.conversations = [
+      {
+        userId: this.selectedConversation.userId,
+        displayName: this.selectedConversation.displayName,
+        avatarUrl: this.selectedConversation.avatarUrl,
+        lastMessage: message.text,
+        lastMessageAtUTC: message.sentAtUTC,
+        unreadCount: 0
+      },
+      ...this.conversations
+    ];
+
+    this.cdr.detectChanges();
   }
 }

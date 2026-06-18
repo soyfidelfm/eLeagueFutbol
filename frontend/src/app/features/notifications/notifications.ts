@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { finalize, Subscription } from 'rxjs';
 
@@ -25,7 +25,8 @@ export class Notifications implements OnInit, OnDestroy {
 
   constructor(
     private notificationInboxService: NotificationInboxService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -33,6 +34,7 @@ export class Notifications implements OnInit, OnDestroy {
 
     this.notificationListener = () => {
       this.loadNotifications();
+      this.cdr.detectChanges();
     };
 
     window.addEventListener(
@@ -54,6 +56,7 @@ export class Notifications implements OnInit, OnDestroy {
 
   toggleDropdown(): void {
     this.isOpen = !this.isOpen;
+    this.cdr.detectChanges();
 
     if (this.isOpen) {
       this.loadNotifications();
@@ -62,24 +65,30 @@ export class Notifications implements OnInit, OnDestroy {
 
   closeDropdown(): void {
     this.isOpen = false;
+    this.cdr.detectChanges();
   }
 
   loadNotifications(): void {
     this.isLoading = true;
+    this.cdr.detectChanges();
 
     const notificationsSub = this.notificationInboxService
       .getNotifications()
       .pipe(
         finalize(() => {
           this.isLoading = false;
+          this.cdr.detectChanges();
         })
       )
       .subscribe({
         next: response => {
-          this.notifications = response;
+          this.notifications = response ?? [];
+          this.cdr.detectChanges();
         },
         error: error => {
           console.error('Error loading notifications:', error);
+          this.notifications = [];
+          this.cdr.detectChanges();
         }
       });
 
@@ -87,10 +96,13 @@ export class Notifications implements OnInit, OnDestroy {
       .getUnreadCount()
       .subscribe({
         next: response => {
-          this.unreadCount = response.count;
+          this.unreadCount = response?.count ?? 0;
+          this.cdr.detectChanges();
         },
         error: error => {
           console.error('Error loading unread count:', error);
+          this.unreadCount = 0;
+          this.cdr.detectChanges();
         }
       });
 
@@ -106,11 +118,16 @@ export class Notifications implements OnInit, OnDestroy {
           next: () => {
             notification.isRead = true;
             this.unreadCount = Math.max(this.unreadCount - 1, 0);
+            this.cdr.detectChanges();
+          },
+          error: error => {
+            console.error('Error marking notification as read:', error);
           }
         });
     }
 
     this.isOpen = false;
+    this.cdr.detectChanges();
 
     if (notification.url) {
       this.router.navigateByUrl(notification.url);
@@ -130,6 +147,10 @@ export class Notifications implements OnInit, OnDestroy {
           }));
 
           this.unreadCount = 0;
+          this.cdr.detectChanges();
+        },
+        error: error => {
+          console.error('Error marking all notifications as read:', error);
         }
       });
   }
