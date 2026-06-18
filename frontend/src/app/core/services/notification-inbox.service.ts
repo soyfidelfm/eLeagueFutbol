@@ -10,6 +10,11 @@ import {
   UnreadNotificationCount
 } from '../models/notification.model';
 
+export interface SaveNotificationTokenDto {
+  token: string;
+  deviceType: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -19,6 +24,13 @@ export class NotificationInboxService extends ApiService {
     protected override http: HttpClient
   ) {
     super(http);
+  }
+
+  saveToken(payload: SaveNotificationTokenDto): Observable<void> {
+    return this.http.post<void>(
+      `${API_ENDPOINTS.notifications}/token`,
+      payload
+    );
   }
 
   getNotifications(): Observable<Notification[]> {

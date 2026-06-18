@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize, Subscription } from 'rxjs';
+import { finalize, forkJoin, Subscription } from 'rxjs';
 
 import { MessageService } from '../../core/services/message.service';
 import { UserService } from '../../core/services/user.service';
@@ -32,7 +32,6 @@ export class Messages implements OnInit, OnDestroy {
   isSending = false;
 
   errorMessage = '';
-
   conversationSearchTerm = '';
 
   conversations: ConversationDto[] = [];
@@ -115,6 +114,17 @@ export class Messages implements OnInit, OnDestroy {
       .subscribe({
         next: response => {
           this.conversations = response ?? [];
+
+          if (this.selectedUserId) {
+            const selected = this.conversations.find(x =>
+              x.userId === this.selectedUserId
+            );
+
+            if (selected) {
+              this.selectedConversation = selected;
+            }
+          }
+
           this.cdr.detectChanges();
         },
         error: error => {
@@ -134,6 +144,9 @@ export class Messages implements OnInit, OnDestroy {
     this.selectedUserId = item.userId;
     this.messages = [];
     this.errorMessage = '';
+
+    item.unreadCount = 0;
+
     this.cdr.detectChanges();
 
     this.loadConversation(item.userId);
@@ -159,28 +172,42 @@ export class Messages implements OnInit, OnDestroy {
             !x.isRead
           );
 
-          unreadMessages.forEach(message => {
-            const readSub = this.messageService
-              .markAsRead(message.messageId)
-              .subscribe({
-                next: () => {
-                  message.isRead = true;
-                  this.cdr.detectChanges();
-                },
-                error: error => {
-                  console.error('Error marking message as read:', error);
-                }
-              });
-
-            this.subscription.add(readSub);
-          });
-
-          if (this.selectedConversation) {
-            this.selectedConversation.unreadCount = 0;
+          if (unreadMessages.length === 0) {
+            this.loadConversations();
+            this.cdr.detectChanges();
+            return;
           }
 
-          this.loadConversations();
-          this.cdr.detectChanges();
+          const markReadRequests = unreadMessages.map(message =>
+            this.messageService.markAsRead(message.messageId)
+          );
+
+          const readSub = forkJoin(markReadRequests)
+            .subscribe({
+              next: () => {
+                this.messages = this.messages.map(message => ({
+                  ...message,
+                  isRead: true
+                }));
+
+                if (this.selectedConversation) {
+                  this.selectedConversation.unreadCount = 0;
+                }
+
+                this.loadConversations();
+
+                window.dispatchEvent(
+                  new CustomEvent('eleague-message-read')
+                );
+
+                this.cdr.detectChanges();
+              },
+              error: error => {
+                console.error('Error marking messages as read:', error);
+              }
+            });
+
+          this.subscription.add(readSub);
         },
         error: error => {
           this.errorMessage =

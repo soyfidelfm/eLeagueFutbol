@@ -2,7 +2,7 @@ import { Component, HostListener, OnInit, ChangeDetectorRef } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
-import { take } from 'rxjs';
+import { firstValueFrom, take } from 'rxjs';
 
 import { Profile } from '../../features/profile/profile';
 import { Notifications } from '../../features/notifications/notifications';
@@ -10,6 +10,8 @@ import { Notifications } from '../../features/notifications/notifications';
 import { UserService } from '../../core/services/user.service';
 import { SeasonService } from '../../core/services/season.service';
 import { MessageService } from '../../core/services/message.service';
+import { NotificationService } from '../../core/services/notification.service';
+import { NotificationInboxService } from '../../core/services/notification-inbox.service';
 
 import { MeUserDto } from '../../core/models/user.model';
 
@@ -42,6 +44,8 @@ export class Navbar implements OnInit {
     private userService: UserService,
     private seasonService: SeasonService,
     private messageService: MessageService,
+    private pushNotificationService: NotificationService,
+    private notificationInboxService: NotificationInboxService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
@@ -49,10 +53,35 @@ export class Navbar implements OnInit {
   ngOnInit(): void {
     this.loadMe();
     this.loadUnreadMessagesCount();
+    this.setupPushNotifications();
 
     window.addEventListener('eleague-message-received', () => {
       this.loadUnreadMessagesCount();
     });
+  }
+
+  async setupPushNotifications(): Promise<void> {
+    try {
+      const token =
+        await this.pushNotificationService.requestPermissionAndGetToken();
+
+      if (!token) {
+        return;
+      }
+
+      await firstValueFrom(
+        this.notificationInboxService.saveToken({
+          token,
+          deviceType: 'web'
+        })
+      );
+
+      this.pushNotificationService.listenForMessages();
+
+      console.log('Push notifications enabled.');
+    } catch (error) {
+      console.error('Error setting up push notifications:', error);
+    }
   }
 
   loadMe(): void {
