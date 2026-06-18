@@ -4,7 +4,7 @@
   <div class="navbar-left">
     <div class="brand">
       <img
-         src="/images/logo-clear.png"
+        src="/images/logo-clear.png"
         alt="eLeague Futbol"
         class="brand-logo" />
     </div>
@@ -19,16 +19,14 @@
     </a>
 
     <a routerLink="/matches" routerLinkActive="active">
-  <i class="fa-solid fa-futbol"></i>
-  <span>Matches</span>
-</a>
+      <i class="fa-solid fa-futbol"></i>
+      <span>Matches</span>
+    </a>
 
-<a
-  routerLink="/draft"
-  routerLinkActive="active">
-  <i class="fa-solid fa-list-ol"></i>
-  <span>Draft</span>
-</a>
+    <a routerLink="/draft" routerLinkActive="active">
+      <i class="fa-solid fa-list-ol"></i>
+      <span>Draft</span>
+    </a>
 
     <a routerLink="/seasons" routerLinkActive="active">
       <i class="fa-solid fa-trophy"></i>
@@ -55,30 +53,58 @@
   <!-- RIGHT -->
   <div class="navbar-right">
 
-    <button class="icon-btn">
+    <!-- MESSAGES -->
+    <a
+      routerLink="/messages"
+      routerLinkActive="active"
+      class="icon-btn"
+      title="Messages">
+
+      <i class="fa-regular fa-envelope"></i>
+
+      <span
+        class="notification-dot"
+        *ngIf="unreadMessagesCount > 0">
+        {{ unreadMessagesCount }}
+      </span>
+
+    </a>
+
+    <!-- NOTIFICATIONS -->
+    <button
+      type="button"
+      class="icon-btn"
+      title="Notifications">
+
       <i class="fa-regular fa-bell"></i>
-      <span class="notification-dot">3</span>
+
+      <span
+        class="notification-dot"
+        *ngIf="unreadNotificationsCount > 0">
+        {{ unreadNotificationsCount }}
+      </span>
+
     </button>
 
     <!-- USER -->
     <div
-  class="profile-box"
-  [class.loading]="!me"
-  (click)="me && toggleUserMenu($event)">
+      class="profile-box"
+      [class.loading]="!me"
+      (click)="me && toggleUserMenu($event)">
 
       <img
-  [src]="me?.avatarUrl || '/images/default-avatar.png'"
-  [alt]="me?.displayName || 'User'" />
+        [src]="me?.avatarUrl || '/images/default-avatar.png'"
+        [alt]="me?.displayName || 'User'" />
 
-<div class="profile-info">
-  <strong>{{ me?.displayName || 'Loading...' }}</strong>
+      <div class="profile-info">
+        <strong>{{ me?.displayName || 'Loading...' }}</strong>
 
-  <span>
-    {{ me?.gamerTag?.trim() ? me?.gamerTag : (me?.email || 'Profile') }}
-  </span>
-</div>
+        <span>
+          {{ me?.gamerTag?.trim() ? me?.gamerTag : (me?.email || 'Profile') }}
+        </span>
+      </div>
 
-<div class="online-dot" *ngIf="me"></div>
+      <div class="online-dot" *ngIf="me"></div>
 
     </div>
 

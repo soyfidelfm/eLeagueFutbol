@@ -3,15 +3,20 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ApiService } from '../services/api.service.ts';
-
 import { API_ENDPOINTS } from '../constants/api-endpoints';
 
 import {
   User,
   SyncUserDto,
-  UpdateUserDto, 
+  UpdateUserDto,
   MeUserDto
 } from '../models/user.model';
+
+export interface UserSearchResult {
+  userId: string;
+  displayName: string;
+  avatarUrl?: string | null;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -51,8 +56,14 @@ export class UserService extends ApiService {
   }
 
   getMe(): Observable<MeUserDto> {
-  return this.get<MeUserDto>(
-    `${API_ENDPOINTS.users}/me`
-  );
-}
+    return this.get<MeUserDto>(
+      `${API_ENDPOINTS.users}/me`
+    );
+  }
+
+  searchUsers(term: string): Observable<UserSearchResult[]> {
+    return this.get<UserSearchResult[]>(
+      `${API_ENDPOINTS.users}/search?term=${encodeURIComponent(term)}`
+    );
+  }
 }

@@ -13,4 +13,5 @@ public interface IUserService
 
 	Task<UserDto?> UpdateAsync(Guid userId, UpdateUserDto dto);
 	Task<MeUserDto?> GetMeAsync(ClaimsPrincipal principal);
+	Task<List<UserDto>> SearchAsync(string term, ClaimsPrincipal principal);
 }

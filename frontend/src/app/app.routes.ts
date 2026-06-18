@@ -80,7 +80,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/draft/draft')
             .then(m => m.Draft)
-      }
+      },
+      {
+  path: 'messages',
+  loadComponent: () =>
+    import('./features/messages/messages').then(m => m.Messages)
+}
 
     ]
   },

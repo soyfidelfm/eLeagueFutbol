@@ -5,8 +5,11 @@ import { AuthService } from '@auth0/auth0-angular';
 import { take } from 'rxjs';
 
 import { Profile } from '../../features/profile/profile';
+
 import { UserService } from '../../core/services/user.service';
 import { SeasonService } from '../../core/services/season.service';
+import { MessageService } from '../../core/services/message.service';
+
 import { MeUserDto } from '../../core/models/user.model';
 
 @Component({
@@ -30,16 +33,25 @@ export class Navbar implements OnInit {
   showUserMenu = false;
   showProfileModal = false;
 
+  unreadMessagesCount = 0;
+  unreadNotificationsCount = 0;
+
   constructor(
     public auth: AuthService,
     private userService: UserService,
     private seasonService: SeasonService,
+    private messageService: MessageService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.loadMe();
+    this.loadUnreadMessagesCount();
+
+    window.addEventListener('eleague-message-received', () => {
+      this.loadUnreadMessagesCount();
+    });
   }
 
   loadMe(): void {
@@ -69,6 +81,26 @@ export class Navbar implements OnInit {
             this.firstProfileCheckDone = true;
             this.cdr.detectChanges();
           }
+        }
+      });
+  }
+
+  loadUnreadMessagesCount(): void {
+    this.messageService.getConversations()
+      .pipe(take(1))
+      .subscribe({
+        next: conversations => {
+          this.unreadMessagesCount = (conversations ?? []).reduce(
+            (total, item) => total + item.unreadCount,
+            0
+          );
+
+          this.cdr.detectChanges();
+        },
+        error: err => {
+          console.error('Error loading unread messages count', err);
+          this.unreadMessagesCount = 0;
+          this.cdr.detectChanges();
         }
       });
   }

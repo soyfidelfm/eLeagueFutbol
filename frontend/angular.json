@@ -33,6 +33,11 @@
                 "glob": "manifest.webmanifest",
                 "input": "src",
                 "output": "."
+              },
+              {
+                "glob": "firebase-messaging-sw.js",
+                "input": "src",
+                "output": "/"
               }
             ],
             "styles": [
@@ -72,6 +77,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "open": true
+          },
           "configurations": {
             "production": {
               "buildTarget": "frontend:build:production"

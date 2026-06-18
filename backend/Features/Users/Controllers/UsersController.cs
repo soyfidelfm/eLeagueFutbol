@@ -68,4 +68,11 @@ public class UsersController : ControllerBase
 
 		return Ok(me);
 	}
+
+	[HttpGet("search")]
+	public async Task<ActionResult<List<UserDto>>> Search([FromQuery] string term)
+	{
+		var users = await _service.SearchAsync(term, User);
+		return Ok(users);
+	}
 }

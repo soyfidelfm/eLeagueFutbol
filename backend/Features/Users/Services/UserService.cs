@@ -235,4 +235,58 @@ public class UserService : IUserService
 				.ToList()
 		};
 	}
+
+	public async Task<List<UserDto>> SearchAsync(string term, ClaimsPrincipal principal)
+	{
+		var auth0Id =
+			principal.FindFirstValue(ClaimTypes.NameIdentifier)
+			?? principal.FindFirstValue("sub");
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return [];
+
+		term = term.Trim().ToLower();
+
+		if (term.Length < 2)
+			return [];
+
+		var me = await _context.Users
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == auth0Id &&
+				!x.IsDeleted);
+
+		if (me is null)
+			return [];
+
+		return await _context.Users
+			.AsNoTracking()
+			.Where(x =>
+				!x.IsDeleted &&
+				x.UserId != me.UserId &&
+				(
+					x.DisplayName.ToLower().Contains(term) ||
+					x.Email.ToLower().Contains(term) ||
+					x.GamerTag.ToLower().Contains(term) ||
+					x.ClubName.ToLower().Contains(term)
+				))
+			.OrderBy(x => x.DisplayName)
+			.Take(20)
+			.Select(x => new UserDto
+			{
+				UserId = x.UserId,
+				Auth0Id = x.Auth0Id,
+				Email = x.Email,
+				DisplayName = x.DisplayName,
+				AvatarUrl = x.AvatarUrl,
+				TimeZone = x.TimeZone,
+				LastLoginAtUTC = x.LastLoginAtUTC,
+				IsActive = x.IsActive,
+				ClubName = x.ClubName,
+				GameClubId = x.GameClubId,
+				GamerTag = x.GamerTag,
+				Role = x.Role
+			})
+			.ToListAsync();
+	}
 }

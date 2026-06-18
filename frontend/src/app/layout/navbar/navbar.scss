@@ -97,15 +97,32 @@
 
 .icon-btn {
   position: relative;
+
   width: 46px;
   height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   flex-shrink: 0;
+
   border-radius: 14px;
   border: 1px solid var(--border-primary);
+
   background: rgba(255, 255, 255, .03);
   color: white;
+
   cursor: pointer;
   transition: .25s ease;
+
+  text-decoration: none;
+  appearance: none;
+}
+
+.icon-btn i {
+  font-size: 17px;
+  line-height: 1;
 }
 
 .icon-btn:hover {
@@ -395,19 +412,26 @@
 }
 
 @media (max-width: 900px) and (orientation: portrait) {
+
   .navbar {
     height: calc(92px + env(safe-area-inset-top));
+
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: env(safe-area-inset-top) 22px 0 22px;
-    gap: 14px;
+
+    padding-top: env(safe-area-inset-top);
+    padding-left: 14px;
+    padding-right: 14px;
+
+    gap: 10px;
   }
 
   .navbar-left {
     display: flex;
     align-items: center;
     flex-shrink: 0;
+    min-width: 0;
   }
 
   .brand {
@@ -416,8 +440,8 @@
   }
 
   .brand-logo {
-    height: 54px;
-    max-width: 170px;
+    height: 50px;
+    max-width: 150px;
   }
 
   .navbar-center {
@@ -426,38 +450,84 @@
 
   .navbar-right {
     margin-left: auto;
+
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 10px;
+
+    gap: 8px;
+
     flex-wrap: nowrap;
     min-width: 0;
   }
 
-  .icon-btn {
-    display: none;
-  }
+  /* MESSAGES + NOTIFICATIONS */
 
-  .profile-box {
-    width: 190px;
-    min-width: 190px;
-    max-width: 190px;
-    min-height: 64px;
-    padding: 7px 12px;
+  .icon-btn {
+    position: relative;
+
+    width: 42px;
+    height: 42px;
+
     display: flex;
     align-items: center;
-    gap: 10px;
-    border-radius: 18px;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 14px;
+  }
+
+  .icon-btn i {
+    font-size: 16px;
+  }
+
+  .notification-dot {
+    top: -5px;
+    right: -5px;
+
+    width: 18px;
+    height: 18px;
+
+    font-size: 10px;
+  }
+
+  /* PROFILE */
+
+  .profile-box {
+    width: 48px;
+    min-width: 48px;
+    max-width: 48px;
+
+    height: 48px;
+    min-height: 48px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
     background: rgba(255, 255, 255, .04);
+
+    overflow: visible;
   }
 
   .profile-box img {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
+
     display: block;
+
     opacity: 1;
     visibility: visible;
+
     flex-shrink: 0;
+
+    border-radius: 50%;
+
     object-fit: cover;
     object-position: top center;
   }
@@ -466,37 +536,37 @@
     opacity: .55;
   }
 
+  /* HIDE NAME + GAMERTAG */
+
   .profile-info {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .profile-info strong {
-    font-size: 13px;
-  }
-
-  .profile-info span {
-    font-size: 10px;
+    display: none;
   }
 
   .online-dot {
-    left: 47px;
-    right: auto;
-    bottom: 9px;
+    left: auto;
+    right: 1px;
+    bottom: 2px;
+
+    width: 11px;
+    height: 11px;
   }
+
+  /* MENU */
 
   .user-menu {
     right: 0;
     left: auto;
+
     transform: none;
   }
 
   .user-menu::before {
-    right: 24px;
+    right: 18px;
+
     transform: rotate(45deg);
   }
+
+  /* MODAL */
 
   .profile-modal-backdrop {
     padding: 14px;
@@ -504,8 +574,11 @@
 
   .profile-modal-clean {
     width: calc(100vw - 28px);
+
     max-height: calc(100vh - 28px);
+
     padding: 14px;
+
     border-radius: 22px;
   }
 

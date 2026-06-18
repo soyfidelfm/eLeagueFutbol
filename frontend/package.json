@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "run": "ng serve -o",
+    "dev": "ng serve --open",
+    "run": "ng serve --open",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
@@ -26,6 +27,7 @@
     "@auth0/auth0-angular": "^2.9.0",
     "@fortawesome/fontawesome-free": "^7.2.0",
     "express": "^5.1.0",
+    "firebase": "^12.15.0",
     "lucide-angular": "^1.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"

@@ -1,0 +1,324 @@
+<div class="messages-page">
+
+  <section class="messages-shell">
+
+    <div
+      class="dashboard-loading-overlay"
+      *ngIf="isLoading">
+
+      <div class="loading-card">
+
+        <div class="loading-ring"></div>
+
+        <img
+          src="/images/logo-clear.png"
+          alt="eLeagueFutbol"
+          class="loading-logo">
+
+        <h3>Loading Messages</h3>
+
+        <p>Syncing conversations and notifications...</p>
+
+        <div class="loading-bar">
+          <span></span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <aside class="inbox-card" [class.hidden-mobile]="selectedUserId">
+
+      <header class="inbox-header">
+        <div>
+          <span>INBOX</span>
+          <h1>Messages</h1>
+        </div>
+
+        <button type="button" (click)="startNewMessage()">
+          <i class="fa-solid fa-pen"></i>
+        </button>
+      </header>
+
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+          type="text"
+          placeholder="Search conversations..."
+          [(ngModel)]="conversationSearchTerm">
+      </div>
+
+      <div class="inbox-list">
+
+        <ng-container *ngIf="!isLoading">
+
+          <div
+            class="conversation-item"
+            *ngFor="let item of filteredConversations"
+            [class.active]="selectedUserId === item.userId"
+            (click)="openConversation(item)">
+
+            <img
+              [src]="item.avatarUrl || '/images/default-avatar.png'"
+              [alt]="item.displayName">
+
+            <div>
+              <strong>{{ item.displayName }}</strong>
+              <p>{{ item.lastMessage }}</p>
+            </div>
+
+            <span class="time">
+              {{ item.lastMessageAtUTC | date:'shortTime' }}
+            </span>
+
+            <span class="unread-badge" *ngIf="item.unreadCount > 0">
+              {{ item.unreadCount }}
+            </span>
+
+          </div>
+
+          <div
+            class="empty-state"
+            *ngIf="filteredConversations.length === 0">
+
+            <i class="fa-solid fa-comments"></i>
+
+            <strong>No conversations yet</strong>
+
+            <span>Start a message with another player.</span>
+
+          </div>
+
+        </ng-container>
+
+      </div>
+
+    </aside>
+
+    <section class="chat-card" *ngIf="selectedUserId; else emptyChat">
+
+      <header class="chat-header">
+
+        <button
+          type="button"
+          class="back-chat"
+          (click)="selectedUserId = ''; selectedConversation = null">
+
+          <i class="fa-solid fa-arrow-left"></i>
+
+        </button>
+
+        <img
+          [src]="selectedConversation?.avatarUrl || '/images/default-avatar.png'"
+          [alt]="selectedConversation?.displayName || 'User'">
+
+        <div>
+          <strong>{{ selectedConversation?.displayName }}</strong>
+          <span>Private message</span>
+        </div>
+
+      </header>
+
+      <div class="chat-body">
+
+        <div
+          class="dashboard-loading-overlay conversation-loading"
+          *ngIf="isLoadingConversation">
+
+          <div class="loading-card small">
+
+            <div class="loading-ring"></div>
+
+            <h3>Loading Conversation</h3>
+
+            <p>Retrieving messages...</p>
+
+          </div>
+
+        </div>
+
+        <ng-container *ngIf="!isLoadingConversation">
+
+          <div
+            class="message-row"
+            *ngFor="let message of messages"
+            [class.mine]="message.isMine">
+
+            <div class="message-bubble">
+              <p>{{ message.text }}</p>
+
+              <span>
+                {{ message.sentAtUTC | date:'shortTime' }}
+              </span>
+            </div>
+
+          </div>
+
+          <div
+            class="empty-state chat-empty"
+            *ngIf="messages.length === 0">
+
+            <i class="fa-solid fa-paper-plane"></i>
+
+            <strong>No messages yet</strong>
+
+            <span>Send the first message.</span>
+
+          </div>
+
+        </ng-container>
+
+      </div>
+
+      <footer class="chat-footer">
+
+        <textarea
+          rows="1"
+          placeholder="Write a message..."
+          [(ngModel)]="newMessageText"
+          (keydown.enter)="sendOnEnter($event)">
+        </textarea>
+
+        <button
+          type="button"
+          [disabled]="isSending || !newMessageText.trim()"
+          (click)="sendMessage()">
+
+          <i
+            class="fa-solid"
+            [class.fa-paper-plane]="!isSending"
+            [class.fa-spinner]="isSending"
+            [class.fa-spin]="isSending">
+          </i>
+
+        </button>
+
+      </footer>
+
+    </section>
+
+    <ng-template #emptyChat>
+
+      <section class="chat-card empty-desktop">
+
+        <i class="fa-solid fa-envelope-open-text"></i>
+
+        <h2>Select a message</h2>
+
+        <p>Choose a conversation or start a new one.</p>
+
+        <button type="button" (click)="startNewMessage()">
+          <i class="fa-solid fa-pen"></i>
+          New Message
+        </button>
+
+      </section>
+
+    </ng-template>
+
+  </section>
+
+  <div
+    class="new-message-modal-backdrop"
+    *ngIf="showNewMessageModal"
+    (click)="closeNewMessageModal()">
+
+    <div
+      class="new-message-modal"
+      (click)="$event.stopPropagation()">
+
+      <button
+        type="button"
+        class="modal-close"
+        (click)="closeNewMessageModal()">
+
+        <i class="fa-solid fa-xmark"></i>
+
+      </button>
+
+      <span>NEW MESSAGE</span>
+
+      <h2>Choose Player</h2>
+
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+          type="text"
+          placeholder="Search player..."
+          [(ngModel)]="userSearchTerm"
+          (input)="searchUsers()">
+      </div>
+
+      <div class="user-results">
+
+        <div
+          class="dashboard-loading-overlay modal-loading"
+          *ngIf="isSearchingUsers">
+
+          <div class="loading-card small">
+
+            <div class="loading-ring"></div>
+
+            <h3>Searching Players</h3>
+
+            <p>Finding league users...</p>
+
+          </div>
+
+        </div>
+
+        <ng-container *ngIf="!isSearchingUsers">
+
+          <div
+            class="user-result"
+            *ngFor="let user of userResults"
+            (click)="startConversationWith(user)">
+
+            <img
+              [src]="user.avatarUrl || '/images/default-avatar.png'"
+              [alt]="user.displayName">
+
+            <div>
+              <strong>{{ user.displayName }}</strong>
+              <small>Start private message</small>
+            </div>
+
+            <i class="fa-solid fa-arrow-right"></i>
+
+          </div>
+
+          <div
+  class="empty-state"
+  *ngIf="!isSearchingUsers && userSearchTerm.trim().length < 4">
+
+  <i class="fa-solid fa-user-plus"></i>
+
+  <strong>Search players</strong>
+
+  <span>Type at least 4 characters.</span>
+
+</div>
+
+          <div
+            class="empty-state"
+            *ngIf="userSearchTerm.trim().length >= 2 && userResults.length === 0">
+
+            <i class="fa-solid fa-user-slash"></i>
+
+            <strong>No players found</strong>
+
+            <span>Try another name, gamer tag, or club.</span>
+
+          </div>
+
+        </ng-container>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

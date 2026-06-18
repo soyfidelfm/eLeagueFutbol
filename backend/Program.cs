@@ -7,12 +7,16 @@ using backend.Features.Dashboard.Services;
 using backend.Features.Draft.Services;
 using backend.Features.GameData.Services;
 using backend.Features.Matches.Services;
+using backend.Features.Messages.Services;
+using backend.Features.Notifications.Services;
 using backend.Features.Rankings.Services;
 using backend.Features.Seasons.Services;
 using backend.Features.Sidebar.Services;
 using backend.Features.Stats.Services;
 using backend.Features.Users.Services;
 using eLeagueFutbol.Application.Stats;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,6 +31,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 	options.UseNpgsql(
 		builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Services
 builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -40,10 +45,25 @@ builder.Services.AddScoped<IRankingService, RankingService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<ISidebarService, SidebarService>();
 builder.Services.AddScoped<IDraftService, DraftService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
 
+// Settings
 builder.Services.Configure<CloudinarySettings>(
 	builder.Configuration.GetSection("Cloudinary"));
 
+// Firebase Admin SDK
+var firebaseAdminSdkJson = builder.Configuration["Firebase:AdminSdkJson"];
+
+if (FirebaseApp.DefaultInstance is null && !string.IsNullOrWhiteSpace(firebaseAdminSdkJson))
+{
+	FirebaseApp.Create(new AppOptions
+	{
+		Credential = GoogleCredential.FromJson(firebaseAdminSdkJson)
+	});
+}
+
+// CORS
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AngularPolicy", policy =>
@@ -59,6 +79,7 @@ builder.Services.AddCors(options =>
 	});
 });
 
+// Auth0
 builder.Services
 	.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 	.AddJwtBearer(options =>

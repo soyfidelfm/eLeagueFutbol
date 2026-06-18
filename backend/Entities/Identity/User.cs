@@ -1,8 +1,9 @@
 ﻿namespace backend.Entities.Identity;
 
-using backend.Entities.Draft;
 using backend.Entities.Common;
+using backend.Entities.Draft;
 using backend.Entities.GameData;
+using backend.Entities.Notifications;
 using backend.Entities.Stats;
 using backend.Entities.Teams;
 using backend.Entities.Tournaments;
@@ -49,4 +50,6 @@ public class User : BaseEntity
 
 	public ICollection<DraftOrder> DraftOrders { get; set; } = [];
 	public ICollection<DraftPick> DraftPicks { get; set; } = [];
+	public ICollection<NotificationToken> NotificationTokens { get; set; }
+	= new List<NotificationToken>();
 }

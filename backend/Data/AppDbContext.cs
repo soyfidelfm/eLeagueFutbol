@@ -5,6 +5,8 @@ using backend.Entities.Dashboard;
 using backend.Entities.Draft;
 using backend.Entities.GameData;
 using backend.Entities.Identity;
+using backend.Entities.Messaging;
+using backend.Entities.Notifications;
 using backend.Entities.Stats;
 using backend.Entities.Teams;
 using backend.Entities.Tournaments;
@@ -42,6 +44,8 @@ public class AppDbContext : DbContext
 	public DbSet<DraftSession> DraftSessions => Set<DraftSession>();
 	public DbSet<DraftOrder> DraftOrders => Set<DraftOrder>();
 	public DbSet<DraftPick> DraftPicks => Set<DraftPick>();
+	public DbSet<NotificationToken> NotificationTokens => Set<NotificationToken>();
+	public DbSet<Message> Messages => Set<Message>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
@@ -140,6 +144,46 @@ public class AppDbContext : DbContext
 				.WithMany()
 				.HasForeignKey(x => x.AwayGameClubId)
 				.OnDelete(DeleteBehavior.Restrict);
+		});
+		modelBuilder.Entity<NotificationToken>(entity =>
+		{
+			entity.HasKey(x => x.NotificationTokenId);
+
+			entity.HasIndex(x => x.FcmToken)
+				.IsUnique();
+
+			entity.HasOne(x => x.User)
+				.WithMany(x => x.NotificationTokens)
+				.HasForeignKey(x => x.UserId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			entity.Property(x => x.FcmToken)
+				.HasMaxLength(500);
+
+			entity.Property(x => x.DeviceType)
+				.HasMaxLength(50);
+		});
+		modelBuilder.Entity<Message>(entity =>
+		{
+			entity.HasKey(x => x.MessageId);
+
+			entity.Property(x => x.Text)
+				.IsRequired()
+				.HasMaxLength(1000);
+
+			entity.HasOne(x => x.SenderUser)
+				.WithMany()
+				.HasForeignKey(x => x.SenderUserId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			entity.HasOne(x => x.ReceiverUser)
+				.WithMany()
+				.HasForeignKey(x => x.ReceiverUserId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			entity.HasIndex(x => new { x.SenderUserId, x.ReceiverUserId });
+
+			entity.HasIndex(x => new { x.ReceiverUserId, x.IsRead });
 		});
 	}
 

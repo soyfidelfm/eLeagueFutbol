@@ -1,9 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { Navbar } from '../navbar/navbar';
 import { Sidebar } from '../sidebar/sidebar';
 import { Footer } from '../footer/footer';
+
+import { NotificationService } from '../../core/services/notification.service';
+import { NotificationApiService } from '../../core/services/notification-api.service';
 
 @Component({
   selector: 'app-shell',
@@ -17,6 +20,23 @@ import { Footer } from '../footer/footer';
   templateUrl: './shell.html',
   styleUrl: './shell.scss'
 })
-export class Shell {
+export class Shell implements OnInit {
 
+  constructor(
+  private notificationService: NotificationService,
+  private notificationApiService: NotificationApiService
+) { }
+
+  async ngOnInit(): Promise<void> {
+
+    this.notificationService.listenForMessages();
+
+const token =
+  await this.notificationService.requestPermissionAndGetToken();
+
+if (token) {
+  this.notificationApiService.saveToken(token)
+    .subscribe();
+}
+  }
 }

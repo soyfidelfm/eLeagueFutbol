@@ -16,5 +16,7 @@ clubs: `${environment.api.baseUrl}/api/clubs`,
 cloudinary: `${environment.api.baseUrl}/api/cloudinary`,
 rankings: `${environment.api.baseUrl}/api/rankings`,
 sidebar: `${environment.api.baseUrl}/api/sidebar`,
-draft: `${environment.api.baseUrl}/api/draft`
+draft: `${environment.api.baseUrl}/api/draft`,
+notifications: `${environment.api.baseUrl}/api/notifications`,
+messages: `${environment.api.baseUrl}/api/messages`
 };
