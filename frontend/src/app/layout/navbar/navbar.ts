@@ -5,6 +5,7 @@ import { AuthService } from '@auth0/auth0-angular';
 import { take } from 'rxjs';
 
 import { Profile } from '../../features/profile/profile';
+import { Notifications } from '../../features/notifications/notifications';
 
 import { UserService } from '../../core/services/user.service';
 import { SeasonService } from '../../core/services/season.service';
@@ -18,7 +19,8 @@ import { MeUserDto } from '../../core/models/user.model';
   imports: [
     CommonModule,
     RouterModule,
-    Profile
+    Profile,
+    Notifications
   ],
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss'
@@ -34,7 +36,6 @@ export class Navbar implements OnInit {
   showProfileModal = false;
 
   unreadMessagesCount = 0;
-  unreadNotificationsCount = 0;
 
   constructor(
     public auth: AuthService,

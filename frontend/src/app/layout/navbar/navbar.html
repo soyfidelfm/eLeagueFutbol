@@ -71,20 +71,7 @@
     </a>
 
     <!-- NOTIFICATIONS -->
-    <button
-      type="button"
-      class="icon-btn"
-      title="Notifications">
-
-      <i class="fa-regular fa-bell"></i>
-
-      <span
-        class="notification-dot"
-        *ngIf="unreadNotificationsCount > 0">
-        {{ unreadNotificationsCount }}
-      </span>
-
-    </button>
+    <app-notifications></app-notifications>
 
     <!-- USER -->
     <div

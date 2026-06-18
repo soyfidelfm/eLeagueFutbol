@@ -84,7 +84,7 @@ public class NotificationService : INotificationService
 				{
 					Token = token.FcmToken,
 
-					Notification = new Notification
+					Notification = new FirebaseAdmin.Messaging.Notification
 					{
 						Title = title,
 						Body = body

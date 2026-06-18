@@ -47,6 +47,7 @@ builder.Services.AddScoped<ISidebarService, SidebarService>();
 builder.Services.AddScoped<IDraftService, DraftService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<INotificationInboxService, NotificationInboxService>();
 
 // Settings
 builder.Services.Configure<CloudinarySettings>(

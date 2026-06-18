@@ -46,6 +46,7 @@ public class AppDbContext : DbContext
 	public DbSet<DraftPick> DraftPicks => Set<DraftPick>();
 	public DbSet<NotificationToken> NotificationTokens => Set<NotificationToken>();
 	public DbSet<Message> Messages => Set<Message>();
+	public DbSet<Notification> Notifications => Set<Notification>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{

@@ -2,6 +2,7 @@
 
 using backend.Data;
 using backend.Entities.Messaging;
+using backend.Entities.Notifications;
 using backend.Features.Messages.Dtos;
 using backend.Features.Notifications.Services;
 using Microsoft.EntityFrameworkCore;
@@ -139,6 +140,8 @@ public class MessageService : IMessageService
 		if (text.Length > 1000)
 			throw new Exception("Message text cannot be longer than 1000 characters.");
 
+		var now = DateTime.UtcNow;
+
 		var message = new Message
 		{
 			MessageId = Guid.NewGuid(),
@@ -146,22 +149,41 @@ public class MessageService : IMessageService
 			ReceiverUserId = receiver.UserId,
 			Text = text,
 			IsRead = false,
-			SentAtUTC = DateTime.UtcNow
+			SentAtUTC = now
+		};
+
+		var preview = text.Length > 80
+			? text[..80] + "..."
+			: text;
+
+		var notification = new Notification
+		{
+			NotificationId = Guid.NewGuid(),
+			UserId = receiver.UserId,
+			Title = "New message",
+			Message = $"{sender.DisplayName}: {preview}",
+			Type = "message",
+			Url = $"/messages?userId={sender.UserId}",
+			IsRead = false,
+			CreatedAtUTC = now
 		};
 
 		_context.Messages.Add(message);
+		_context.Notifications.Add(notification);
 
 		await _context.SaveChangesAsync();
 
 		await _notificationService.SendToUserAsync(
 			receiver.UserId,
 			"New message",
-			$"{sender.DisplayName}: {message.Text}",
+			$"{sender.DisplayName}: {preview}",
 			new Dictionary<string, string>
 			{
 				{ "type", "message" },
 				{ "senderUserId", sender.UserId.ToString() },
-				{ "messageId", message.MessageId.ToString() }
+				{ "receiverUserId", receiver.UserId.ToString() },
+				{ "messageId", message.MessageId.ToString() },
+				{ "notificationId", notification.NotificationId.ToString() }
 			});
 
 		return new MessageDto

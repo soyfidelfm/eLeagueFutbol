@@ -12,10 +12,14 @@ using Microsoft.AspNetCore.Mvc;
 public class NotificationsController : ControllerBase
 {
 	private readonly INotificationService _notificationService;
+	private readonly INotificationInboxService _notificationInboxService;
 
-	public NotificationsController(INotificationService notificationService)
+	public NotificationsController(
+		INotificationService notificationService,
+		INotificationInboxService notificationInboxService)
 	{
 		_notificationService = notificationService;
+		_notificationInboxService = notificationInboxService;
 	}
 
 	[HttpPost("token")]
@@ -33,5 +37,73 @@ public class NotificationsController : ControllerBase
 		await _notificationService.SaveTokenAsync(auth0Id, dto);
 
 		return Ok();
+	}
+
+	[HttpGet]
+	public async Task<ActionResult<List<NotificationDto>>> GetMyNotifications()
+	{
+		var auth0Id =
+			User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+			User.FindFirstValue("sub") ??
+			string.Empty;
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		var notifications =
+			await _notificationInboxService.GetMyNotificationsAsync(auth0Id);
+
+		return Ok(notifications);
+	}
+
+	[HttpGet("unread-count")]
+	public async Task<ActionResult<UnreadNotificationCountDto>> GetUnreadCount()
+	{
+		var auth0Id =
+			User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+			User.FindFirstValue("sub") ??
+			string.Empty;
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		var result =
+			await _notificationInboxService.GetUnreadCountAsync(auth0Id);
+
+		return Ok(result);
+	}
+
+	[HttpPut("{notificationId:guid}/read")]
+	public async Task<IActionResult> MarkAsRead(Guid notificationId)
+	{
+		var auth0Id =
+			User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+			User.FindFirstValue("sub") ??
+			string.Empty;
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		await _notificationInboxService.MarkAsReadAsync(
+			auth0Id,
+			notificationId);
+
+		return NoContent();
+	}
+
+	[HttpPut("read-all")]
+	public async Task<IActionResult> MarkAllAsRead()
+	{
+		var auth0Id =
+			User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+			User.FindFirstValue("sub") ??
+			string.Empty;
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		await _notificationInboxService.MarkAllAsReadAsync(auth0Id);
+
+		return NoContent();
 	}
 }
