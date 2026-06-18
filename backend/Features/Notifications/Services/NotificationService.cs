@@ -60,18 +60,24 @@ public class NotificationService : INotificationService
 	}
 
 	public async Task SendToUserAsync(
-		Guid userId,
-		string title,
-		string body,
-		Dictionary<string, string>? data = null)
+	Guid userId,
+	string title,
+	string body,
+	Dictionary<string, string>? data = null)
 	{
 		var tokens = await _context.NotificationTokens
 			.Where(x =>
 				!x.IsDeleted &&
-				x.UserId == userId)
+				x.UserId == userId &&
+				!string.IsNullOrWhiteSpace(x.FcmToken))
 			.ToListAsync();
 
 		if (tokens.Count == 0)
+			return;
+
+		var firebase = FirebaseMessaging.DefaultInstance;
+
+		if (firebase is null)
 			return;
 
 		var safeData = data ?? new Dictionary<string, string>();
@@ -86,14 +92,14 @@ public class NotificationService : INotificationService
 
 					Notification = new FirebaseAdmin.Messaging.Notification
 					{
-						Title = title,
-						Body = body
+						Title = title ?? string.Empty,
+						Body = body ?? string.Empty
 					},
 
 					Data = safeData
 				};
 
-				await FirebaseMessaging.DefaultInstance.SendAsync(message);
+				await firebase.SendAsync(message);
 
 				token.LastUsedAtUTC = DateTime.UtcNow;
 			}

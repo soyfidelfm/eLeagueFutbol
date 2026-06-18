@@ -56,7 +56,12 @@ builder.Services.Configure<CloudinarySettings>(
 // Firebase Admin SDK
 var firebaseAdminSdkJson = builder.Configuration["Firebase:AdminSdkJson"];
 
-if (FirebaseApp.DefaultInstance is null && !string.IsNullOrWhiteSpace(firebaseAdminSdkJson))
+if (string.IsNullOrWhiteSpace(firebaseAdminSdkJson))
+{
+	throw new InvalidOperationException("Firebase Admin SDK JSON is missing. Set Firebase__AdminSdkJson.");
+}
+
+if (FirebaseApp.DefaultInstance is null)
 {
 	FirebaseApp.Create(new AppOptions
 	{
