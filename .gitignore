@@ -13,5 +13,9 @@ frontend/.angular/
 # User Secrets
 **/secrets.json
 
+# Firebase
+firebase-service-account.json
+**/firebase-service-account.json
+
 # Logs
 *.log

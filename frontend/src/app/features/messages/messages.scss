@@ -1064,21 +1064,35 @@
 
 @media (max-width: 900px) {
   .messages-page {
-    padding: 12px;
-    padding-bottom: 92px;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
   }
 
   .messages-shell {
-    height: calc(100vh - 190px);
+    width: 100%;
+    height: 100%;
     min-height: 0;
 
     display: block;
-    border-radius: 24px;
+
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+
+    overflow: hidden;
   }
 
   .inbox-card,
   .chat-card {
     height: 100%;
+    min-height: 0;
+  }
+
+  .chat-card {
+    display: grid;
+    grid-template-rows: 74px minmax(0, 1fr) auto;
   }
 
   .hidden-mobile {
@@ -1089,17 +1103,10 @@
     display: none;
   }
 
-  .inbox-header {
-    padding: 20px;
-
-    h1 {
-      font-size: 32px;
-    }
-  }
-
   .back-chat {
     display: grid;
     place-content: center;
+    flex-shrink: 0;
   }
 
   .chat-header {
@@ -1107,33 +1114,64 @@
     padding: 0 14px;
   }
 
+  .chat-header img {
+    width: 46px;
+    height: 46px;
+  }
+
+  .chat-header strong {
+    font-size: 16px;
+  }
+
   .chat-body {
-    padding: 16px;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 14px;
+
+    -webkit-overflow-scrolling: touch;
   }
 
   .message-bubble {
-    max-width: 88%;
+    max-width: 86%;
   }
 
   .chat-footer {
-    padding: 12px;
-    grid-template-columns: minmax(0, 1fr) 46px;
+    padding: 10px 12px 12px;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    gap: 10px;
 
-    textarea {
-      height: 46px;
-      border-radius: 16px;
-    }
+    background: rgba(2, 4, 3, .96);
+  }
 
-    button {
-      width: 46px;
-      height: 46px;
-      border-radius: 16px;
-    }
+  .chat-footer textarea {
+    height: 48px;
+    max-height: 48px;
+    padding: 13px 14px;
+    border-radius: 16px;
+  }
+
+  .chat-footer button {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+  }
+
+  .inbox-header {
+    padding: 18px;
+  }
+
+  .inbox-header h1 {
+    font-size: 30px;
+  }
+
+  .inbox-list {
+    height: calc(100% - 140px);
+    overflow-y: auto;
   }
 
   .new-message-modal {
     width: 100%;
-    max-height: calc(100vh - 110px);
+    max-height: calc(100dvh - 140px);
     padding: 22px;
     border-radius: 24px;
   }
