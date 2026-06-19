@@ -9,14 +9,16 @@ export const API_ENDPOINTS = {
   dashboard: `${environment.api.baseUrl}/api/dashboard`,
   gameData: `${environment.api.baseUrl}/api/game-data`,
   statsOverview: `${environment.api.baseUrl}/api/stats/overview`,
-  // api-endpoints.ts
-matchStatsOcrPreview: `${environment.api.baseUrl}/api/match-stats/ocr-preview`,
-matchStatsConfirmPlayer: `${environment.api.baseUrl}/api/match-stats/confirm-player`,
-clubs: `${environment.api.baseUrl}/api/clubs`,
-cloudinary: `${environment.api.baseUrl}/api/cloudinary`,
-rankings: `${environment.api.baseUrl}/api/rankings`,
-sidebar: `${environment.api.baseUrl}/api/sidebar`,
-draft: `${environment.api.baseUrl}/api/draft`,
-notifications: `${environment.api.baseUrl}/api/notifications`,
-messages: `${environment.api.baseUrl}/api/messages`
+
+  matchStatsOcrPreview: `${environment.api.baseUrl}/api/match-stats/ocr-preview`,
+  matchStatsOcrMatchPreview: `${environment.api.baseUrl}/api/match-stats/ocr-match-preview`,
+  matchStatsConfirmPlayer: `${environment.api.baseUrl}/api/match-stats/confirm-player`,
+
+  clubs: `${environment.api.baseUrl}/api/clubs`,
+  cloudinary: `${environment.api.baseUrl}/api/cloudinary`,
+  rankings: `${environment.api.baseUrl}/api/rankings`,
+  sidebar: `${environment.api.baseUrl}/api/sidebar`,
+  draft: `${environment.api.baseUrl}/api/draft`,
+  notifications: `${environment.api.baseUrl}/api/notifications`,
+  messages: `${environment.api.baseUrl}/api/messages`
 };

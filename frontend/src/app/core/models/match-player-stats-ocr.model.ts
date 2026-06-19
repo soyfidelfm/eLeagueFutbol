@@ -38,3 +38,24 @@ export interface ConfirmMatchPlayerStats extends MatchPlayerStatsOcrPreview {
   matchId: string;
   userId: string;
 }
+
+export interface MatchOcrEventPreview {
+  minute: number;
+  type: string;
+  playerName: string;
+  teamName: string;
+  rawText: string;
+}
+
+export interface MatchOcrPreview {
+  homeTeamName: string;
+  awayTeamName: string;
+
+  homeScore?: number | null;
+  awayScore?: number | null;
+
+  events: MatchOcrEventPreview[];
+
+  rawLines: string[];
+  warnings: string[];
+}

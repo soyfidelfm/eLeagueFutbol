@@ -1,4 +1,4 @@
-﻿using backend.Application.MatchStats.DTOs;
+﻿using backend.Application.Stats.DTOs;
 using backend.Data;
 using backend.Entities.Stats;
 using backend.Features.Stats.Services;
@@ -36,6 +36,7 @@ public class MatchStatsController : ControllerBase
 			MatchPlayerStatsId = Guid.NewGuid(),
 			MatchId = dto.MatchId,
 			UserId = dto.UserId,
+			TeamId = dto.TeamId,
 
 			Position = dto.Position,
 			PlayerName = dto.PlayerName,
@@ -65,6 +66,9 @@ public class MatchStatsController : ControllerBase
 			DistanceCoveredKm = dto.DistanceCoveredKm,
 			DistanceSprintedKm = dto.DistanceSprintedKm,
 
+			YellowCards = dto.YellowCards,
+			RedCards = dto.RedCards,
+
 			IsPlayerOfTheMatch = dto.IsPlayerOfTheMatch
 		};
 
@@ -72,5 +76,15 @@ public class MatchStatsController : ControllerBase
 		await _context.SaveChangesAsync();
 
 		return Ok(entity.MatchPlayerStatsId);
+	}
+
+	[HttpPost("ocr-match-preview")]
+	public async Task<IActionResult> OcrMatchPreview(
+	[FromForm] List<IFormFile> images)
+	{
+		var result =
+			await _ocrService.PreviewMatchScreenshotsAsync(images);
+
+		return Ok(result);
 	}
 }

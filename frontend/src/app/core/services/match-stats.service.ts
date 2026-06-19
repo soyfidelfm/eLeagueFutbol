@@ -8,6 +8,7 @@ import { ApiService } from '../services/api.service.ts';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
 import {
   ConfirmMatchPlayerStats,
+  MatchOcrPreview,
   MatchPlayerStatsOcrPreview
 } from '../models/match-player-stats-ocr.model';
 
@@ -28,6 +29,19 @@ export class MatchStatsService extends ApiService {
 
     return this.http.post<MatchPlayerStatsOcrPreview>(
       API_ENDPOINTS.matchStatsOcrPreview,
+      formData
+    );
+  }
+
+  previewMatchScreenshots(images: File[]): Observable<MatchOcrPreview> {
+    const formData = new FormData();
+
+    images.forEach(image => {
+      formData.append('images', image);
+    });
+
+    return this.http.post<MatchOcrPreview>(
+      API_ENDPOINTS.matchStatsOcrMatchPreview,
       formData
     );
   }

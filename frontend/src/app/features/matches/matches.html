@@ -266,24 +266,66 @@
         </div>
 
         <div class="upload-card">
-          <div class="upload-icon">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-          </div>
+  <div class="upload-icon">
+    <i class="fa-solid fa-cloud-arrow-up"></i>
+  </div>
 
-          <div>
-            <h3>UPLOAD RESULT</h3>
-            <p>Submit the match result once the game is finished.</p>
-          </div>
+  <div>
+    <h3>UPLOAD RESULT</h3>
+    <p>Upload Summary and Events screenshots.</p>
+  </div>
 
-          <button (click)="uploadResult()">
-            Upload Result
-          </button>
+  <input
+    type="file"
+    accept="image/*"
+    multiple
+    hidden
+    #resultFilesInput
+    (change)="onResultFilesSelected($event)"
+  />
 
-          <small>
-            <i class="fa-regular fa-circle-question"></i>
-            Only team captains can upload results.
-          </small>
-        </div>
+  <button type="button" (click)="resultFilesInput.click()">
+    Select Screenshots
+  </button>
+
+  <button
+    type="button"
+    [disabled]="selectedResultFiles.length === 0 || isUploadingResult"
+    (click)="previewUploadedResult()"
+  >
+    {{ isUploadingResult ? 'Reading...' : 'Preview Result' }}
+  </button>
+
+  <small *ngIf="selectedResultFiles.length > 0">
+    <i class="fa-solid fa-image"></i>
+    {{ selectedResultFiles.length }} screenshot(s) selected.
+  </small>
+
+  <div class="ocr-preview" *ngIf="ocrPreview">
+    <h4>OCR PREVIEW</h4>
+
+    <strong>
+      {{ ocrPreview.homeTeamName || selectedMatch.home.name }}
+      {{ ocrPreview.homeScore ?? '-' }}
+      -
+      {{ ocrPreview.awayScore ?? '-' }}
+      {{ ocrPreview.awayTeamName || selectedMatch.away.name }}
+    </strong>
+
+    <p *ngIf="ocrPreview.events.length > 0">
+      Events detected: {{ ocrPreview.events.length }}
+    </p>
+
+    <p *ngIf="ocrPreview.warnings.length > 0">
+      {{ ocrPreview.warnings[0] }}
+    </p>
+  </div>
+
+  <small>
+    <i class="fa-regular fa-circle-question"></i>
+    Only team captains can upload results.
+  </small>
+</div>
 
       </aside>
 

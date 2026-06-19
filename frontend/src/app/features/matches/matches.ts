@@ -5,6 +5,8 @@ import { finalize } from 'rxjs';
 
 import { MatchService } from '../../core/services/match.service';
 import { SeasonService } from '../../core/services/season.service';
+import { MatchStatsService } from '../../core/services/match-stats.service';
+import { MatchOcrPreview } from '../../core/models/match-player-stats-ocr.model';
 
 import {
   MatchDto,
@@ -31,11 +33,16 @@ export class Matches implements OnInit {
   weeks: MatchWeekDto[] = [];
   matches: MatchView[] = [];
 
+  selectedResultFiles: File[] = [];
+ocrPreview: MatchOcrPreview | null = null;
+isUploadingResult = false;
+
   selectedMatch: MatchView | null = null;
 
   constructor(
   private matchService: MatchService,
   private seasonService: SeasonService,
+  private matchStatsService: MatchStatsService,
   private cdr: ChangeDetectorRef
 ) {}
 
@@ -210,4 +217,53 @@ export class Matches implements OnInit {
       }
     };
   }
+
+  onResultFilesSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+
+  if (!input.files || input.files.length === 0) {
+    return;
+  }
+
+  this.selectedResultFiles = Array.from(input.files);
+  this.ocrPreview = null;
+}
+
+previewUploadedResult(): void {
+  if (!this.selectedMatch || this.selectedResultFiles.length === 0) {
+    this.errorMessage = 'Please select Summary and Events screenshots.';
+    return;
+  }
+
+  this.isUploadingResult = true;
+  this.errorMessage = '';
+
+  this.matchStatsService.previewMatchScreenshots(this.selectedResultFiles)
+    .pipe(
+      finalize(() => {
+        this.isUploadingResult = false;
+        this.cdr.detectChanges();
+      })
+    )
+    .subscribe({
+      next: result => {
+        this.ocrPreview = result;
+
+        if (result.homeScore !== null && result.homeScore !== undefined) {
+          this.selectedMatch!.homeScore = result.homeScore;
+        }
+
+        if (result.awayScore !== null && result.awayScore !== undefined) {
+          this.selectedMatch!.awayScore = result.awayScore;
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMessage = 'Could not read match screenshots.';
+        this.ocrPreview = null;
+        this.cdr.detectChanges();
+      }
+    });
+}
 }

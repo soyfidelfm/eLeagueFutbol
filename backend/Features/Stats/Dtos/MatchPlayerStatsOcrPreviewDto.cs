@@ -1,4 +1,4 @@
-﻿namespace backend.Application.MatchStats.DTOs;
+﻿namespace backend.Application.Stats.DTOs;
 
 public class MatchPlayerStatsOcrPreviewDto
 {
@@ -32,6 +32,9 @@ public class MatchPlayerStatsOcrPreviewDto
 
 	public decimal DistanceCoveredKm { get; set; }
 	public decimal DistanceSprintedKm { get; set; }
+
+	public int YellowCards { get; set; }
+	public int RedCards { get; set; }
 
 	public bool IsPlayerOfTheMatch { get; set; }
 }
