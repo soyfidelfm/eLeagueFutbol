@@ -4,5 +4,8 @@ namespace backend.Features.Dashboard.Services;
 
 public interface IDashboardService
 {
-	Task<DashboardDto> GetAsync(string timeZone, CancellationToken ct);
+	Task<DashboardDto> GetAsync(
+		string auth0Id,
+		string timeZone,
+		CancellationToken ct);
 }

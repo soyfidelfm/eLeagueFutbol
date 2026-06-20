@@ -159,6 +159,115 @@ namespace backend.Migrations
                     b.ToTable("Tournaments");
                 });
 
+            modelBuilder.Entity("backend.Entities.Clubs.UserClub", b =>
+                {
+                    b.Property<Guid>("UserClubId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BaseGameClubId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("CurrentBudget")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("InitialBudget")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LogoUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserClubId");
+
+                    b.HasIndex("BaseGameClubId");
+
+                    b.HasIndex("SeasonId");
+
+                    b.HasIndex("UserId", "SeasonId")
+                        .IsUnique();
+
+                    b.ToTable("UserClubs");
+                });
+
+            modelBuilder.Entity("backend.Entities.Clubs.UserClubPlayer", b =>
+                {
+                    b.Property<Guid>("UserClubPlayerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AcquiredAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("AcquisitionPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("AcquisitionType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GamePlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserClubId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserClubPlayerId");
+
+                    b.HasIndex("GamePlayerId");
+
+                    b.HasIndex("UserClubId", "GamePlayerId")
+                        .IsUnique();
+
+                    b.ToTable("UserClubPlayers");
+                });
+
             modelBuilder.Entity("backend.Entities.Dashboard.ActivityFeed", b =>
                 {
                     b.Property<Guid>("Id")
@@ -287,20 +396,29 @@ namespace backend.Migrations
                     b.Property<DateTime>("CreatedAtUTC")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Formation")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("GameClubId")
-                        .HasColumnType("uuid");
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("UpdatedAtUTC")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserClubId")
                         .HasColumnType("uuid");
 
                     b.HasKey("ClubLineupId");
+
+                    b.HasIndex("UserClubId");
 
                     b.ToTable("ClubLineups");
                 });
@@ -314,19 +432,38 @@ namespace backend.Migrations
                     b.Property<Guid>("ClubLineupId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("GamePlayerId")
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Position")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("SlotIndex")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserClubPlayerId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("ClubLineupPlayerId");
 
-                    b.HasIndex("ClubLineupId");
+                    b.HasIndex("UserClubPlayerId");
+
+                    b.HasIndex("ClubLineupId", "SlotIndex")
+                        .IsUnique();
 
                     b.ToTable("ClubLineupPlayers");
                 });
@@ -414,11 +551,32 @@ namespace backend.Migrations
                     b.Property<int>("Age")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ClubContractValidUntilYear")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ClubJerseyNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ClubName")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ClubTeamId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAtUTC")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("Defending")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Dribbling")
+                        .HasColumnType("integer");
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -450,7 +608,22 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("NationTeamId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("NationalityId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Overall")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Pace")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Passing")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Physic")
                         .HasColumnType("integer");
 
                     b.Property<string>("Position")
@@ -464,6 +637,15 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("ReleaseClauseEur")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Shooting")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SkillMoves")
+                        .HasColumnType("integer");
+
                     b.Property<int>("SofifaPlayerId")
                         .HasColumnType("integer");
 
@@ -472,6 +654,15 @@ namespace backend.Migrations
 
                     b.Property<Guid?>("UpdatedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("ValueEur")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("WageEur")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("WeakFoot")
+                        .HasColumnType("integer");
 
                     b.Property<int>("WeightKg")
                         .HasColumnType("integer");
@@ -551,6 +742,127 @@ namespace backend.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("backend.Entities.MatchSummary.MatchSummaryStats", b =>
+                {
+                    b.Property<Guid>("MatchSummaryStatsId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AwayCorners")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("AwayExpectedGoals")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("AwayFoulsCommitted")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AwayFreeKicks")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AwayInterceptions")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AwayOffsides")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AwayPasses")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AwayPenaltyKicks")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AwayPossession")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AwaySaves")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AwayShots")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AwayTackles")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AwayTacklesWon")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AwayYellowCards")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("HomeCorners")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("HomeExpectedGoals")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("HomeFoulsCommitted")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HomeFreeKicks")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HomeInterceptions")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HomeOffsides")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HomePasses")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HomePenaltyKicks")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HomePossession")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HomeSaves")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HomeShots")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HomeTackles")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HomeTacklesWon")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HomeYellowCards")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("MatchId1")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("MatchSummaryStatsId");
+
+                    b.HasIndex("MatchId");
+
+                    b.HasIndex("MatchId1")
+                        .IsUnique();
+
+                    b.ToTable("MatchSummaryStats");
                 });
 
             modelBuilder.Entity("backend.Entities.Messaging.Message", b =>
@@ -920,6 +1232,9 @@ namespace backend.Migrations
                     b.Property<int>("AwayScore")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("AwayUserClubUserClubId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("AwayUserId")
                         .HasColumnType("uuid");
 
@@ -934,6 +1249,9 @@ namespace backend.Migrations
 
                     b.Property<int>("HomeScore")
                         .HasColumnType("integer");
+
+                    b.Property<Guid?>("HomeUserClubUserClubId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("HomeUserId")
                         .HasColumnType("uuid");
@@ -970,9 +1288,13 @@ namespace backend.Migrations
 
                     b.HasIndex("AwayGameClubId");
 
+                    b.HasIndex("AwayUserClubUserClubId");
+
                     b.HasIndex("AwayUserId");
 
                     b.HasIndex("HomeGameClubId");
+
+                    b.HasIndex("HomeUserClubUserClubId");
 
                     b.HasIndex("HomeUserId");
 
@@ -1034,6 +1356,122 @@ namespace backend.Migrations
                     b.HasKey("SeasonId");
 
                     b.ToTable("Seasons");
+                });
+
+            modelBuilder.Entity("backend.Entities.Transfers.TransferRecord", b =>
+                {
+                    b.Property<Guid>("TransferRecordId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("FromUserClubId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GamePlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int?>("PlayerMarketValue")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ToUserClubId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("TransferDateUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("TransferFee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("TransferType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("TransferRecordId");
+
+                    b.HasIndex("FromUserClubId");
+
+                    b.HasIndex("GamePlayerId");
+
+                    b.HasIndex("SeasonId");
+
+                    b.HasIndex("ToUserClubId");
+
+                    b.ToTable("TransferRecords");
+                });
+
+            modelBuilder.Entity("backend.Entities.Transfers.UserClubBudgetTransaction", b =>
+                {
+                    b.Property<Guid>("UserClubBudgetTransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserClubId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserClubBudgetTransactionId");
+
+                    b.HasIndex("SeasonId");
+
+                    b.HasIndex("UserClubId");
+
+                    b.ToTable("UserClubBudgetTransactions");
                 });
 
             modelBuilder.Entity("DraftOrder", b =>
@@ -1120,6 +1558,51 @@ namespace backend.Migrations
                     b.Navigation("Season");
                 });
 
+            modelBuilder.Entity("backend.Entities.Clubs.UserClub", b =>
+                {
+                    b.HasOne("backend.Entities.GameData.GameClub", "BaseGameClub")
+                        .WithMany()
+                        .HasForeignKey("BaseGameClubId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("backend.Entities.Tournaments.Season", "Season")
+                        .WithMany("UserClubs")
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Identity.User", "User")
+                        .WithMany("UserClubs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BaseGameClub");
+
+                    b.Navigation("Season");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("backend.Entities.Clubs.UserClubPlayer", b =>
+                {
+                    b.HasOne("backend.Entities.GameData.GamePlayer", "GamePlayer")
+                        .WithMany("UserClubPlayers")
+                        .HasForeignKey("GamePlayerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Clubs.UserClub", "UserClub")
+                        .WithMany("Players")
+                        .HasForeignKey("UserClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GamePlayer");
+
+                    b.Navigation("UserClub");
+                });
+
             modelBuilder.Entity("backend.Entities.Dashboard.ActivityFeed", b =>
                 {
                     b.HasOne("backend.Entities.Identity.User", "User")
@@ -1151,6 +1634,17 @@ namespace backend.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("backend.Entities.GameData.ClubLineup", b =>
+                {
+                    b.HasOne("backend.Entities.Clubs.UserClub", "UserClub")
+                        .WithMany("Lineups")
+                        .HasForeignKey("UserClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UserClub");
+                });
+
             modelBuilder.Entity("backend.Entities.GameData.ClubLineupPlayer", b =>
                 {
                     b.HasOne("backend.Entities.GameData.ClubLineup", "ClubLineup")
@@ -1159,7 +1653,15 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("backend.Entities.Clubs.UserClubPlayer", "UserClubPlayer")
+                        .WithMany("LineupPlayers")
+                        .HasForeignKey("UserClubPlayerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("ClubLineup");
+
+                    b.Navigation("UserClubPlayer");
                 });
 
             modelBuilder.Entity("backend.Entities.GameData.GamePlayer", b =>
@@ -1181,6 +1683,21 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("GameClub");
+                });
+
+            modelBuilder.Entity("backend.Entities.MatchSummary.MatchSummaryStats", b =>
+                {
+                    b.HasOne("backend.Entities.Tournaments.Match", "Match")
+                        .WithMany()
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Tournaments.Match", null)
+                        .WithOne("MatchSummaryStats")
+                        .HasForeignKey("backend.Entities.MatchSummary.MatchSummaryStats", "MatchId1");
+
+                    b.Navigation("Match");
                 });
 
             modelBuilder.Entity("backend.Entities.Messaging.Message", b =>
@@ -1297,6 +1814,10 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("backend.Entities.Clubs.UserClub", "AwayUserClub")
+                        .WithMany()
+                        .HasForeignKey("AwayUserClubUserClubId");
+
                     b.HasOne("backend.Entities.Identity.User", "AwayUser")
                         .WithMany("AwayMatches")
                         .HasForeignKey("AwayUserId")
@@ -1308,6 +1829,10 @@ namespace backend.Migrations
                         .HasForeignKey("HomeGameClubId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("backend.Entities.Clubs.UserClub", "HomeUserClub")
+                        .WithMany()
+                        .HasForeignKey("HomeUserClubUserClubId");
 
                     b.HasOne("backend.Entities.Identity.User", "HomeUser")
                         .WithMany("HomeMatches")
@@ -1325,16 +1850,91 @@ namespace backend.Migrations
 
                     b.Navigation("AwayUser");
 
+                    b.Navigation("AwayUserClub");
+
                     b.Navigation("HomeGameClub");
 
                     b.Navigation("HomeUser");
 
+                    b.Navigation("HomeUserClub");
+
                     b.Navigation("Tournament");
+                });
+
+            modelBuilder.Entity("backend.Entities.Transfers.TransferRecord", b =>
+                {
+                    b.HasOne("backend.Entities.Clubs.UserClub", "FromUserClub")
+                        .WithMany("TransfersOut")
+                        .HasForeignKey("FromUserClubId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("backend.Entities.GameData.GamePlayer", "GamePlayer")
+                        .WithMany("TransferRecords")
+                        .HasForeignKey("GamePlayerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Tournaments.Season", "Season")
+                        .WithMany("TransferRecords")
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Clubs.UserClub", "ToUserClub")
+                        .WithMany("TransfersIn")
+                        .HasForeignKey("ToUserClubId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FromUserClub");
+
+                    b.Navigation("GamePlayer");
+
+                    b.Navigation("Season");
+
+                    b.Navigation("ToUserClub");
+                });
+
+            modelBuilder.Entity("backend.Entities.Transfers.UserClubBudgetTransaction", b =>
+                {
+                    b.HasOne("backend.Entities.Tournaments.Season", "Season")
+                        .WithMany("UserClubBudgetTransactions")
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Clubs.UserClub", "UserClub")
+                        .WithMany("BudgetTransactions")
+                        .HasForeignKey("UserClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Season");
+
+                    b.Navigation("UserClub");
                 });
 
             modelBuilder.Entity("Tournament", b =>
                 {
                     b.Navigation("Matches");
+                });
+
+            modelBuilder.Entity("backend.Entities.Clubs.UserClub", b =>
+                {
+                    b.Navigation("BudgetTransactions");
+
+                    b.Navigation("Lineups");
+
+                    b.Navigation("Players");
+
+                    b.Navigation("TransfersIn");
+
+                    b.Navigation("TransfersOut");
+                });
+
+            modelBuilder.Entity("backend.Entities.Clubs.UserClubPlayer", b =>
+                {
+                    b.Navigation("LineupPlayers");
                 });
 
             modelBuilder.Entity("backend.Entities.GameData.ClubLineup", b =>
@@ -1352,6 +1952,10 @@ namespace backend.Migrations
             modelBuilder.Entity("backend.Entities.GameData.GamePlayer", b =>
                 {
                     b.Navigation("DraftPicks");
+
+                    b.Navigation("TransferRecords");
+
+                    b.Navigation("UserClubPlayers");
                 });
 
             modelBuilder.Entity("backend.Entities.Identity.User", b =>
@@ -1369,6 +1973,8 @@ namespace backend.Migrations
                     b.Navigation("NotificationTokens");
 
                     b.Navigation("TeamMemberships");
+
+                    b.Navigation("UserClubs");
                 });
 
             modelBuilder.Entity("backend.Entities.Teams.Team", b =>
@@ -1378,6 +1984,8 @@ namespace backend.Migrations
 
             modelBuilder.Entity("backend.Entities.Tournaments.Match", b =>
                 {
+                    b.Navigation("MatchSummaryStats");
+
                     b.Navigation("PlayerStats");
                 });
 
@@ -1392,6 +2000,12 @@ namespace backend.Migrations
                     b.Navigation("Registrations");
 
                     b.Navigation("Tournaments");
+
+                    b.Navigation("TransferRecords");
+
+                    b.Navigation("UserClubBudgetTransactions");
+
+                    b.Navigation("UserClubs");
                 });
 #pragma warning restore 612, 618
         }

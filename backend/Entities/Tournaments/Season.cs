@@ -1,7 +1,10 @@
 ﻿namespace backend.Entities.Tournaments;
 
-using backend.Entities.Draft;
+using backend.Entities.Clubs;
 using backend.Entities.Common;
+using backend.Entities.Draft;
+using backend.Entities.Transfers;
+
 public class Season : BaseEntity
 
 {
@@ -38,4 +41,9 @@ public class Season : BaseEntity
 	public ICollection<DraftSession> DraftSessions { get; set; } = [];
 	public ICollection<DraftOrder> DraftOrders { get; set; } = [];
 	public ICollection<DraftPick> DraftPicks { get; set; } = [];
+	public ICollection<UserClub> UserClubs { get; set; } = [];
+
+	public ICollection<TransferRecord> TransferRecords { get; set; } = [];
+
+	public ICollection<UserClubBudgetTransaction> UserClubBudgetTransactions { get; set; } = [];
 }

@@ -1,4 +1,4 @@
-﻿namespace eLeagueFutbol.Application.Stats.DTOs;
+﻿namespace backend.Application.Stats.DTOs;
 
 public class PerformancePointDto
 {

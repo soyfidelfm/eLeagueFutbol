@@ -1,4 +1,5 @@
 ﻿using backend.Data;
+using backend.Entities.Clubs;
 using backend.Entities.Enums;
 using backend.Entities.Tournaments;
 using backend.Features.Matches.Dtos;
@@ -38,15 +39,18 @@ public class MatchService : IMatchService
 	public async Task<List<MatchDto>> GetByWeekAsync(
 		Guid seasonId,
 		int weekNumber,
-		string? timeZone
-	)
+		string? timeZone)
 	{
+		var userClubs = await GetUserClubMapAsync(seasonId);
+
 		var matches = await _context.Matches
 			.AsNoTracking()
 			.Include(x => x.HomeUser)
 			.Include(x => x.AwayUser)
 			.Include(x => x.HomeGameClub)
 			.Include(x => x.AwayGameClub)
+			.Include(x => x.HomeUserClub)
+			.Include(x => x.AwayUserClub)
 			.Include(x => x.PlayerStats)
 				.ThenInclude(x => x.User)
 			.Include(x => x.Tournament)
@@ -59,14 +63,13 @@ public class MatchService : IMatchService
 			.ToListAsync();
 
 		return matches
-			.Select(x => MapToDto(x, timeZone))
+			.Select(x => MapToDto(x, timeZone, userClubs))
 			.ToList();
 	}
 
 	public async Task<MatchDto?> GetByIdAsync(
 		Guid matchId,
-		string? timeZone
-	)
+		string? timeZone)
 	{
 		var match = await _context.Matches
 			.AsNoTracking()
@@ -74,6 +77,8 @@ public class MatchService : IMatchService
 			.Include(x => x.AwayUser)
 			.Include(x => x.HomeGameClub)
 			.Include(x => x.AwayGameClub)
+			.Include(x => x.HomeUserClub)
+			.Include(x => x.AwayUserClub)
 			.Include(x => x.PlayerStats)
 				.ThenInclude(x => x.User)
 			.Include(x => x.Tournament)
@@ -84,13 +89,14 @@ public class MatchService : IMatchService
 		if (match is null)
 			return null;
 
-		return MapToDto(match, timeZone);
+		var userClubs = await GetUserClubMapAsync(match.Tournament.SeasonId);
+
+		return MapToDto(match, timeZone, userClubs);
 	}
 
 	public async Task<MatchResultDto?> UploadResultAsync(
 		Guid matchId,
-		UploadMatchResultDto dto
-	)
+		UploadMatchResultDto dto)
 	{
 		var match = await _context.Matches
 			.FirstOrDefaultAsync(x =>
@@ -137,7 +143,7 @@ public class MatchService : IMatchService
 				SeasonId = season.SeasonId,
 				Name = $"{season.Name} League",
 				StartDate = season.StartDate,
-				EndDate = season.EndDate,
+				EndDate = season.EndDate
 			};
 
 			_context.Tournaments.Add(tournament);
@@ -157,14 +163,17 @@ public class MatchService : IMatchService
 			await _context.SaveChangesAsync();
 		}
 
-		var teams = await _context.SeasonRegistrations
+		var teams = await _context.UserClubs
 			.AsNoTracking()
 			.Where(x =>
-				x.SeasonId == seasonId)
+				x.SeasonId == seasonId &&
+				!x.IsDeleted &&
+				x.BaseGameClubId.HasValue)
 			.Select(x => new ScheduleTeam
 			{
 				UserId = x.UserId,
-				GameClubId = x.GameClubId
+				UserClubId = x.UserClubId,
+				GameClubId = x.BaseGameClubId!.Value
 			})
 			.ToListAsync();
 
@@ -172,17 +181,14 @@ public class MatchService : IMatchService
 			return false;
 
 		var totalWeeks = season.TotalWeeks <= 0 ? 1 : season.TotalWeeks;
-
 		var pairings = GenerateSchedulePairings(teams, totalWeeks);
 
 		var matches = new List<Match>();
-
 		var matchDate = season.StartDate.Date.AddHours(20);
 
 		for (var i = 0; i < pairings.Count; i++)
 		{
 			var weekNumber = pairings[i].WeekNumber;
-
 			var weekMatchCount = matches.Count(x => x.WeekNumber == weekNumber);
 
 			matches.Add(new Match
@@ -200,8 +206,8 @@ public class MatchService : IMatchService
 				AwayScore = 0,
 
 				MatchDate = matchDate
-					.AddDays((weekNumber - 1) * 7)
-					.AddHours(weekMatchCount),
+		.AddDays((weekNumber - 1) * 7)
+		.AddHours(weekMatchCount),
 
 				Status = MatchStatus.Scheduled,
 				WeekNumber = weekNumber,
@@ -218,83 +224,53 @@ public class MatchService : IMatchService
 		return true;
 	}
 
-	private static List<SchedulePairing> GenerateSchedulePairings(
-		List<ScheduleTeam> teams,
-		int totalWeeks
-	)
+	private async Task<Dictionary<Guid, UserClub>> GetUserClubMapAsync(Guid seasonId)
 	{
-		var clubs = teams.ToList();
-
-		if (clubs.Count % 2 != 0)
-		{
-			clubs.Add(new ScheduleTeam
-			{
-				UserId = Guid.Empty,
-				GameClubId = Guid.Empty
-			});
-		}
-
-		var totalClubs = clubs.Count;
-		var matchesPerWeek = totalClubs / 2;
-
-		var pairings = new List<SchedulePairing>();
-
-		for (var week = 1; week <= totalWeeks; week++)
-		{
-			for (var match = 0; match < matchesPerWeek; match++)
-			{
-				var home = clubs[match];
-				var away = clubs[totalClubs - 1 - match];
-
-				if (home.UserId == Guid.Empty || away.UserId == Guid.Empty)
-					continue;
-
-				if (week % 2 == 1)
-				{
-					pairings.Add(new SchedulePairing
-					{
-						WeekNumber = week,
-						Home = home,
-						Away = away
-					});
-				}
-				else
-				{
-					pairings.Add(new SchedulePairing
-					{
-						WeekNumber = week,
-						Home = away,
-						Away = home
-					});
-				}
-			}
-
-			var fixedClub = clubs[0];
-			var rotatingClubs = clubs.Skip(1).ToList();
-
-			rotatingClubs.Insert(0, rotatingClubs.Last());
-			rotatingClubs.RemoveAt(rotatingClubs.Count - 1);
-
-			clubs = [fixedClub, .. rotatingClubs];
-		}
-
-		return pairings;
+		return await _context.UserClubs
+			.AsNoTracking()
+			.Include(x => x.BaseGameClub)
+			.Where(x =>
+				x.SeasonId == seasonId &&
+				!x.IsDeleted)
+			.ToDictionaryAsync(x => x.UserId);
 	}
 
 	private static MatchDto MapToDto(
 		Match match,
-		string? timeZone
-	)
+		string? timeZone,
+		Dictionary<Guid, UserClub> userClubs)
 	{
 		var localDate = ConvertToLocal(match.MatchDate, timeZone);
 
-		var homeName = string.IsNullOrWhiteSpace(match.HomeUser.ClubName)
-			? match.HomeGameClub.Name
-			: match.HomeUser.ClubName;
+		var homeClub = match.HomeUserClub ??
+			(match.HomeUserId != Guid.Empty &&
+			 userClubs.TryGetValue(match.HomeUserId, out var hc)
+				? hc
+				: null);
 
-		var awayName = string.IsNullOrWhiteSpace(match.AwayUser.ClubName)
-			? match.AwayGameClub.Name
-			: match.AwayUser.ClubName;
+		var awayClub = match.AwayUserClub ??
+			(match.AwayUserId != Guid.Empty &&
+			 userClubs.TryGetValue(match.AwayUserId, out var ac)
+				? ac
+				: null);
+
+		var homeName = homeClub?.Name ??
+			(!string.IsNullOrWhiteSpace(match.HomeUser?.ClubName)
+				? match.HomeUser.ClubName
+				: match.HomeGameClub.Name);
+
+		var awayName = awayClub?.Name ??
+			(!string.IsNullOrWhiteSpace(match.AwayUser?.ClubName)
+				? match.AwayUser.ClubName
+				: match.AwayGameClub.Name);
+
+		var homeLogo = !string.IsNullOrWhiteSpace(homeClub?.LogoUrl)
+			? homeClub.LogoUrl
+			: homeClub?.BaseGameClub?.LogoUrl ?? match.HomeGameClub.LogoUrl ?? "";
+
+		var awayLogo = !string.IsNullOrWhiteSpace(awayClub?.LogoUrl)
+			? awayClub.LogoUrl
+			: awayClub?.BaseGameClub?.LogoUrl ?? match.AwayGameClub.LogoUrl ?? "";
 
 		return new MatchDto
 		{
@@ -323,33 +299,82 @@ public class MatchService : IMatchService
 
 			Home = new MatchTeamDto
 			{
-				ClubId = match.HomeGameClubId,
+				ClubId = homeClub?.UserClubId ?? match.HomeGameClubId,
 				UserId = match.HomeUserId,
 				Name = homeName,
 				Club = match.HomeGameClub.Name,
-				LogoUrl = match.HomeGameClub.LogoUrl ?? "",
-				Stats = BuildTeamStats(match, match.HomeGameClubId)
+				LogoUrl = homeLogo,
+				Stats = BuildTeamStats(match, match.HomeUserId)
 			},
 
 			Away = new MatchTeamDto
 			{
-				ClubId = match.AwayGameClubId,
+				ClubId = awayClub?.UserClubId ?? match.AwayGameClubId,
 				UserId = match.AwayUserId,
 				Name = awayName,
 				Club = match.AwayGameClub.Name,
-				LogoUrl = match.AwayGameClub.LogoUrl ?? "",
-				Stats = BuildTeamStats(match, match.AwayGameClubId)
+				LogoUrl = awayLogo,
+				Stats = BuildTeamStats(match, match.AwayUserId)
 			}
 		};
 	}
 
+	private static List<SchedulePairing> GenerateSchedulePairings(
+		List<ScheduleTeam> teams,
+		int totalWeeks)
+	{
+		var clubs = teams.ToList();
+
+		if (clubs.Count % 2 != 0)
+		{
+			clubs.Add(new ScheduleTeam
+			{
+				UserId = Guid.Empty,
+				UserClubId = Guid.Empty,
+				GameClubId = Guid.Empty
+			});
+		}
+
+		var totalClubs = clubs.Count;
+		var matchesPerWeek = totalClubs / 2;
+		var pairings = new List<SchedulePairing>();
+
+		for (var week = 1; week <= totalWeeks; week++)
+		{
+			for (var match = 0; match < matchesPerWeek; match++)
+			{
+				var home = clubs[match];
+				var away = clubs[totalClubs - 1 - match];
+
+				if (home.UserId == Guid.Empty || away.UserId == Guid.Empty)
+					continue;
+
+				pairings.Add(new SchedulePairing
+				{
+					WeekNumber = week,
+					Home = week % 2 == 1 ? home : away,
+					Away = week % 2 == 1 ? away : home
+				});
+			}
+
+			var fixedClub = clubs[0];
+			var rotatingClubs = clubs.Skip(1).ToList();
+
+			rotatingClubs.Insert(0, rotatingClubs.Last());
+			rotatingClubs.RemoveAt(rotatingClubs.Count - 1);
+
+			clubs = [fixedClub, .. rotatingClubs];
+		}
+
+		return pairings;
+	}
+
 	private static MatchTeamStatsDto BuildTeamStats(
 		Match match,
-		Guid gameClubId
-	)
+		Guid userId)
 	{
 		var teamStats = match.PlayerStats
-			.Where(x => x.TeamId == gameClubId)
+			.Where(x => x.UserId == userId)
 			.ToList();
 
 		var topScorer = teamStats
@@ -364,18 +389,15 @@ public class MatchService : IMatchService
 		{
 			TopScorer = topScorer?.User.DisplayName ?? "-",
 			Goals = topScorer?.Goals ?? 0,
-
 			TopAssist = topAssist?.User.DisplayName ?? "-",
 			Assists = topAssist?.Assists ?? 0,
-
 			Streak = ["W", "W", "L", "W"]
 		};
 	}
 
 	private static DateTime ConvertToLocal(
 		DateTime utcDate,
-		string? timeZone
-	)
+		string? timeZone)
 	{
 		if (string.IsNullOrWhiteSpace(timeZone))
 			return utcDate;
@@ -386,8 +408,7 @@ public class MatchService : IMatchService
 
 			return TimeZoneInfo.ConvertTimeFromUtc(
 				DateTime.SpecifyKind(utcDate, DateTimeKind.Utc),
-				zone
-			);
+				zone);
 		}
 		catch
 		{
@@ -398,6 +419,8 @@ public class MatchService : IMatchService
 	private sealed class ScheduleTeam
 	{
 		public Guid UserId { get; set; }
+
+		public Guid UserClubId { get; set; }
 
 		public Guid GameClubId { get; set; }
 	}

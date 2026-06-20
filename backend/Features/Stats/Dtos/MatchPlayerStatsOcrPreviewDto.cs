@@ -1,4 +1,4 @@
-﻿namespace backend.Application.Stats.DTOs;
+﻿namespace backend.Features.Stats.Dtos;
 
 public class MatchPlayerStatsOcrPreviewDto
 {

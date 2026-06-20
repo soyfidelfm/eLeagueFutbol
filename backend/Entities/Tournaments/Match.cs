@@ -1,7 +1,9 @@
-﻿using backend.Entities.Common;
+﻿using backend.Entities.Clubs;
+using backend.Entities.Common;
 using backend.Entities.Enums;
 using backend.Entities.GameData;
 using backend.Entities.Identity;
+using backend.Entities.MatchSummary;
 using backend.Entities.Stats;
 
 namespace backend.Entities.Tournaments;
@@ -45,6 +47,13 @@ public class Match : BaseEntity
 	public GameClub HomeGameClub { get; set; } = null!;
 
 	public GameClub AwayGameClub { get; set; } = null!;
+	
+
+public UserClub? HomeUserClub { get; set; }
+
+public UserClub? AwayUserClub { get; set; }
+
+	public MatchSummaryStats? MatchSummaryStats { get; set; }
 
 	public ICollection<MatchPlayerStats> PlayerStats { get; set; }
 		= new List<MatchPlayerStats>();

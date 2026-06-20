@@ -1,7 +1,7 @@
-﻿using eLeagueFutbol.Application.Stats;
+﻿using backend.Application.Stats;
 using Microsoft.AspNetCore.Mvc;
 
-namespace eLeagueFutbol.API.Controllers;
+namespace backend.Controllers;
 
 [ApiController]
 [Route("api/stats")]

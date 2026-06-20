@@ -1,9 +1,12 @@
-﻿using backend.Application.Stats.DTOs;
+﻿using backend.Features.Stats.Dtos;
+
 namespace backend.Features.Stats.Services;
 
 public interface IMatchStatsOcrService
 {
-	Task<MatchPlayerStatsOcrPreviewDto> PreviewPlayerStatsAsync(IFormFile image);
+	Task<MatchSummaryStatsOcrDto> PreviewMatchSummaryAsync(
+		IFormFile image);
 
-	Task<MatchOcrPreviewDto> PreviewMatchScreenshotsAsync(List<IFormFile> images);
+	Task<TeamPerformanceOcrPreviewDto> PreviewTeamPerformanceAsync(
+		IFormFile image);
 }

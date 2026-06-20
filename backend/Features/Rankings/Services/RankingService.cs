@@ -1,12 +1,12 @@
 ﻿using backend.Data;
+using backend.Entities.Clubs;
 using backend.Entities.Enums;
 using backend.Features.Rankings.DTOs;
 using backend.Features.Rankings.Dtos;
-using backend.Features.Rankings.Services;
 using Microsoft.EntityFrameworkCore;
 using backend.Entities.Tournaments;
 
-namespace backend.Application.Rankings.Services;
+namespace backend.Features.Rankings.Services;
 
 public sealed class RankingService : IRankingService
 {
@@ -35,12 +35,12 @@ public sealed class RankingService : IRankingService
 			: seasons.FirstOrDefault(x => x.IsCurrent) ?? seasons.FirstOrDefault();
 
 		if (selectedSeason is null)
-		{
 			return new RankingsResponseDto();
-		}
 
 		var matches = await _context.Matches
 			.Include(x => x.Tournament)
+			.Include(x => x.HomeUser)
+			.Include(x => x.AwayUser)
 			.Include(x => x.HomeGameClub)
 			.Include(x => x.AwayGameClub)
 			.Where(x =>
@@ -49,8 +49,27 @@ public sealed class RankingService : IRankingService
 				x.Tournament.SeasonId == selectedSeason.SeasonId)
 			.ToListAsync();
 
-		var playerRankings = await BuildPlayerRankingsAsync(selectedSeason.SeasonId);
-		var clubRankings = await BuildClubRankingsAsync(selectedSeason.SeasonId, matches);
+		var userClubs = await _context.UserClubs
+			.AsNoTracking()
+			.Include(x => x.User)
+			.Include(x => x.BaseGameClub)
+			.Where(x =>
+				x.SeasonId == selectedSeason.SeasonId &&
+				!x.IsDeleted)
+			.ToListAsync();
+
+		var userClubMap = userClubs
+			.GroupBy(x => x.UserId)
+			.ToDictionary(g => g.Key, g => g.First());
+
+		var playerRankings = await BuildPlayerRankingsAsync(
+			selectedSeason.SeasonId,
+			userClubs);
+
+		var clubRankings = BuildClubRankings(
+			matches,
+			userClubs,
+			userClubMap);
 
 		return new RankingsResponseDto
 		{
@@ -62,32 +81,31 @@ public sealed class RankingService : IRankingService
 		};
 	}
 
-	private async Task<List<PlayerRankingDto>> BuildPlayerRankingsAsync(Guid seasonId)
+	private async Task<List<PlayerRankingDto>> BuildPlayerRankingsAsync(
+		Guid seasonId,
+		List<UserClub> userClubs)
 	{
-		var registrations = await _context.SeasonRegistrations
-			.Include(x => x.User)
-			.Include(x => x.GameClub)
-			.Where(x =>
-				x.SeasonId == seasonId)
-			.ToListAsync();
-
-		var table = registrations
+		var table = userClubs
 			.GroupBy(x => x.UserId)
 			.ToDictionary(
 				g => g.Key,
 				g =>
 				{
-					var registration = g.First();
+					var club = g.First();
 
 					return new PlayerRankingDto
 					{
-						UserId = registration.UserId,
-						PlayerName = registration.User.DisplayName,
-						AvatarUrl = registration.User.AvatarUrl ?? string.Empty,
+						UserId = club.UserId,
+						PlayerName = string.IsNullOrWhiteSpace(club.User.DisplayName)
+							? club.User.Email
+							: club.User.DisplayName,
+						AvatarUrl = string.IsNullOrWhiteSpace(club.User.AvatarUrl)
+							? string.Empty
+							: club.User.AvatarUrl,
 
-						ClubId = registration.GameClubId,
-						ClubName = registration.User.ClubName ?? registration.GameClub.Name,
-						ClubLogoUrl = registration.GameClub.LogoUrl ?? string.Empty,
+						ClubId = club.UserClubId,
+						ClubName = club.Name,
+						ClubLogoUrl = GetClubLogo(club),
 
 						Points = 0,
 						Wins = 0,
@@ -118,51 +136,101 @@ public sealed class RankingService : IRankingService
 		foreach (var stat in stats)
 		{
 			if (!table.TryGetValue(stat.UserId, out var player))
-			{
 				continue;
-			}
 
-			player.GoalsFor = stat.Goals;
-			player.Points = stat.Goals * 10 + stat.Assists * 5;
+			player.Points += stat.Goals * 10 + stat.Assists * 5;
+		}
+
+		var finishedMatches = await _context.Matches
+			.Include(x => x.Tournament)
+			.Where(x =>
+				!x.IsDeleted &&
+				x.Status == MatchStatus.Finished &&
+				x.Tournament.SeasonId == seasonId)
+			.OrderBy(x => x.MatchDate)
+			.ToListAsync();
+
+		foreach (var match in finishedMatches)
+		{
+			if (!table.TryGetValue(match.HomeUserId, out var home))
+				continue;
+
+			if (!table.TryGetValue(match.AwayUserId, out var away))
+				continue;
+
+			home.GoalsFor += match.HomeScore;
+			home.GoalsAgainst += match.AwayScore;
+
+			away.GoalsFor += match.AwayScore;
+			away.GoalsAgainst += match.HomeScore;
+
+			if (match.HomeScore > match.AwayScore)
+			{
+				home.Wins++;
+				home.Points += 3;
+				home.Form.Add("W");
+
+				away.Losses++;
+				away.Form.Add("L");
+			}
+			else if (match.HomeScore < match.AwayScore)
+			{
+				away.Wins++;
+				away.Points += 3;
+				away.Form.Add("W");
+
+				home.Losses++;
+				home.Form.Add("L");
+			}
+			else
+			{
+				home.Form.Add("D");
+				away.Form.Add("D");
+			}
 		}
 
 		var rankings = table.Values
+			.Select(x =>
+			{
+				var games = x.Wins + x.Losses;
+
+				x.WinRate = games == 0
+					? 0
+					: Math.Round((decimal)x.Wins / games * 100, 2);
+
+				x.Form = x.Form.TakeLast(5).ToList();
+
+				return x;
+			})
 			.OrderByDescending(x => x.Points)
 			.ThenByDescending(x => x.GoalsFor)
 			.ThenBy(x => x.PlayerName)
 			.ToList();
 
 		for (var i = 0; i < rankings.Count; i++)
-		{
 			rankings[i].Rank = i + 1;
-		}
 
 		return rankings;
 	}
 
-	private async Task<List<ClubRankingDto>> BuildClubRankingsAsync(
-		Guid seasonId,
-		List<Match> matches)
+	private static List<ClubRankingDto> BuildClubRankings(
+		List<Match> matches,
+		List<UserClub> userClubs,
+		Dictionary<Guid, UserClub> userClubMap)
 	{
-		var registrations = await _context.SeasonRegistrations
-			.Include(x => x.GameClub)
-			.Where(x =>
-				x.SeasonId == seasonId)
-			.ToListAsync();
-
-		var table = registrations
-			.GroupBy(x => x.GameClubId)
+		var table = userClubs
+			.GroupBy(x => x.UserClubId)
 			.ToDictionary(
 				g => g.Key,
 				g =>
 				{
-					var registration = g.First();
+					var club = g.First();
 
 					return new ClubRankingDto
 					{
-						ClubId = registration.GameClubId,
-						ClubName = registration.User.ClubName ?? registration.GameClub.Name,
-						ClubLogoUrl = registration.GameClub.LogoUrl ?? string.Empty,
+						ClubId = club.UserClubId,
+						ClubName = club.Name,
+						ClubLogoUrl = GetClubLogo(club),
 
 						Points = 0,
 						Wins = 0,
@@ -176,13 +244,16 @@ public sealed class RankingService : IRankingService
 					};
 				});
 
-		foreach (var match in matches)
+		foreach (var match in matches.OrderBy(x => x.MatchDate))
 		{
-			AddClubIfMissing(table, match.HomeGameClubId, match.HomeGameClub.Name, match.HomeGameClub.LogoUrl);
-			AddClubIfMissing(table, match.AwayGameClubId, match.AwayGameClub.Name, match.AwayGameClub.LogoUrl);
+			if (!userClubMap.TryGetValue(match.HomeUserId, out var homeClub))
+				continue;
 
-			var home = table[match.HomeGameClubId];
-			var away = table[match.AwayGameClubId];
+			if (!userClubMap.TryGetValue(match.AwayUserId, out var awayClub))
+				continue;
+
+			var home = table[homeClub.UserClubId];
+			var away = table[awayClub.UserClubId];
 
 			home.GoalsFor += match.HomeScore;
 			home.GoalsAgainst += match.AwayScore;
@@ -227,7 +298,10 @@ public sealed class RankingService : IRankingService
 				var games = x.Wins + x.Draws + x.Losses;
 
 				x.GoalDifference = x.GoalsFor - x.GoalsAgainst;
-				x.WinRate = games == 0 ? 0 : Math.Round((decimal)x.Wins / games * 100, 2);
+				x.WinRate = games == 0
+					? 0
+					: Math.Round((decimal)x.Wins / games * 100, 2);
+
 				x.Form = x.Form.TakeLast(5).ToList();
 
 				return x;
@@ -239,30 +313,19 @@ public sealed class RankingService : IRankingService
 			.ToList();
 
 		for (var i = 0; i < rankings.Count; i++)
-		{
 			rankings[i].Rank = i + 1;
-		}
 
 		return rankings;
 	}
 
-	private static void AddClubIfMissing(
-		Dictionary<Guid, ClubRankingDto> table,
-		Guid clubId,
-		string clubName,
-		string? logoUrl)
+	private static string GetClubLogo(UserClub club)
 	{
-		if (table.ContainsKey(clubId))
-		{
-			return;
-		}
+		if (!string.IsNullOrWhiteSpace(club.LogoUrl))
+			return club.LogoUrl;
 
-		table[clubId] = new ClubRankingDto
-		{
-			ClubId = clubId,
-			ClubName = clubName,
-			ClubLogoUrl = logoUrl ?? string.Empty,
-			Form = []
-		};
+		if (!string.IsNullOrWhiteSpace(club.BaseGameClub?.LogoUrl))
+			return club.BaseGameClub.LogoUrl;
+
+		return string.Empty;
 	}
 }

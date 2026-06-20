@@ -3,6 +3,7 @@
 public class DraftCenterDto
 {
 	public Guid MyUserId { get; set; }
+	public decimal CurrentBudget { get; set; }
 	public DraftStateDto State { get; set; } = new();
 
 	public List<DraftOrderDto> DraftOrder { get; set; } = [];

@@ -44,35 +44,31 @@ public class ClubService : IClubService
 				!x.IsDeleted &&
 				x.IsActive);
 
-		if (user is null || user.GameClubId is null)
+		if (user is null)
 			return null;
 
-		var gameClubId = user.GameClubId.Value;
-
-		var gameClub = await _context.GameClubs
+		var season = await _context.Seasons
 			.AsNoTracking()
 			.FirstOrDefaultAsync(x =>
-				x.GameClubId == gameClubId &&
-				!x.IsDeleted &&
-				x.IsActive);
+				x.IsCurrent &&
+				x.IsActive &&
+				!x.IsDeleted);
 
-		if (gameClub is null)
+		if (season is null)
 			return null;
 
-		var members = await _context.Users
+		var userClub = await _context.UserClubs
 			.AsNoTracking()
-			.CountAsync(x =>
-				x.GameClubId == gameClubId &&
-				!x.IsDeleted &&
-				x.IsActive);
+			.Include(x => x.BaseGameClub)
+			.FirstOrDefaultAsync(x =>
+				x.UserId == user.UserId &&
+				x.SeasonId == season.SeasonId &&
+				!x.IsDeleted);
 
-		var teamIds = await _context.Teams
-			.AsNoTracking()
-			.Where(x =>
-				x.GameClubId == gameClubId &&
-				!x.IsDeleted)
-			.Select(x => x.TeamId)
-			.ToListAsync();
+		if (userClub is null)
+			return null;
+
+		var baseClub = userClub.BaseGameClub;
 
 		var matches = await _context.Matches
 			.AsNoTracking()
@@ -80,30 +76,30 @@ public class ClubService : IClubService
 				!x.IsDeleted &&
 				x.Status == MatchStatus.Finished &&
 				(
-					teamIds.Contains(x.HomeGameClubId) ||
-					teamIds.Contains(x.AwayGameClubId)
+					x.HomeUserId == user.UserId ||
+					x.AwayUserId == user.UserId
 				))
 			.ToListAsync();
 
 		var matchesPlayed = matches.Count;
 
 		var wins = matches.Count(x =>
-			(teamIds.Contains(x.HomeGameClubId) && x.HomeScore > x.AwayScore) ||
-			(teamIds.Contains(x.AwayGameClubId) && x.AwayScore > x.HomeScore));
+			(x.HomeUserId == user.UserId && x.HomeScore > x.AwayScore) ||
+			(x.AwayUserId == user.UserId && x.AwayScore > x.HomeScore));
 
 		var losses = matches.Count(x =>
-			(teamIds.Contains(x.HomeGameClubId) && x.HomeScore < x.AwayScore) ||
-			(teamIds.Contains(x.AwayGameClubId) && x.AwayScore < x.HomeScore));
+			(x.HomeUserId == user.UserId && x.HomeScore < x.AwayScore) ||
+			(x.AwayUserId == user.UserId && x.AwayScore < x.HomeScore));
 
 		var draws = matches.Count(x => x.HomeScore == x.AwayScore);
 
 		var goalsFor = matches.Sum(x =>
-			teamIds.Contains(x.HomeGameClubId)
+			x.HomeUserId == user.UserId
 				? x.HomeScore
 				: x.AwayScore);
 
 		var goalsAgainst = matches.Sum(x =>
-			teamIds.Contains(x.HomeGameClubId)
+			x.HomeUserId == user.UserId
 				? x.AwayScore
 				: x.HomeScore);
 
@@ -111,22 +107,24 @@ public class ClubService : IClubService
 
 		var rating = wins * 3 + draws;
 
-		var players = await _context.GamePlayers
+		var players = await _context.UserClubPlayers
 			.AsNoTracking()
+			.Include(x => x.GamePlayer)
 			.Where(x =>
-				x.GameClubId == gameClubId &&
+				x.UserClubId == userClub.UserClubId &&
 				!x.IsDeleted &&
-				x.IsActive)
-			.OrderByDescending(x => x.Overall)
+				!x.GamePlayer.IsDeleted &&
+				x.GamePlayer.IsActive)
+			.OrderByDescending(x => x.GamePlayer.Overall)
 			.Select(x => new MyClubPlayerDto
 			{
 				PlayerId = x.GamePlayerId,
-				Name = string.IsNullOrWhiteSpace(x.Name)
-					? x.FullName
-					: x.Name,
-				Position = x.Position,
-				Overall = x.Overall,
-				AvatarUrl = x.ImageUrl,
+				Name = string.IsNullOrWhiteSpace(x.GamePlayer.Name)
+					? x.GamePlayer.FullName
+					: x.GamePlayer.Name,
+				Position = x.GamePlayer.Position,
+				Overall = x.GamePlayer.Overall,
+				AvatarUrl = x.GamePlayer.ImageUrl,
 				X = 50,
 				Y = 50
 			})
@@ -134,18 +132,9 @@ public class ClubService : IClubService
 
 		SetFormationPositions(players);
 
-		var clubUserIds = await _context.Users
-			.AsNoTracking()
-			.Where(x =>
-				x.GameClubId == gameClubId &&
-				!x.IsDeleted &&
-				x.IsActive)
-			.Select(x => x.UserId)
-			.ToListAsync();
-
 		var activities = await _context.ActivityFeeds
 			.AsNoTracking()
-			.Where(x => clubUserIds.Contains(x.UserId))
+			.Where(x => x.UserId == user.UserId)
 			.OrderByDescending(x => x.CreatedAtUTC)
 			.Take(8)
 			.Select(x => new MyClubActivityDto
@@ -160,19 +149,20 @@ public class ClubService : IClubService
 
 		return new MyClubDto
 		{
-			ClubId = gameClub.GameClubId,
-			Name = string.IsNullOrWhiteSpace(user.ClubName)
-				? gameClub.Name
-				: user.ClubName,
+			ClubId = userClub.UserClubId,
+			Name = userClub.Name,
 
-			Abbreviation = gameClub.Code,
-			LogoUrl = gameClub.LogoUrl,
+			Abbreviation = baseClub?.Code ?? string.Empty,
+			LogoUrl = string.IsNullOrWhiteSpace(userClub.LogoUrl)
+				? baseClub?.LogoUrl ?? string.Empty
+				: userClub.LogoUrl,
+
 			Description = string.Empty,
 			Slogan = null,
-			Region = gameClub.Country,
-			Division = gameClub.League,
+			Region = baseClub?.Country ?? string.Empty,
+			Division = baseClub?.League ?? string.Empty,
 
-			Members = members,
+			Members = 1,
 
 			MatchesPlayed = matchesPlayed,
 			Wins = wins,
@@ -181,7 +171,7 @@ public class ClubService : IClubService
 			GoalsFor = goalsFor,
 			GoalsAgainst = goalsAgainst,
 			GoalDifference = goalDifference,
-			Rating = rating > 0 ? rating : gameClub.OverallRating,
+			Rating = rating > 0 ? rating : baseClub?.OverallRating ?? 0,
 
 			Players = players,
 			Activities = activities
@@ -199,20 +189,29 @@ public class ClubService : IClubService
 				!x.IsDeleted &&
 				x.IsActive);
 
-		if (user is null || user.GameClubId is null)
+		if (user is null)
 			return null;
 
-		var gameClub = await _context.GameClubs
+		var season = await _context.Seasons
+			.AsNoTracking()
 			.FirstOrDefaultAsync(x =>
-				x.GameClubId == user.GameClubId.Value &&
-				!x.IsDeleted &&
-				x.IsActive);
+				x.IsCurrent &&
+				x.IsActive &&
+				!x.IsDeleted);
 
-		if (gameClub is null)
+		if (season is null)
 			return null;
 
-		gameClub.LogoUrl = logoUrl;
-		gameClub.UpdatedAtUTC = DateTime.UtcNow;
+		var userClub = await _context.UserClubs
+			.FirstOrDefaultAsync(x =>
+				x.UserId == user.UserId &&
+				x.SeasonId == season.SeasonId &&
+				!x.IsDeleted);
+
+		if (userClub is null)
+			return null;
+
+		userClub.LogoUrl = logoUrl;
 
 		await _context.SaveChangesAsync();
 
@@ -226,8 +225,8 @@ public class ClubService : IClubService
 	}
 
 	public async Task<MyClubDto?> UpdateMyClubLineupAsync(
-	string auth0Id,
-	UpdateMyClubLineupDto dto)
+		string auth0Id,
+		UpdateMyClubLineupDto dto)
 	{
 		if (dto is null || string.IsNullOrWhiteSpace(dto.Formation))
 			return null;
@@ -241,46 +240,65 @@ public class ClubService : IClubService
 				!x.IsDeleted &&
 				x.IsActive);
 
-		if (user is null || user.GameClubId is null)
+		if (user is null)
 			return null;
 
-		var gameClubId = user.GameClubId.Value;
+		var season = await _context.Seasons
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x =>
+				x.IsCurrent &&
+				x.IsActive &&
+				!x.IsDeleted);
 
-		var playerIds = dto.Players
+		if (season is null)
+			return null;
+
+		var userClub = await _context.UserClubs
+			.FirstOrDefaultAsync(x =>
+				x.UserId == user.UserId &&
+				x.SeasonId == season.SeasonId &&
+				!x.IsDeleted);
+
+		if (userClub is null)
+			return null;
+
+		var gamePlayerIds = dto.Players
 			.Select(x => x.PlayerId)
 			.ToList();
 
-		var distinctPlayerIds = playerIds.Distinct().ToList();
+		var distinctGamePlayerIds = gamePlayerIds
+			.Distinct()
+			.ToList();
 
-		if (distinctPlayerIds.Count != 11)
+		if (distinctGamePlayerIds.Count != 11)
 			return null;
 
-		var validPlayersCount = await _context.GamePlayers
-			.CountAsync(x =>
-				distinctPlayerIds.Contains(x.GamePlayerId) &&
-				x.GameClubId == gameClubId &&
-				!x.IsDeleted &&
-				x.IsActive);
+		var userClubPlayers = await _context.UserClubPlayers
+			.Where(x =>
+				x.UserClubId == userClub.UserClubId &&
+				distinctGamePlayerIds.Contains(x.GamePlayerId) &&
+				!x.IsDeleted)
+			.ToListAsync();
 
-		if (validPlayersCount != 11)
+		if (userClubPlayers.Count != 11)
 			return null;
+
+		var userClubPlayerMap = userClubPlayers
+			.ToDictionary(x => x.GamePlayerId, x => x.UserClubPlayerId);
 
 		var lineup = await _context.ClubLineups
 			.Include(x => x.Players)
 			.FirstOrDefaultAsync(x =>
-				x.UserId == user.UserId &&
-				x.GameClubId == gameClubId);
+				x.UserClubId == userClub.UserClubId &&
+				!x.IsDeleted);
 
 		if (lineup is null)
 		{
 			lineup = new ClubLineup
 			{
 				ClubLineupId = Guid.NewGuid(),
-				UserId = user.UserId,
-				GameClubId = gameClubId,
-				Formation = dto.Formation,
-				CreatedAtUTC = DateTime.UtcNow,
-				UpdatedAtUTC = DateTime.UtcNow
+				UserClubId = userClub.UserClubId,
+				Formation = dto.Formation
 			};
 
 			_context.ClubLineups.Add(lineup);
@@ -288,8 +306,6 @@ public class ClubService : IClubService
 		else
 		{
 			lineup.Formation = dto.Formation;
-			lineup.UpdatedAtUTC = DateTime.UtcNow;
-
 			_context.ClubLineupPlayers.RemoveRange(lineup.Players);
 		}
 
@@ -299,7 +315,7 @@ public class ClubService : IClubService
 			{
 				ClubLineupPlayerId = Guid.NewGuid(),
 				ClubLineupId = lineup.ClubLineupId,
-				GamePlayerId = x.PlayerId,
+				UserClubPlayerId = userClubPlayerMap[x.PlayerId],
 				SlotIndex = x.SlotIndex,
 				Position = x.Position ?? string.Empty
 			})
@@ -323,16 +339,13 @@ public class ClubService : IClubService
 			new { X = 18, Y = 15 },
 			new { X = 47, Y = 8 },
 			new { X = 74, Y = 15 },
-
 			new { X = 28, Y = 42 },
 			new { X = 48, Y = 38 },
 			new { X = 68, Y = 42 },
-
 			new { X = 12, Y = 67 },
 			new { X = 34, Y = 70 },
 			new { X = 60, Y = 70 },
 			new { X = 82, Y = 67 },
-
 			new { X = 48, Y = 88 }
 		};
 

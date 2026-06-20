@@ -89,18 +89,12 @@
         </div>
 
         <div class="draft-order-list">
-          <div
-            class="draft-order-item"
-            *ngFor="let team of draftOrder"
-            [class.current]="team.isCurrentPick">
+          <div class="draft-order-item" *ngFor="let team of draftOrder" [class.current]="team.isCurrentPick">
 
             <span class="pick-number">{{ team.pickOrder }}</span>
 
             <span class="team-logo">
-              <img
-                *ngIf="team.logoUrl; else teamLogoFallback"
-                [src]="team.logoUrl"
-                [alt]="team.clubName" />
+              <img *ngIf="team.logoUrl; else teamLogoFallback" [src]="team.logoUrl" [alt]="team.clubName" />
 
               <ng-template #teamLogoFallback>
                 ⚽
@@ -120,17 +114,12 @@
         </div>
 
         <div class="draft-order-list reverse">
-          <div
-            class="draft-order-item"
-            *ngFor="let team of draftOrder">
+          <div class="draft-order-item" *ngFor="let team of draftOrder">
 
             <span class="pick-number">{{ team.pickOrder }}</span>
 
             <span class="team-logo">
-              <img
-                *ngIf="team.logoUrl; else reverseLogoFallback"
-                [src]="team.logoUrl"
-                [alt]="team.clubName" />
+              <img *ngIf="team.logoUrl; else reverseLogoFallback" [src]="team.logoUrl" [alt]="team.clubName" />
 
               <ng-template #reverseLogoFallback>
                 ⚽
@@ -157,19 +146,12 @@
         <div class="search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
 
-          <input
-            type="text"
-            [(ngModel)]="searchTerm"
-            (keyup.enter)="loadPlayers()"
-            placeholder="Search player..." />
+          <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="loadPlayers()" placeholder="Search player..." />
         </div>
 
         <div class="filters-row">
           <div class="position-tabs">
-            <button
-              type="button"
-              *ngFor="let position of positions"
-              [class.active]="selectedPosition === position"
+            <button type="button" *ngFor="let position of positions" [class.active]="selectedPosition === position"
               (click)="setPosition(position)">
               {{ position }}
             </button>
@@ -183,62 +165,74 @@
         </div>
 
         <div class="player-grid" *ngIf="pagedPlayers.length > 0; else noPlayers">
-          <article
-  class="player-card"
-  *ngFor="let player of pagedPlayers">
+          <article class="player-card" *ngFor="let player of pagedPlayers">
 
-  <img
-    class="card-background"
-    src="https://res.cloudinary.com/dwgojz5cu/image/upload/v1781595337/cardRegular_ivakii.png"
-    alt="Assist Card" />
+            <img class="card-background"
+              src="https://res.cloudinary.com/dwgojz5cu/image/upload/v1781595337/cardRegular_ivakii.png"
+              alt="Assist Card" />
 
-  <div class="player-rating">
-    {{ player.overall }}
-  </div>
+            <div class="player-rating">
+              {{ player.overall }}
+            </div>
 
-  <div class="player-position">
-  {{ getPrimaryPosition(player.position) }}
-</div>
+            <div class="player-position">
+              {{ getPrimaryPosition(player.position) }}
+            </div>
 
-  <div class="player-image">
-    <img
-      [src]="getPlayerImageUrl(player)"
-      [alt]="player.name"
-      referrerpolicy="no-referrer"
-      loading="lazy"
-      (error)="onPlayerImageError($event)" />
-  </div>
+            <div class="player-image">
+              <img [src]="getPlayerImageUrl(player)" [alt]="player.name" referrerpolicy="no-referrer" loading="lazy"
+                (error)="onPlayerImageError($event)" />
+            </div>
 
-  <div class="player-name">
-    {{ player.name }}
-  </div>
+            <div class="player-name">
+              {{ player.name }}
+            </div>
 
-  <div class="player-card-stats">
-    <div>
-      <strong>{{ player.overall }}</strong>
-      <span>OVR</span>
-    </div>
+            <div class="player-card-stats">
 
-    <div>
-      <strong>{{ player.potential }}</strong>
-      <span>POT</span>
-    </div>
+              <div>
+                <strong>{{ player.pace }}</strong>
+                <span>PAC</span>
+              </div>
 
-    <div>
-      <strong>{{ player.age }}</strong>
-      <span>AGE</span>
-    </div>
-  </div>
+              <div>
+                <strong>{{ player.shooting }}</strong>
+                <span>SHO</span>
+              </div>
 
-  <button
-    class="draft-button"
-    type="button"
-    [disabled]="isPicking || !isDraftActive"
-    (click)="draftPlayer(player)">
-    <i class="fa-solid fa-plus"></i>
-  </button>
+              <div>
+                <strong>{{ player.passing }}</strong>
+                <span>PAS</span>
+              </div>
 
-</article>
+              <div>
+                <strong>{{ player.dribbling }}</strong>
+                <span>DRI</span>
+              </div>
+
+              <div>
+                <strong>{{ player.defending }}</strong>
+                <span>DEF</span>
+              </div>
+
+              <div>
+                <strong>{{ player.physic }}</strong>
+                <span>PHY</span>
+              </div>
+
+            </div>
+
+            <div class="player-value">
+              <i class="fa-solid fa-sack-dollar"></i>
+              €{{ player.value | number:'1.0-0' }}
+            </div>
+
+            <button class="draft-button" type="button" [disabled]="isPicking || !isDraftActive"
+              (click)="draftPlayer(player)">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+
+          </article>
         </div>
 
         <ng-template #noPlayers>
@@ -267,15 +261,28 @@
         <div class="panel-header">
           <div>
             <h2>Your Squad</h2>
-            <p>{{ draftedCount }}/{{ squadSlots.length }} players</p>
+
+            <p>
+              {{ draftedCount }}/{{ squadSlots.length }} players
+            </p>
+
+            <div class="budget-display">
+              <i class="fa-solid fa-coins"></i>
+
+              <div>
+                <small>Budget Remaining</small>
+
+                <strong>
+                  ${{ currentBudget | number:'1.0-0' }}
+                </strong>
+              </div>
+            </div>
+
           </div>
         </div>
 
         <div class="pitch">
-          <div
-            class="squad-slot"
-            *ngFor="let slot of squadSlots"
-            [class.filled]="slot.player">
+          <div class="squad-slot" *ngFor="let slot of squadSlots" [class.filled]="slot.player">
 
             <span *ngIf="!slot.player">{{ slot.position }}</span>
 
@@ -369,4 +376,7 @@
 
   </ng-container>
 
+</div>
+<div class="draft-toast" *ngIf="errorMessage">
+  {{ errorMessage }}
 </div>

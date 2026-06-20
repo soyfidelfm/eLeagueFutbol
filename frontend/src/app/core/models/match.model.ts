@@ -60,3 +60,8 @@ export interface Match {
   score: string;
   status: string;
 }
+
+export interface UploadMatchResultDto {
+  homeScore: number;
+  awayScore: number;
+}

@@ -49,14 +49,12 @@
             [(ngModel)]="selectedWeek"
             (ngModelChange)="onWeekChange()"
           >
-
             <option
               *ngFor="let week of weeks"
               [ngValue]="week.value"
             >
               {{ week.label }}
             </option>
-
           </select>
         </div>
 
@@ -92,11 +90,11 @@
             <span>{{ match.arena }}</span>
             <small>{{ match.mode }}</small>
 
-            <strong *ngIf="match.homeScore === undefined">
+            <strong *ngIf="match.homeScore === undefined || match.homeScore === null">
               {{ match.time }}
             </strong>
 
-            <strong *ngIf="match.homeScore !== undefined">
+            <strong *ngIf="match.homeScore !== undefined && match.homeScore !== null">
               {{ match.homeScore }} - {{ match.awayScore }}
             </strong>
 
@@ -134,11 +132,11 @@
             <span>{{ match.arena }}</span>
             <small>{{ match.mode }}</small>
 
-            <strong *ngIf="match.homeScore === undefined">
+            <strong *ngIf="match.homeScore === undefined || match.homeScore === null">
               {{ match.time }}
             </strong>
 
-            <strong *ngIf="match.homeScore !== undefined">
+            <strong *ngIf="match.homeScore !== undefined && match.homeScore !== null">
               {{ match.homeScore }} - {{ match.awayScore }}
             </strong>
 
@@ -182,7 +180,15 @@
             <span>{{ selectedMatch.home.club }}</span>
           </div>
 
-          <div class="vs">VS</div>
+          <div class="vs">
+            <ng-container *ngIf="selectedMatch.homeScore !== undefined && selectedMatch.homeScore !== null; else vsText">
+              {{ selectedMatch.homeScore }} - {{ selectedMatch.awayScore }}
+            </ng-container>
+
+            <ng-template #vsText>
+              VS
+            </ng-template>
+          </div>
 
           <div class="versus-team">
             <img [src]="selectedMatch.away.logo" alt="Away logo" />
@@ -266,66 +272,73 @@
         </div>
 
         <div class="upload-card">
-  <div class="upload-icon">
-    <i class="fa-solid fa-cloud-arrow-up"></i>
-  </div>
 
-  <div>
-    <h3>UPLOAD RESULT</h3>
-    <p>Upload Summary and Events screenshots.</p>
-  </div>
+          <div class="upload-icon">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
 
-  <input
-    type="file"
-    accept="image/*"
-    multiple
-    hidden
-    #resultFilesInput
-    (change)="onResultFilesSelected($event)"
-  />
+          <div>
+            <h3>UPLOAD RESULT</h3>
+            <p>Upload Summary and Events screenshots.</p>
+          </div>
 
-  <button type="button" (click)="resultFilesInput.click()">
-    Select Screenshots
-  </button>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            #resultFilesInput
+            (change)="onResultFilesSelected($event)"
+          />
 
-  <button
-    type="button"
-    [disabled]="selectedResultFiles.length === 0 || isUploadingResult"
-    (click)="previewUploadedResult()"
-  >
-    {{ isUploadingResult ? 'Reading...' : 'Preview Result' }}
-  </button>
+          <button type="button" (click)="resultFilesInput.click()">
+            Select Screenshots
+          </button>
 
-  <small *ngIf="selectedResultFiles.length > 0">
-    <i class="fa-solid fa-image"></i>
-    {{ selectedResultFiles.length }} screenshot(s) selected.
-  </small>
+          <button
+            type="button"
+            [disabled]="selectedResultFiles.length === 0 || isUploadingResult"
+            (click)="previewUploadedResult()"
+          >
+            {{ isUploadingResult ? 'Reading...' : 'Preview Result' }}
+          </button>
 
-  <div class="ocr-preview" *ngIf="ocrPreview">
-    <h4>OCR PREVIEW</h4>
+          <button
+            type="button"
+            *ngIf="ocrPreview"
+            [disabled]="isUploadingResult"
+            (click)="confirmUploadedResult()"
+          >
+            {{ isUploadingResult ? 'Saving...' : 'Confirm Result' }}
+          </button>
 
-    <strong>
-      {{ ocrPreview.homeTeamName || selectedMatch.home.name }}
-      {{ ocrPreview.homeScore ?? '-' }}
-      -
-      {{ ocrPreview.awayScore ?? '-' }}
-      {{ ocrPreview.awayTeamName || selectedMatch.away.name }}
-    </strong>
+          <small *ngIf="selectedResultFiles.length > 0">
+            <i class="fa-solid fa-image"></i>
+            {{ selectedResultFiles.length }} screenshot(s) selected.
+          </small>
 
-    <p *ngIf="ocrPreview.events.length > 0">
-      Events detected: {{ ocrPreview.events.length }}
-    </p>
+          <div class="ocr-preview" *ngIf="ocrPreview">
+            <h4>OCR PREVIEW</h4>
 
-    <p *ngIf="ocrPreview.warnings.length > 0">
-      {{ ocrPreview.warnings[0] }}
-    </p>
-  </div>
+            <strong>
+              {{ ocrPreview.homeTeamName || selectedMatch.home.name }}
+              {{ ocrPreview.homeScore ?? '-' }}
+              -
+              {{ ocrPreview.awayScore ?? '-' }}
+              {{ ocrPreview.awayTeamName || selectedMatch.away.name }}
+            </strong>
 
-  <small>
-    <i class="fa-regular fa-circle-question"></i>
-    Only team captains can upload results.
-  </small>
-</div>
+            <p *ngIf="ocrPreview.warnings.length > 0">
+              {{ ocrPreview.warnings[0] }}
+            </p>
+          </div>
+
+          <small>
+            <i class="fa-regular fa-circle-question"></i>
+            Only team captains can upload results.
+          </small>
+
+        </div>
 
       </aside>
 

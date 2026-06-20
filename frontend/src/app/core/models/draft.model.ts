@@ -1,11 +1,12 @@
 export interface DraftCenter {
-   myUserId: string; 
+  myUserId: string;
+  currentBudget: number;
+
   state: DraftState;
   draftOrder: DraftOrder[];
   recentPicks: DraftPick[];
   mySquad: MyDraftSquad;
 }
-
 export interface DraftState {
   draftSessionId: string;
   isActive: boolean;
@@ -55,12 +56,25 @@ export interface DraftSquadPlayer {
 
 export interface DraftPlayer {
   gamePlayerId: string;
+
   name: string;
   position: string;
+
   overall: number;
   potential: number;
+
+  pace: number;
+  shooting: number;
+  passing: number;
+  dribbling: number;
+  defending: number;
+  physic: number;
+
+  value: number;
+
   nation: string;
   age: number;
+
   imageUrl?: string;
   gameClubName: string;
 }

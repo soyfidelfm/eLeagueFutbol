@@ -1,4 +1,5 @@
-﻿using backend.Features.Dashboard.Dtos;
+﻿using System.Security.Claims;
+using backend.Features.Dashboard.Dtos;
 using backend.Features.Dashboard.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,10 +20,15 @@ public class DashboardController : ControllerBase
 
 	[HttpGet]
 	public async Task<ActionResult<DashboardDto>> Get(
-	[FromQuery] string timeZone = "UTC",
-	CancellationToken ct = default)
+		[FromQuery] string timeZone = "UTC",
+		CancellationToken ct = default)
 	{
-		var dashboard = await _dashboardService.GetAsync(timeZone, ct);
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		var dashboard = await _dashboardService.GetAsync(auth0Id, timeZone, ct);
 
 		return Ok(dashboard);
 	}

@@ -1,6 +1,6 @@
-﻿using eLeagueFutbol.Application.Stats.DTOs;
+﻿using backend.Application.Stats.DTOs;
 
-namespace eLeagueFutbol.Application.Stats;
+namespace backend.Application.Stats;
 
 public interface IStatsService
 {

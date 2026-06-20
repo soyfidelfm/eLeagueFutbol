@@ -1,12 +1,17 @@
-﻿namespace backend.Entities.GameData
+﻿using backend.Entities.Clubs;
+using backend.Entities.Common;
+
+namespace backend.Entities.GameData
 {
-	public class ClubLineupPlayer
+	public class ClubLineupPlayer : BaseEntity
 	{
 		public Guid ClubLineupPlayerId { get; set; }
 
 		public Guid ClubLineupId { get; set; }
 
-		public Guid GamePlayerId { get; set; }
+		public Guid UserClubPlayerId { get; set; }
+
+		public UserClubPlayer UserClubPlayer { get; set; } = null!;
 
 		public int SlotIndex { get; set; }
 

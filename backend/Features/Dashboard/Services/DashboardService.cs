@@ -1,7 +1,10 @@
 ﻿using backend.Common.Helpers;
 using backend.Data;
+using backend.Entities.Clubs;
 using backend.Entities.Dashboard;
 using backend.Entities.Enums;
+using backend.Entities.GameData;
+using backend.Entities.Identity;
 using backend.Entities.Tournaments;
 using backend.Features.Dashboard.Dtos;
 using Microsoft.EntityFrameworkCore;
@@ -17,8 +20,19 @@ public class DashboardService : IDashboardService
 		_context = context;
 	}
 
-	public async Task<DashboardDto> GetAsync(string timeZone, CancellationToken ct)
+	public async Task<DashboardDto> GetAsync(
+		string auth0Id,
+		string timeZone,
+		CancellationToken ct)
 	{
+		var user = await _context.Users
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == auth0Id &&
+				x.IsActive &&
+				!x.IsDeleted,
+				ct);
+
 		var weekStartUtc = DateTimeHelper.GetStartOfWeekUtc(timeZone);
 		var weekEndUtc = weekStartUtc.AddDays(7);
 
@@ -31,6 +45,27 @@ public class DashboardService : IDashboardService
 			.Where(x => x.IsActive && !x.IsDeleted)
 			.OrderByDescending(x => x.StartDate)
 			.FirstOrDefaultAsync(ct);
+
+		var myUserClub = user is null || currentSeason is null
+			? null
+			: await _context.UserClubs
+				.AsNoTracking()
+				.Include(x => x.BaseGameClub)
+				.FirstOrDefaultAsync(x =>
+					x.UserId == user.UserId &&
+					x.SeasonId == currentSeason.SeasonId &&
+					!x.IsDeleted,
+					ct);
+
+		var userClubs = currentSeason is null
+			? new Dictionary<Guid, UserClub>()
+			: await _context.UserClubs
+				.AsNoTracking()
+				.Include(x => x.BaseGameClub)
+				.Where(x =>
+					x.SeasonId == currentSeason.SeasonId &&
+					!x.IsDeleted)
+				.ToDictionaryAsync(x => x.UserId, ct);
 
 		var registered = currentSeason is null
 			? 0
@@ -58,19 +93,21 @@ public class DashboardService : IDashboardService
 			.ToListAsync(ct);
 
 		var featuredMatch = await _context.Matches
-	.Include(x => x.Tournament)
-	.Include(x => x.HomeUser)
-	.Include(x => x.AwayUser)
-	.Include(x => x.HomeGameClub)
-	.Include(x => x.AwayGameClub)
-	.Where(x =>
-		!x.IsDeleted &&
-		x.IsMatchOfTheWeek)
-	.OrderBy(x => x.MatchDate)
-	.FirstOrDefaultAsync(ct);
+			.Include(x => x.Tournament)
+			.Include(x => x.HomeUser)
+			.Include(x => x.AwayUser)
+			.Include(x => x.HomeGameClub)
+			.Include(x => x.AwayGameClub)
+			.Where(x =>
+				!x.IsDeleted &&
+				x.IsMatchOfTheWeek)
+			.OrderBy(x => x.MatchDate)
+			.FirstOrDefaultAsync(ct);
 
 		var activeMatches = await _context.Matches
 			.Include(x => x.Tournament)
+			.Include(x => x.HomeUser)
+			.Include(x => x.AwayUser)
 			.Include(x => x.HomeGameClub)
 			.Include(x => x.AwayGameClub)
 			.Where(x =>
@@ -86,6 +123,8 @@ public class DashboardService : IDashboardService
 
 		var upcomingMatches = await _context.Matches
 			.Include(x => x.Tournament)
+			.Include(x => x.HomeUser)
+			.Include(x => x.AwayUser)
 			.Include(x => x.HomeGameClub)
 			.Include(x => x.AwayGameClub)
 			.Where(x =>
@@ -128,6 +167,14 @@ public class DashboardService : IDashboardService
 
 		var topPlayer = rankings.FirstOrDefault();
 
+		var mySquadCount = myUserClub is null
+			? 0
+			: await _context.UserClubPlayers
+				.CountAsync(x =>
+					x.UserClubId == myUserClub.UserClubId &&
+					!x.IsDeleted,
+					ct);
+
 		return new DashboardDto
 		{
 			CurrentSeasonId = currentSeason?.SeasonId,
@@ -149,51 +196,63 @@ public class DashboardService : IDashboardService
 				},
 				new()
 				{
-					Label = "Live Now",
-					Value = liveMatchesCount.ToString("N0"),
-					Sub = "Matches"
+					Label = "Budget",
+					Value = myUserClub is null
+						? "$0"
+						: $"${myUserClub.CurrentBudget / 1_000_000m:N1}M",
+					Sub = "My Club"
 				},
 				new()
 				{
-					Label = "This Week",
-					Value = matchesThisWeekCount.ToString("N0"),
-					Sub = "Scheduled"
+					Label = "Squad",
+					Value = $"{mySquadCount}/25",
+					Sub = "Players"
 				}
 			],
 
 			Leaderboard = rankings
-				.Select((x, index) => new PlayerLeaderboardDto
+				.Select((x, index) =>
 				{
-					Rank = index + 1,
+					userClubs.TryGetValue(x.UserId, out var club);
 
-					Name = string.IsNullOrWhiteSpace(x.User.DisplayName)
-						? x.User.Email
-						: x.User.DisplayName,
+					return new PlayerLeaderboardDto
+					{
+						Rank = index + 1,
 
-					Points = x.Points,
+						Name = club?.Name ??
+							(string.IsNullOrWhiteSpace(x.User.DisplayName)
+								? x.User.Email
+								: x.User.DisplayName),
 
-					Gd = x.GoalDifference >= 0
-						? $"+{x.GoalDifference}"
-						: x.GoalDifference.ToString(),
+						Points = x.Points,
 
-					Record = $"{x.Wins}/{x.Losses}",
+						Gd = x.GoalDifference >= 0
+							? $"+{x.GoalDifference}"
+							: x.GoalDifference.ToString(),
 
-					Avatar = string.IsNullOrWhiteSpace(x.User.AvatarUrl)
-						? "/images/avatar1.png"
-						: x.User.AvatarUrl,
+						Record = $"{x.Wins}/{x.Losses}",
 
-					Form = string.IsNullOrWhiteSpace(x.Form)
-						? []
-						: x.Form
-							.Split(',', StringSplitOptions.RemoveEmptyEntries)
-							.Select(f => f.Trim())
-							.ToList()
+						Avatar = !string.IsNullOrWhiteSpace(club?.LogoUrl)
+							? club.LogoUrl
+							: !string.IsNullOrWhiteSpace(club?.BaseGameClub?.LogoUrl)
+								? club.BaseGameClub.LogoUrl
+								: string.IsNullOrWhiteSpace(x.User.AvatarUrl)
+									? "/images/avatar1.png"
+									: x.User.AvatarUrl,
+
+						Form = string.IsNullOrWhiteSpace(x.Form)
+							? []
+							: x.Form
+								.Split(',', StringSplitOptions.RemoveEmptyEntries)
+								.Select(f => f.Trim())
+								.ToList()
+					};
 				})
 				.ToList(),
 
 			MatchOfWeek = featuredMatch is null
 				? null
-				: BuildMatchOfWeek(featuredMatch, timeZone),
+				: BuildMatchOfWeek(featuredMatch, timeZone, userClubs),
 
 			Matches = activeMatches
 				.Select(x => new MatchSummaryDto
@@ -207,8 +266,18 @@ public class DashboardService : IDashboardService
 			UpcomingMatches = upcomingMatches
 				.Select(x => new UpcomingMatchDto
 				{
-					Home = x.HomeGameClub.Name,
-					Away = x.AwayGameClub.Name,
+					Home = GetClubName(
+						x.HomeUserId,
+						x.HomeUser,
+						x.HomeGameClub,
+						userClubs),
+
+					Away = GetClubName(
+						x.AwayUserId,
+						x.AwayUser,
+						x.AwayGameClub,
+						userClubs),
+
 					Date = DateTimeHelper.FormatLocal(x.MatchDate, timeZone),
 					Stage = x.Tournament?.Name ?? "Scheduled"
 				})
@@ -220,15 +289,23 @@ public class DashboardService : IDashboardService
 				? null
 				: new FeaturedPlayerDto
 				{
-					Name = string.IsNullOrWhiteSpace(topPlayer.User.DisplayName)
-						? topPlayer.User.Email
-						: topPlayer.User.DisplayName,
+					Name = userClubs.TryGetValue(topPlayer.UserId, out var topClub)
+						? topClub.Name
+						: string.IsNullOrWhiteSpace(topPlayer.User.DisplayName)
+							? topPlayer.User.Email
+							: topPlayer.User.DisplayName,
 
 					Rank = 1,
 					Rating = Math.Min(99, 80 + topPlayer.Wins),
-					Image = string.IsNullOrWhiteSpace(topPlayer.User.AvatarUrl)
-						? "/images/player1.png"
-						: topPlayer.User.AvatarUrl,
+
+					Image = userClubs.TryGetValue(topPlayer.UserId, out var playerClub)
+						? !string.IsNullOrWhiteSpace(playerClub.LogoUrl)
+							? playerClub.LogoUrl
+							: playerClub.BaseGameClub?.LogoUrl ?? "/images/player1.png"
+						: string.IsNullOrWhiteSpace(topPlayer.User.AvatarUrl)
+							? "/images/player1.png"
+							: topPlayer.User.AvatarUrl,
+
 					Streak = $"{topPlayer.Wins} Wins · {topPlayer.Points} PTS"
 				},
 
@@ -246,24 +323,41 @@ public class DashboardService : IDashboardService
 	}
 
 	private static MatchOfWeekDto BuildMatchOfWeek(
-	Match match,
-	string timeZone)
+		Match match,
+		string timeZone,
+		Dictionary<Guid, UserClub> userClubs)
 	{
-		var homeName = string.IsNullOrWhiteSpace(match.HomeUser?.ClubName)
-			? match.HomeGameClub.Name
-			: match.HomeUser.ClubName;
+		var homeName = GetClubName(
+			match.HomeUserId,
+			match.HomeUser,
+			match.HomeGameClub,
+			userClubs);
 
-		var awayName = string.IsNullOrWhiteSpace(match.AwayUser?.ClubName)
-			? match.AwayGameClub.Name
-			: match.AwayUser.ClubName;
+		var awayName = GetClubName(
+			match.AwayUserId,
+			match.AwayUser,
+			match.AwayGameClub,
+			userClubs);
+
+		var homeImage = GetClubImage(
+			match.HomeUserId,
+			match.HomeUser,
+			match.HomeGameClub,
+			userClubs);
+
+		var awayImage = GetClubImage(
+			match.AwayUserId,
+			match.AwayUser,
+			match.AwayGameClub,
+			userClubs);
 
 		return new MatchOfWeekDto
 		{
 			Arena = !string.IsNullOrWhiteSpace(match.HomeGameClub.StadiumName)
-	? match.HomeGameClub.StadiumName
-	: !string.IsNullOrWhiteSpace(match.AwayGameClub.StadiumName)
-		? match.AwayGameClub.StadiumName
-		: "Champions Arena",
+				? match.HomeGameClub.StadiumName
+				: !string.IsNullOrWhiteSpace(match.AwayGameClub.StadiumName)
+					? match.AwayGameClub.StadiumName
+					: "Champions Arena",
 
 			Stage = match.Tournament?.Name ?? match.Status.ToString(),
 
@@ -281,9 +375,7 @@ public class DashboardService : IDashboardService
 				Name = homeName,
 				Rank = 0,
 				Rating = match.HomeGameClub.OverallRating,
-				Image = !string.IsNullOrWhiteSpace(match.HomeUser?.AvatarUrl)
-					? match.HomeUser.AvatarUrl
-					: match.HomeGameClub.LogoUrl ?? "",
+				Image = homeImage,
 				Streak = $"{match.HomeScore} Goals"
 			},
 
@@ -292,11 +384,45 @@ public class DashboardService : IDashboardService
 				Name = awayName,
 				Rank = 0,
 				Rating = match.AwayGameClub.OverallRating,
-				Image = !string.IsNullOrWhiteSpace(match.AwayUser?.AvatarUrl)
-					? match.AwayUser.AvatarUrl
-					: match.AwayGameClub.LogoUrl ?? "",
+				Image = awayImage,
 				Streak = $"{match.AwayScore} Goals"
 			}
 		};
+	}
+
+	private static string GetClubName(
+		Guid? userId,
+		User? user,
+		GameClub gameClub,
+		Dictionary<Guid, UserClub> userClubs)
+	{
+		if (userId.HasValue && userClubs.TryGetValue(userId.Value, out var club))
+			return club.Name;
+
+		if (!string.IsNullOrWhiteSpace(user?.ClubName))
+			return user.ClubName;
+
+		return gameClub.Name;
+	}
+
+	private static string GetClubImage(
+		Guid? userId,
+		User? user,
+		GameClub gameClub,
+		Dictionary<Guid, UserClub> userClubs)
+	{
+		if (userId.HasValue && userClubs.TryGetValue(userId.Value, out var club))
+		{
+			if (!string.IsNullOrWhiteSpace(club.LogoUrl))
+				return club.LogoUrl;
+
+			if (!string.IsNullOrWhiteSpace(club.BaseGameClub?.LogoUrl))
+				return club.BaseGameClub.LogoUrl;
+		}
+
+		if (!string.IsNullOrWhiteSpace(user?.AvatarUrl))
+			return user.AvatarUrl;
+
+		return gameClub.LogoUrl ?? string.Empty;
 	}
 }

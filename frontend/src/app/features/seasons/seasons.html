@@ -21,16 +21,26 @@
 
     <div class="page-header">
       <div class="page-header-content">
-        <span class="page-eyebrow">
-          LEAGUE MANAGEMENT
-        </span>
+  <span class="page-eyebrow">
+    LEAGUE MANAGEMENT
+  </span>
 
-        <h1>Seasons</h1>
+  <h1>Seasons</h1>
 
-        <p>
-          Create, manage and track league seasons.
-        </p>
-      </div>
+  <p>
+    Create, manage and track league seasons.
+  </p>
+
+  <div class="form-actions">
+    <button
+      type="button"
+      class="primary-action"
+      (click)="view = 'create'">
+      <i class="fa-solid fa-plus"></i>
+      Create Season
+    </button>
+  </div>
+</div>
     </div>
 
     <ng-container *ngIf="view === 'current'">
@@ -308,13 +318,11 @@
           </button>
 
           <button
-            type="button"
-            class="secondary-action"
-            (click)="resetForm()"
-            *ngIf="isEditMode"
-          >
-            Cancel
-          </button>
+  type="button"
+  class="secondary-action"
+  (click)="view = 'list'; resetForm()">
+  Cancel
+</button>
 
         </div>
 

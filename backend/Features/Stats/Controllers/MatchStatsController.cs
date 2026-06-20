@@ -1,6 +1,4 @@
-﻿using backend.Application.Stats.DTOs;
-using backend.Data;
-using backend.Entities.Stats;
+﻿using backend.Features.Stats.Dtos;
 using backend.Features.Stats.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,81 +8,54 @@ namespace backend.Controllers;
 [Route("api/match-stats")]
 public class MatchStatsController : ControllerBase
 {
-	private readonly AppDbContext _context;
 	private readonly IMatchStatsOcrService _ocrService;
+	private readonly IMatchStatsService _matchStatsService;
 
 	public MatchStatsController(
-		AppDbContext context,
-		IMatchStatsOcrService ocrService)
+		IMatchStatsOcrService ocrService,
+		IMatchStatsService matchStatsService)
 	{
-		_context = context;
 		_ocrService = ocrService;
+		_matchStatsService = matchStatsService;
 	}
 
-	[HttpPost("ocr-preview")]
-	public async Task<IActionResult> OcrPreview(IFormFile image)
+	[HttpPost("ocr-summary-preview")]
+	public async Task<IActionResult> OcrSummaryPreview(
+		IFormFile image)
 	{
-		var result = await _ocrService.PreviewPlayerStatsAsync(image);
+		var result = await _ocrService
+			.PreviewMatchSummaryAsync(image);
+
 		return Ok(result);
 	}
 
-	[HttpPost("confirm-player")]
-	public async Task<IActionResult> ConfirmPlayerStats([FromBody] ConfirmMatchPlayerStatsDto dto)
+	[HttpPost("ocr-team-performance-preview")]
+	public async Task<IActionResult> OcrTeamPerformancePreview(
+		IFormFile image)
 	{
-		var entity = new MatchPlayerStats
-		{
-			MatchPlayerStatsId = Guid.NewGuid(),
-			MatchId = dto.MatchId,
-			UserId = dto.UserId,
-			TeamId = dto.TeamId,
-
-			Position = dto.Position,
-			PlayerName = dto.PlayerName,
-			Rating = dto.Rating,
-
-			Goals = dto.Goals,
-			Assists = dto.Assists,
-			Shots = dto.Shots,
-			ShotAccuracy = dto.ShotAccuracy,
-
-			Passes = dto.Passes,
-			PassAccuracy = dto.PassAccuracy,
-
-			Dribbles = dto.Dribbles,
-			DribbleSuccessRate = dto.DribbleSuccessRate,
-
-			Tackles = dto.Tackles,
-			TackleSuccessRate = dto.TackleSuccessRate,
-
-			Offsides = dto.Offsides,
-			FoulsCommitted = dto.FoulsCommitted,
-
-			PossessionWon = dto.PossessionWon,
-			PossessionLost = dto.PossessionLost,
-
-			MinutesPlayed = dto.MinutesPlayed,
-			DistanceCoveredKm = dto.DistanceCoveredKm,
-			DistanceSprintedKm = dto.DistanceSprintedKm,
-
-			YellowCards = dto.YellowCards,
-			RedCards = dto.RedCards,
-
-			IsPlayerOfTheMatch = dto.IsPlayerOfTheMatch
-		};
-
-		_context.MatchPlayerStats.Add(entity);
-		await _context.SaveChangesAsync();
-
-		return Ok(entity.MatchPlayerStatsId);
-	}
-
-	[HttpPost("ocr-match-preview")]
-	public async Task<IActionResult> OcrMatchPreview(
-	[FromForm] List<IFormFile> images)
-	{
-		var result =
-			await _ocrService.PreviewMatchScreenshotsAsync(images);
+		var result = await _ocrService
+			.PreviewTeamPerformanceAsync(image);
 
 		return Ok(result);
+	}
+
+	[HttpPost("confirm-summary")]
+	public async Task<IActionResult> ConfirmSummary(
+		[FromBody] ConfirmMatchSummaryDto dto)
+	{
+		await _matchStatsService
+			.SaveMatchSummaryAsync(dto);
+
+		return Ok();
+	}
+
+	[HttpPost("confirm-team-performance")]
+	public async Task<IActionResult> ConfirmTeamPerformance(
+		[FromBody] ConfirmTeamPerformanceDto dto)
+	{
+		await _matchStatsService
+			.SaveTeamPerformanceAsync(dto);
+
+		return Ok();
 	}
 }

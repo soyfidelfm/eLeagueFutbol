@@ -1,4 +1,4 @@
-using backend.Application.Rankings.Services;
+using backend.Application.Stats;
 using backend.Data;
 using backend.Features.ActivityFeed.Services;
 using backend.Features.Cloudinary.Services;
@@ -14,7 +14,6 @@ using backend.Features.Seasons.Services;
 using backend.Features.Sidebar.Services;
 using backend.Features.Stats.Services;
 using backend.Features.Users.Services;
-using eLeagueFutbol.Application.Stats;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -48,6 +47,9 @@ builder.Services.AddScoped<IDraftService, DraftService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<INotificationInboxService, NotificationInboxService>();
+builder.Services.AddScoped<IStatsService, StatsService>();
+builder.Services.AddScoped<IMatchStatsOcrService, MatchStatsOcrService>();
+builder.Services.AddScoped<IMatchStatsService, MatchStatsService>();
 
 // Settings
 builder.Services.Configure<CloudinarySettings>(

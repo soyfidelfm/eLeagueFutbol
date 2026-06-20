@@ -306,6 +306,23 @@ export class Draft implements OnInit, OnDestroy {
     return;
   }
 
+  const playerValue = player.value ?? 0;
+
+  if (playerValue > this.currentBudget) {
+
+  this.errorMessage =
+    `❌ Not enough budget. ${player.name} costs €${playerValue.toLocaleString()} and your budget is €${this.currentBudget.toLocaleString()}.`;
+
+  this.cdr.detectChanges();
+
+  setTimeout(() => {
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+  }, 3500);
+
+  return;
+}
+
   this.isPicking = true;
   this.errorMessage = '';
   this.cdr.detectChanges();
@@ -331,6 +348,20 @@ export class Draft implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     });
+}
+
+private showToast(message: string): void {
+  this.errorMessage = message;
+  this.cdr.detectChanges();
+
+  setTimeout(() => {
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+  }, 3500);
+}
+
+get currentBudget(): number {
+  return this.draftCenter?.currentBudget ?? 0;
 }
 
   private mapMySquadToSlots(): void {

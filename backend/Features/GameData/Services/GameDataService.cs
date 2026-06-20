@@ -181,6 +181,17 @@ public class GameDataService : IGameDataService
 
 		var rows = csv.GetRecords<Fc26PlayerCsvRow>().ToList();
 
+		var clubsByExternalTeamId = await _context.GameClubs
+	.AsNoTracking()
+	.Where(x =>
+		!x.IsDeleted &&
+		x.IsActive)
+	.ToDictionaryAsync(x => x.ExternalTeamId); 
+
+		var existingPlayersBySofifaId = await _context.GamePlayers
+			.Where(x => !x.IsDeleted)
+			.ToDictionaryAsync(x => x.SofifaPlayerId);
+
 		foreach (var row in rows)
 		{
 			if (!row.ClubTeamId.HasValue || row.ClubTeamId.Value <= 0)
@@ -189,24 +200,15 @@ public class GameDataService : IGameDataService
 				continue;
 			}
 
-			var club = await _context.GameClubs
-				.FirstOrDefaultAsync(x =>
-					!x.IsDeleted &&
-					x.IsActive &&
-					x.ExternalTeamId == row.ClubTeamId.Value);
-
-			if (club == null)
+			if (!clubsByExternalTeamId.TryGetValue(row.ClubTeamId.Value, out var club))
 			{
 				skippedNoClub++;
 				continue;
 			}
 
-			var existing = await _context.GamePlayers
-				.FirstOrDefaultAsync(x => x.SofifaPlayerId == row.SofifaPlayerId);
-
-			if (existing == null)
+			if (!existingPlayersBySofifaId.TryGetValue(row.SofifaPlayerId, out var existing))
 			{
-				_context.GamePlayers.Add(new GamePlayer
+				var player = new GamePlayer
 				{
 					GamePlayerId = Guid.NewGuid(),
 
@@ -220,19 +222,47 @@ public class GameDataService : IGameDataService
 					Potential = row.Potential,
 
 					Position = row.Positions.Trim(),
-					Nation = row.Nation.Trim(),
+
+					ValueEur = row.ValueEur,
+					WageEur = row.WageEur,
+					ReleaseClauseEur = row.ReleaseClauseEur,
 
 					Age = row.Age,
+					DateOfBirth = row.DateOfBirth.HasValue
+	? DateTime.SpecifyKind(row.DateOfBirth.Value, DateTimeKind.Utc)
+	: null,
+
 					HeightCm = row.HeightCm,
 					WeightKg = row.WeightKg,
 
+					ClubTeamId = row.ClubTeamId,
+					ClubName = row.ClubName?.Trim(),
+					ClubJerseyNumber = row.ClubJerseyNumber,
+					ClubContractValidUntilYear = row.ClubContractValidUntilYear,
+
+					NationalityId = row.NationalityId,
+					Nation = row.Nation.Trim(),
+					NationTeamId = row.NationTeamId,
+
 					PreferredFoot = row.PreferredFoot.Trim(),
+					WeakFoot = row.WeakFoot,
+					SkillMoves = row.SkillMoves,
+
+					Pace = row.Pace,
+					Shooting = row.Shooting,
+					Passing = row.Passing,
+					Dribbling = row.Dribbling,
+					Defending = row.Defending,
+					Physic = row.Physic,
 
 					ImageUrl = row.ImageUrl,
 
 					GameClubId = club.GameClubId,
 					IsActive = true
-				});
+				};
+
+				_context.GamePlayers.Add(player);
+				existingPlayersBySofifaId[row.SofifaPlayerId] = player;
 
 				imported++;
 			}
@@ -245,13 +275,38 @@ public class GameDataService : IGameDataService
 				existing.Potential = row.Potential;
 
 				existing.Position = row.Positions.Trim();
-				existing.Nation = row.Nation.Trim();
+
+				existing.ValueEur = row.ValueEur;
+				existing.WageEur = row.WageEur;
+				existing.ReleaseClauseEur = row.ReleaseClauseEur;
 
 				existing.Age = row.Age;
+				existing.DateOfBirth = row.DateOfBirth.HasValue
+	? DateTime.SpecifyKind(row.DateOfBirth.Value, DateTimeKind.Utc)
+	: null;
+
 				existing.HeightCm = row.HeightCm;
 				existing.WeightKg = row.WeightKg;
 
+				existing.ClubTeamId = row.ClubTeamId;
+				existing.ClubName = row.ClubName?.Trim();
+				existing.ClubJerseyNumber = row.ClubJerseyNumber;
+				existing.ClubContractValidUntilYear = row.ClubContractValidUntilYear;
+
+				existing.NationalityId = row.NationalityId;
+				existing.Nation = row.Nation.Trim();
+				existing.NationTeamId = row.NationTeamId;
+
 				existing.PreferredFoot = row.PreferredFoot.Trim();
+				existing.WeakFoot = row.WeakFoot;
+				existing.SkillMoves = row.SkillMoves;
+
+				existing.Pace = row.Pace;
+				existing.Shooting = row.Shooting;
+				existing.Passing = row.Passing;
+				existing.Dribbling = row.Dribbling;
+				existing.Defending = row.Defending;
+				existing.Physic = row.Physic;
 
 				existing.ImageUrl = row.ImageUrl;
 

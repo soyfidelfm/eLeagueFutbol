@@ -1,6 +1,8 @@
 ﻿using backend.Common.Helpers;
 using backend.Data;
+using backend.Entities.Clubs;
 using backend.Entities.Tournaments;
+using backend.Entities.Transfers;
 using backend.Features.Seasons.Dtos;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +10,8 @@ namespace backend.Features.Seasons.Services;
 
 public class SeasonService : ISeasonService
 {
+	private const decimal InitialClubBudget = 250_000_000m;
+
 	private readonly AppDbContext _db;
 
 	public SeasonService(AppDbContext db)
@@ -23,9 +27,7 @@ public class SeasonService : ISeasonService
 			.OrderByDescending(x => x.StartDate)
 			.ToListAsync(ct);
 
-		return seasons
-			.Select(ToDto)
-			.ToList();
+		return seasons.Select(ToDto).ToList();
 	}
 
 	public async Task<SeasonDto?> GetByIdAsync(Guid id, CancellationToken ct)
@@ -39,16 +41,13 @@ public class SeasonService : ISeasonService
 
 	public async Task<SeasonDto> CreateAsync(CreateSeasonDto dto, CancellationToken ct)
 	{
-		var startDateUtc = DateTimeHelper.ToUtc(dto.StartDate, dto.TimeZone);
-		var endDateUtc = DateTimeHelper.ToUtc(dto.EndDate, dto.TimeZone);
-
 		var season = new Season
 		{
 			SeasonId = Guid.NewGuid(),
 			Name = dto.Name.Trim(),
 			Description = dto.Description?.Trim() ?? string.Empty,
-			StartDate = startDateUtc,
-			EndDate = endDateUtc,
+			StartDate = DateTimeHelper.ToUtc(dto.StartDate, dto.TimeZone),
+			EndDate = DateTimeHelper.ToUtc(dto.EndDate, dto.TimeZone),
 			IsCurrent = dto.IsCurrent,
 			IsActive = dto.IsActive,
 			TotalWeeks = dto.TotalWeeks,
@@ -70,13 +69,10 @@ public class SeasonService : ISeasonService
 		if (season is null)
 			return false;
 
-		var startDateUtc = DateTimeHelper.ToUtc(dto.StartDate, dto.TimeZone);
-		var endDateUtc = DateTimeHelper.ToUtc(dto.EndDate, dto.TimeZone);
-
 		season.Name = dto.Name.Trim();
 		season.Description = dto.Description?.Trim() ?? string.Empty;
-		season.StartDate = startDateUtc;
-		season.EndDate = endDateUtc;
+		season.StartDate = DateTimeHelper.ToUtc(dto.StartDate, dto.TimeZone);
+		season.EndDate = DateTimeHelper.ToUtc(dto.EndDate, dto.TimeZone);
 		season.IsCurrent = dto.IsCurrent;
 		season.IsActive = dto.IsActive;
 		season.TotalWeeks = dto.TotalWeeks;
@@ -135,7 +131,11 @@ public class SeasonService : ISeasonService
 			throw new Exception("Registration is closed.");
 
 		var gameClubExists = await _db.GameClubs
-			.AnyAsync(x => x.GameClubId == dto.GameClubId, ct);
+			.AnyAsync(x =>
+				x.GameClubId == dto.GameClubId &&
+				!x.IsDeleted &&
+				x.IsActive,
+				ct);
 
 		if (!gameClubExists)
 			throw new Exception("Game club not found.");
@@ -165,6 +165,38 @@ public class SeasonService : ISeasonService
 		};
 
 		_db.SeasonRegistrations.Add(registration);
+
+		var clubName = string.IsNullOrWhiteSpace(user.ClubName)
+			? user.DisplayName
+			: user.ClubName.Trim();
+
+		if (string.IsNullOrWhiteSpace(clubName))
+			clubName = "My Club";
+
+		var userClub = new UserClub
+		{
+			UserClubId = Guid.NewGuid(),
+			UserId = user.UserId,
+			SeasonId = seasonId,
+			BaseGameClubId = dto.GameClubId,
+			Name = clubName,
+			LogoUrl = string.Empty,
+			InitialBudget = InitialClubBudget,
+			CurrentBudget = InitialClubBudget
+		};
+
+		_db.UserClubs.Add(userClub);
+
+		_db.UserClubBudgetTransactions.Add(new UserClubBudgetTransaction
+		{
+			UserClubBudgetTransactionId = Guid.NewGuid(),
+			UserClubId = userClub.UserClubId,
+			SeasonId = seasonId,
+			Amount = InitialClubBudget,
+			Type = "InitialBudget",
+			Description = $"Initial budget assigned: {InitialClubBudget:N0}"
+		});
+
 		await _db.SaveChangesAsync(ct);
 
 		return new SeasonRegistrationDto
