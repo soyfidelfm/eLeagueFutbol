@@ -196,11 +196,50 @@ public class UserService : IUserService
 			return null;
 
 		var user = await _context.Users
-			.AsNoTracking()
-			.FirstOrDefaultAsync(x => x.Auth0Id == auth0Id && !x.IsDeleted);
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == auth0Id &&
+				!x.IsDeleted);
 
 		if (user == null)
-			return null;
+		{
+			var email =
+				principal.FindFirstValue(ClaimTypes.Email)
+				?? principal.FindFirstValue("email")
+				?? string.Empty;
+
+			var displayName =
+				principal.FindFirstValue(ClaimTypes.Name)
+				?? principal.FindFirstValue("name")
+				?? principal.FindFirstValue("nickname")
+				?? email;
+
+			var avatarUrl =
+				principal.FindFirstValue("picture")
+				?? string.Empty;
+
+			user = new User
+			{
+				UserId = Guid.NewGuid(),
+				Auth0Id = auth0Id,
+				Email = email,
+				DisplayName = displayName,
+				AvatarUrl = avatarUrl,
+				TimeZone = "America/Los_Angeles",
+				ClubName = string.Empty,
+				GamerTag = string.Empty,
+				IsActive = true,
+				LastLoginAtUTC = DateTime.UtcNow,
+				Role = "Player"
+			};
+
+			_context.Users.Add(user);
+			await _context.SaveChangesAsync();
+		}
+		else
+		{
+			user.LastLoginAtUTC = DateTime.UtcNow;
+			await _context.SaveChangesAsync();
+		}
 
 		var gameClubLeague = user.GameClubId == null
 			? string.Empty
