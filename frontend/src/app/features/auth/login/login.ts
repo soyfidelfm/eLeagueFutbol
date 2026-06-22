@@ -20,6 +20,7 @@ export class Login implements OnDestroy {
   showArenaWord = false;
 
   private destroy$ = new Subject<void>();
+
   @ViewChild('loginCard') loginCard!: ElementRef<HTMLDivElement>;
 
   constructor(
@@ -67,15 +68,20 @@ export class Login implements OnDestroy {
           localStorage.setItem('gameClubId', user.gameClubId ?? '');
           localStorage.setItem('gameClubLeague', user.gameClubLeague ?? '');
 
+          localStorage.setItem('userSynced', 'true');
+
           this.router.navigateByUrl('/dashboard');
         },
         error: error => {
           console.error('Error syncing user:', error);
+          localStorage.removeItem('userSynced');
         }
       });
   }
 
   loginWithEmail(): void {
+    this.clearUserSyncState();
+
     this.auth.loginWithRedirect({
       appState: {
         target: '/dashboard'
@@ -90,6 +96,8 @@ export class Login implements OnDestroy {
   }
 
   signUpWithEmail(): void {
+    this.clearUserSyncState();
+
     this.auth.loginWithRedirect({
       appState: {
         target: '/dashboard'
@@ -105,6 +113,8 @@ export class Login implements OnDestroy {
   }
 
   loginWithProvider(provider: string): void {
+    this.clearUserSyncState();
+
     this.auth.loginWithRedirect({
       appState: {
         target: '/dashboard'
@@ -131,36 +141,35 @@ export class Login implements OnDestroy {
   }
 
   enterArena(): void {
-  this.showArenaIntro = true;
-  this.showArenaWord = false;
-
-  setTimeout(() => {
-    this.showArenaWord = true;
-  }, 3000);
-
-  setTimeout(() => {
-    this.showArenaIntro = false;
-
-    const loginCard = document.querySelector('.login-card');
-
-    loginCard?.classList.add('login-card-active');
-
-    // SOLO EN MÓVIL
-    if (window.innerWidth <= 768) {
-      setTimeout(() => {
-        loginCard?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }, 100);
-    }
+    this.showArenaIntro = true;
+    this.showArenaWord = false;
 
     setTimeout(() => {
-      loginCard?.classList.remove('login-card-active');
-    }, 1200);
+      this.showArenaWord = true;
+    }, 3000);
 
-  }, 1200);
-}
+    setTimeout(() => {
+      this.showArenaIntro = false;
+
+      const loginCard = document.querySelector('.login-card');
+
+      loginCard?.classList.add('login-card-active');
+
+      if (window.innerWidth <= 768) {
+        setTimeout(() => {
+          loginCard?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }, 100);
+      }
+
+      setTimeout(() => {
+        loginCard?.classList.remove('login-card-active');
+      }, 1200);
+
+    }, 1200);
+  }
 
   openExploreModal(): void {
     this.showExploreModal = true;
@@ -173,6 +182,20 @@ export class Login implements OnDestroy {
   startFromExplore(): void {
     this.showExploreModal = false;
     this.enterArena();
+  }
+
+  private clearUserSyncState(): void {
+    localStorage.removeItem('userSynced');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('auth0Id');
+    localStorage.removeItem('email');
+    localStorage.removeItem('displayName');
+    localStorage.removeItem('avatarUrl');
+    localStorage.removeItem('timeZone');
+    localStorage.removeItem('clubName');
+    localStorage.removeItem('gamerTag');
+    localStorage.removeItem('gameClubId');
+    localStorage.removeItem('gameClubLeague');
   }
 
   ngOnDestroy(): void {

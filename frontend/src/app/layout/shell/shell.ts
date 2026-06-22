@@ -23,20 +23,32 @@ import { NotificationApiService } from '../../core/services/notification-api.ser
 export class Shell implements OnInit {
 
   constructor(
-  private notificationService: NotificationService,
-  private notificationApiService: NotificationApiService
-) { }
+    private notificationService: NotificationService,
+    private notificationApiService: NotificationApiService
+  ) { }
 
   async ngOnInit(): Promise<void> {
-
     this.notificationService.listenForMessages();
 
-const token =
-  await this.notificationService.requestPermissionAndGetToken();
+    const userSynced = localStorage.getItem('userSynced') === 'true';
+    const userId = localStorage.getItem('userId');
 
-if (token) {
-  this.notificationApiService.saveToken(token)
-    .subscribe();
-}
+    if (!userSynced || !userId) {
+      return;
+    }
+
+    const token =
+      await this.notificationService.requestPermissionAndGetToken();
+
+    if (!token) {
+      return;
+    }
+
+    this.notificationApiService.saveToken(token)
+      .subscribe({
+        error: error => {
+          console.error('Error saving notification token:', error);
+        }
+      });
   }
 }

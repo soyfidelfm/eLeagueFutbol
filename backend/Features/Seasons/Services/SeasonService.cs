@@ -10,7 +10,7 @@ namespace backend.Features.Seasons.Services;
 
 public class SeasonService : ISeasonService
 {
-	private const decimal InitialClubBudget = 250_000_000m;
+	private const decimal InitialClubBudget = 350_000_000m;
 
 	private readonly AppDbContext _db;
 

@@ -26,18 +26,23 @@ public class NotificationService : INotificationService
 				x.Auth0Id == auth0Id);
 
 		if (user is null)
-			throw new Exception("User not found.");
+			return;
+
+		var token = dto.Token.Trim();
 
 		var deviceType = string.IsNullOrWhiteSpace(dto.DeviceType)
 			? "web"
 			: dto.DeviceType.Trim();
 
 		var existingToken = await _context.NotificationTokens
-			.FirstOrDefaultAsync(x => x.FcmToken == dto.Token);
+			.FirstOrDefaultAsync(x =>
+				x.FcmToken == token ||
+				(x.UserId == user.UserId && x.DeviceType == deviceType));
 
 		if (existingToken is not null)
 		{
 			existingToken.UserId = user.UserId;
+			existingToken.FcmToken = token;
 			existingToken.DeviceType = deviceType;
 			existingToken.LastUsedAtUTC = DateTime.UtcNow;
 
@@ -49,7 +54,7 @@ public class NotificationService : INotificationService
 		{
 			NotificationTokenId = Guid.NewGuid(),
 			UserId = user.UserId,
-			FcmToken = dto.Token,
+			FcmToken = token,
 			DeviceType = deviceType,
 			LastUsedAtUTC = DateTime.UtcNow
 		};
