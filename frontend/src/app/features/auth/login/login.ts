@@ -84,8 +84,8 @@ export class Login implements OnDestroy {
 
     this.auth.loginWithRedirect({
       appState: {
-        target: '/dashboard'
-      },
+  target: '/login'
+},
       authorizationParams: {
         connection: 'Username-Password-Authentication',
         redirect_uri: window.location.origin,
@@ -100,8 +100,8 @@ export class Login implements OnDestroy {
 
     this.auth.loginWithRedirect({
       appState: {
-        target: '/dashboard'
-      },
+  target: '/login'
+},
       authorizationParams: {
         screen_hint: 'signup',
         connection: 'Username-Password-Authentication',
@@ -117,8 +117,8 @@ export class Login implements OnDestroy {
 
     this.auth.loginWithRedirect({
       appState: {
-        target: '/dashboard'
-      },
+  target: '/login'
+},
       authorizationParams: {
         connection: provider,
         redirect_uri: window.location.origin,
