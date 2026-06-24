@@ -34,6 +34,31 @@ public class DraftController : ControllerBase
 		return Ok(result);
 	}
 
+	[HttpPost("start")]
+	public async Task<ActionResult<DraftCenterDto>> StartDraft(
+	[FromQuery] Guid seasonId,
+	[FromBody] StartDraftDto dto)
+	{
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		try
+		{
+			var result = await _draftService.StartDraftAsync(
+				seasonId,
+				auth0Id,
+				dto);
+
+			return Ok(result);
+		}
+		catch (Exception ex)
+		{
+			return BadRequest(new { message = ex.Message });
+		}
+	}
+
 	[HttpGet("players")]
 	public async Task<ActionResult<List<DraftPlayerDto>>> GetAvailablePlayers(
 		[FromQuery] Guid seasonId,
@@ -85,6 +110,31 @@ public class DraftController : ControllerBase
 			{
 				message = ex.Message
 			});
+		}
+	}
+
+	[HttpGet("preview-order")]
+	public async Task<ActionResult<DraftLotteryPreviewDto>> PreviewDraftOrder(
+	[FromQuery] Guid seasonId,
+	[FromQuery] int drawNumber)
+	{
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		try
+		{
+			var result = await _draftService.PreviewDraftOrderAsync(
+				seasonId,
+				drawNumber,
+				auth0Id);
+
+			return Ok(result);
+		}
+		catch (Exception ex)
+		{
+			return BadRequest(new { message = ex.Message });
 		}
 	}
 }

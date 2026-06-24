@@ -6,7 +6,7 @@ import { Sidebar } from '../sidebar/sidebar';
 import { Footer } from '../footer/footer';
 
 import { NotificationService } from '../../core/services/notification.service';
-import { NotificationApiService } from '../../core/services/notification-api.service';
+import { NotificationInboxService } from '../../core/services/notification-inbox.service';
 
 @Component({
   selector: 'app-shell',
@@ -24,10 +24,11 @@ export class Shell implements OnInit {
 
   constructor(
     private notificationService: NotificationService,
-    private notificationApiService: NotificationApiService
+    private notificationInboxService: NotificationInboxService
   ) { }
 
   async ngOnInit(): Promise<void> {
+
     this.notificationService.listenForMessages();
 
     const userSynced = localStorage.getItem('userSynced') === 'true';
@@ -44,10 +45,16 @@ export class Shell implements OnInit {
       return;
     }
 
-    this.notificationApiService.saveToken(token)
+    this.notificationInboxService.saveToken({
+      token,
+      deviceType: 'web'
+    })
       .subscribe({
         error: error => {
-          console.error('Error saving notification token:', error);
+          console.error(
+            'Error saving notification token:',
+            error
+          );
         }
       });
   }

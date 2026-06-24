@@ -9,8 +9,15 @@ import {
   DraftCenter,
   DraftPick,
   DraftPlayer,
+  DraftOrder,
   MakeDraftPick
 } from '../models/draft.model';
+
+export interface DraftLotteryPreview {
+  drawNumber: number;
+  isFinal: boolean;
+  draftOrder: DraftOrder[];
+}
 
 @Injectable({
   providedIn: 'root'
@@ -29,6 +36,29 @@ export class DraftService extends ApiService {
     );
   }
 
+  startDraft(
+    seasonId: string,
+    userIds: string[]
+  ): Observable<DraftCenter> {
+
+    return this.post<DraftCenter>(
+      `${API_ENDPOINTS.draft}/start?seasonId=${seasonId}`,
+      {
+        userIds
+      }
+    );
+  }
+
+  previewDraftOrder(
+    seasonId: string,
+    drawNumber: number
+  ): Observable<DraftLotteryPreview> {
+
+    return this.get<DraftLotteryPreview>(
+      `${API_ENDPOINTS.draft}/preview-order?seasonId=${seasonId}&drawNumber=${drawNumber}`
+    );
+  }
+
   getPlayers(
     seasonId: string,
     search = '',
@@ -36,6 +66,7 @@ export class DraftService extends ApiService {
     page = 1,
     pageSize = 30
   ): Observable<DraftPlayer[]> {
+
     const params = new URLSearchParams();
 
     params.set('seasonId', seasonId);
@@ -61,7 +92,11 @@ export class DraftService extends ApiService {
     );
   }
 
-  makePick(seasonId: string, gamePlayerId: string): Observable<DraftPick> {
+  makePick(
+    seasonId: string,
+    gamePlayerId: string
+  ): Observable<DraftPick> {
+
     const body: MakeDraftPick = {
       gamePlayerId
     };

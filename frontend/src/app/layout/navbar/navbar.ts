@@ -6,6 +6,7 @@ import { firstValueFrom, take } from 'rxjs';
 
 import { Profile } from '../../features/profile/profile';
 import { Notifications } from '../../features/notifications/notifications';
+import { MessageNotifications } from '../../features/message-notifications/message-notifications';
 
 import { UserService } from '../../core/services/user.service';
 import { SeasonService } from '../../core/services/season.service';
@@ -22,7 +23,8 @@ import { MeUserDto } from '../../core/models/user.model';
     CommonModule,
     RouterModule,
     Profile,
-    Notifications
+    Notifications,
+    MessageNotifications
   ],
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss'

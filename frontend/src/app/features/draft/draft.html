@@ -18,6 +18,18 @@
 
   <ng-container *ngIf="!isLoading">
 
+    <div
+      class="lottery-banner"
+      *ngIf="isLotteryRunning">
+
+      <i class="fa-solid fa-shuffle"></i>
+
+      <span>
+        Draft Lottery Draw {{ lotteryDrawNumber }} of 3
+      </span>
+
+    </div>
+
     <a class="back-link">
       <i class="fa-solid fa-arrow-left"></i>
       Draft Center
@@ -69,8 +81,36 @@
           <small>Current: {{ currentClubName }}</small>
         </div>
 
-        <button type="button" [disabled]="!isDraftActive || isPicking">
-          {{ isDraftActive ? 'Draft is active' : 'Draft is not active' }}
+        <button
+          *ngIf="!isDraftActive"
+          type="button"
+          class="draft-start-btn"
+          [disabled]="isStartingDraft || isLotteryRunning"
+          (click)="startDraft()">
+
+          <i
+            class="fa-solid"
+            [class.fa-shuffle]="!isLotteryRunning"
+            [class.fa-spinner]="isLotteryRunning"
+            [class.fa-spin]="isLotteryRunning">
+          </i>
+
+          {{
+            isLotteryRunning
+              ? 'Running Lottery...'
+              : 'Start Draft Lottery'
+          }}
+
+        </button>
+
+        <button
+          *ngIf="isDraftActive"
+          type="button"
+          disabled>
+
+          <i class="fa-solid fa-check"></i>
+          Draft is active
+
         </button>
       </div>
 
@@ -89,12 +129,18 @@
         </div>
 
         <div class="draft-order-list">
-          <div class="draft-order-item" *ngFor="let team of draftOrder" [class.current]="team.isCurrentPick">
+          <div
+            class="draft-order-item"
+            *ngFor="let team of draftOrder"
+            [class.current]="team.isCurrentPick">
 
             <span class="pick-number">{{ team.pickOrder }}</span>
 
             <span class="team-logo">
-              <img *ngIf="team.logoUrl; else teamLogoFallback" [src]="team.logoUrl" [alt]="team.clubName" />
+              <img
+                *ngIf="team.logoUrl; else teamLogoFallback"
+                [src]="team.logoUrl"
+                [alt]="team.clubName" />
 
               <ng-template #teamLogoFallback>
                 ⚽
@@ -114,12 +160,17 @@
         </div>
 
         <div class="draft-order-list reverse">
-          <div class="draft-order-item" *ngFor="let team of draftOrder">
+          <div
+            class="draft-order-item"
+            *ngFor="let team of draftOrder">
 
             <span class="pick-number">{{ team.pickOrder }}</span>
 
             <span class="team-logo">
-              <img *ngIf="team.logoUrl; else reverseLogoFallback" [src]="team.logoUrl" [alt]="team.clubName" />
+              <img
+                *ngIf="team.logoUrl; else reverseLogoFallback"
+                [src]="team.logoUrl"
+                [alt]="team.clubName" />
 
               <ng-template #reverseLogoFallback>
                 ⚽
@@ -138,7 +189,10 @@
             <p>{{ filteredPlayers.length }} players found</p>
           </div>
 
-          <button class="ghost-icon" type="button" (click)="loadPlayers()">
+          <button
+            class="ghost-icon"
+            type="button"
+            (click)="loadPlayers()">
             <i class="fa-solid fa-rotate-right"></i>
           </button>
         </div>
@@ -146,12 +200,19 @@
         <div class="search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
 
-          <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="loadPlayers()" placeholder="Search player..." />
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="loadPlayers()"
+            placeholder="Search player..." />
         </div>
 
         <div class="filters-row">
           <div class="position-tabs">
-            <button type="button" *ngFor="let position of positions" [class.active]="selectedPosition === position"
+            <button
+              type="button"
+              *ngFor="let position of positions"
+              [class.active]="selectedPosition === position"
               (click)="setPosition(position)">
               {{ position }}
             </button>
@@ -164,12 +225,18 @@
           </div>
         </div>
 
-        <div class="player-grid" *ngIf="pagedPlayers.length > 0; else noPlayers">
-          <article class="player-card" *ngFor="let player of pagedPlayers">
+        <div
+          class="player-grid"
+          *ngIf="pagedPlayers.length > 0; else noPlayers">
 
-            <img class="card-background"
+          <article
+            class="player-card"
+            *ngFor="let player of pagedPlayers">
+
+            <img
+              class="card-background"
               src="https://res.cloudinary.com/dwgojz5cu/image/upload/v1781595337/cardRegular_ivakii.png"
-              alt="Assist Card" />
+              alt="Player Card" />
 
             <div class="player-rating">
               {{ player.overall }}
@@ -180,7 +247,11 @@
             </div>
 
             <div class="player-image">
-              <img [src]="getPlayerImageUrl(player)" [alt]="player.name" referrerpolicy="no-referrer" loading="lazy"
+              <img
+                [src]="getPlayerImageUrl(player)"
+                [alt]="player.name"
+                referrerpolicy="no-referrer"
+                loading="lazy"
                 (error)="onPlayerImageError($event)" />
             </div>
 
@@ -189,7 +260,6 @@
             </div>
 
             <div class="player-card-stats">
-
               <div>
                 <strong>{{ player.pace }}</strong>
                 <span>PAC</span>
@@ -219,7 +289,6 @@
                 <strong>{{ player.physic }}</strong>
                 <span>PHY</span>
               </div>
-
             </div>
 
             <div class="player-value">
@@ -227,9 +296,14 @@
               €{{ player.value | number:'1.0-0' }}
             </div>
 
-            <button class="draft-button" type="button" [disabled]="isPicking || !isDraftActive"
+            <button
+              class="draft-button"
+              type="button"
+              [disabled]="isPicking || !isDraftActive || isLotteryRunning"
               (click)="draftPlayer(player)">
+
               <i class="fa-solid fa-plus"></i>
+
             </button>
 
           </article>
@@ -243,16 +317,25 @@
         </ng-template>
 
         <div class="pagination" *ngIf="totalPages > 1">
-          <button type="button" (click)="previousPage()" [disabled]="currentPage <= 1">
+          <button
+            type="button"
+            (click)="previousPage()"
+            [disabled]="currentPage <= 1">
+
             <i class="fa-solid fa-chevron-left"></i>
+
           </button>
 
           <span class="active">{{ currentPage }}</span>
           <span>of</span>
           <span>{{ totalPages }}</span>
 
-          <button type="button" (click)="nextPage()">
+          <button
+            type="button"
+            (click)="nextPage()">
+
             <i class="fa-solid fa-chevron-right"></i>
+
           </button>
         </div>
       </main>
@@ -277,19 +360,27 @@
                 </strong>
               </div>
             </div>
-
           </div>
         </div>
 
         <div class="pitch">
-          <div class="squad-slot" *ngFor="let slot of squadSlots" [class.filled]="slot.player">
+          <div
+            class="squad-slot"
+            *ngFor="let slot of squadSlots"
+            [class.filled]="slot.player">
 
-            <span *ngIf="!slot.player">{{ slot.position }}</span>
+            <span *ngIf="!slot.player">
+              {{ slot.position }}
+            </span>
 
-            <div class="mini-player" *ngIf="slot.player">
+            <div
+              class="mini-player"
+              *ngIf="slot.player">
+
               <strong>{{ slot.player.overall }}</strong>
               <small>{{ slot.player.position }}</small>
               <span>{{ slot.player.name }}</span>
+
             </div>
           </div>
         </div>
@@ -326,11 +417,15 @@
           <h3>Last Picks</h3>
           <p>Round {{ currentRound }}</p>
 
-          <div class="last-pick-item" *ngFor="let pick of lastPicks">
+          <div
+            class="last-pick-item"
+            *ngFor="let pick of lastPicks">
+
             <span>Pick {{ pick.pickNumber }}</span>
             <strong>{{ pick.clubName }}</strong>
             <small>{{ pick.playerName }}</small>
             <em>{{ pick.overall }}</em>
+
           </div>
 
           <button type="button">
@@ -377,6 +472,7 @@
   </ng-container>
 
 </div>
+
 <div class="draft-toast" *ngIf="errorMessage">
   {{ errorMessage }}
 </div>

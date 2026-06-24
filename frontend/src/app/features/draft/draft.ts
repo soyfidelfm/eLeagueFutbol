@@ -30,6 +30,9 @@ interface SquadSlot {
 export class Draft implements OnInit, OnDestroy {
   isLoading = true;
   isPicking = false;
+  isStartingDraft = false;
+  isLotteryRunning = false;
+
   errorMessage = '';
 
   searchTerm = '';
@@ -40,6 +43,8 @@ export class Draft implements OnInit, OnDestroy {
   secondsRemaining = 0;
   timerText = '00:00:00';
 
+  lotteryDrawNumber = 0;
+
   draftCenter: DraftCenter | null = null;
 
   draftOrder: DraftOrder[] = [];
@@ -49,6 +54,7 @@ export class Draft implements OnInit, OnDestroy {
   seasonId = '';
 
   private timerId?: number;
+  private lotteryTimeoutId?: number;
 
   readonly playerImageFallback = 'https://cdn.sofifa.net/players/239/085/26_120.png';
 
@@ -94,6 +100,10 @@ export class Draft implements OnInit, OnDestroy {
     if (this.timerId) {
       window.clearInterval(this.timerId);
     }
+
+    if (this.lotteryTimeoutId) {
+      window.clearTimeout(this.lotteryTimeoutId);
+    }
   }
 
   get draftedCount(): number {
@@ -115,7 +125,7 @@ export class Draft implements OnInit, OnDestroy {
   }
 
   get currentRound(): number {
-    return this.draftCenter?.state.currentRound ?? 1;
+    return this.draftCenter?.state.currentRound ?? 0;
   }
 
   get playersPerTeam(): number {
@@ -127,7 +137,7 @@ export class Draft implements OnInit, OnDestroy {
   }
 
   get currentPickNumber(): number {
-    return this.draftCenter?.state.currentPickNumber ?? 1;
+    return this.draftCenter?.state.currentPickNumber ?? 0;
   }
 
   get currentClubName(): string {
@@ -136,6 +146,26 @@ export class Draft implements OnInit, OnDestroy {
 
   get isDraftActive(): boolean {
     return this.draftCenter?.state.isActive ?? false;
+  }
+
+  get currentBudget(): number {
+    return this.draftCenter?.currentBudget ?? 0;
+  }
+
+  get isMyTurn(): boolean {
+    if (!this.draftCenter) {
+      return false;
+    }
+
+    return this.draftCenter.myUserId === this.draftCenter.state.currentUserId;
+  }
+
+  get lotteryTitle(): string {
+    if (!this.isLotteryRunning) {
+      return '';
+    }
+
+    return `Draft Lottery Draw ${this.lotteryDrawNumber} of 3`;
   }
 
   getPlayerImageUrl(player: DraftPlayer): string {
@@ -233,6 +263,97 @@ export class Draft implements OnInit, OnDestroy {
       });
   }
 
+  startDraft(): void {
+    if (!this.seasonId || this.isLotteryRunning || this.isStartingDraft) {
+      return;
+    }
+
+    this.isLotteryRunning = true;
+    this.isStartingDraft = true;
+    this.errorMessage = '';
+    this.lotteryDrawNumber = 1;
+
+    this.showToast('🎲 Starting draft lottery...');
+    this.runLotteryDraw(1);
+  }
+
+  private runLotteryDraw(drawNumber: number): void {
+    this.lotteryDrawNumber = drawNumber;
+    this.cdr.detectChanges();
+
+    this.draftService.previewDraftOrder(
+      this.seasonId,
+      drawNumber
+    )
+      .subscribe({
+        next: preview => {
+          this.draftOrder = preview.draftOrder ?? [];
+          this.lastPicks = [];
+
+          this.cdr.detectChanges();
+
+          if (drawNumber < 3) {
+            this.showToast(`🎲 Draft lottery draw ${drawNumber} of 3...`);
+
+            this.lotteryTimeoutId = window.setTimeout(() => {
+              this.runLotteryDraw(drawNumber + 1);
+            }, 5000);
+
+            return;
+          }
+
+          const finalUserIds = this.draftOrder.map(x => x.userId);
+
+          this.draftService.startDraft(
+            this.seasonId,
+            finalUserIds
+          )
+            .pipe(
+              finalize(() => {
+                this.isLotteryRunning = false;
+                this.isStartingDraft = false;
+                this.cdr.detectChanges();
+              })
+            )
+            .subscribe({
+              next: center => {
+                this.draftCenter = center;
+                this.draftOrder = center.draftOrder ?? [];
+                this.lastPicks = center.recentPicks ?? [];
+
+                this.mapMySquadToSlots();
+                this.startTimer(center.state.secondsRemaining);
+                this.loadPlayers();
+
+                this.showToast('🏆 Final draft order saved.');
+                this.cdr.detectChanges();
+              },
+              error: err => {
+                console.error('Error saving final draft order:', err);
+
+                this.errorMessage =
+                  err?.error?.message ||
+                  'Could not save final draft order.';
+
+                this.cdr.detectChanges();
+              }
+            });
+        },
+        error: err => {
+          console.error('Error generating draft order preview:', err);
+
+          this.errorMessage =
+            err?.error?.message ||
+            'Could not generate draft order preview.';
+
+          this.isLotteryRunning = false;
+          this.isStartingDraft = false;
+
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
   loadPlayers(): void {
     if (!this.seasonId) {
       return;
@@ -282,87 +403,82 @@ export class Draft implements OnInit, OnDestroy {
   }
 
   draftPlayer(player: DraftPlayer): void {
-  if (!this.isMyTurn) {
-    this.errorMessage =
-      `⏳ You're on deck. ${this.currentClubName} is currently on the clock.`;
+    if (!this.isMyTurn) {
+      this.showToast(
+        `⏳ You're on deck. ${this.currentClubName} is currently on the clock.`
+      );
+      return;
+    }
 
-    this.cdr.detectChanges();
-    return;
-  }
+    if (!this.seasonId) {
+      this.showToast('Season was not found.');
+      return;
+    }
 
-  if (!this.seasonId) {
-    this.errorMessage = 'Season was not found.';
-    this.cdr.detectChanges();
-    return;
-  }
+    if (!this.isDraftActive) {
+      this.showToast('The draft is not active right now.');
+      return;
+    }
 
-  if (!this.isDraftActive) {
-    this.errorMessage = 'The draft is not active right now.';
-    this.cdr.detectChanges();
-    return;
-  }
+    if (this.isPicking) {
+      return;
+    }
 
-  if (this.isPicking) {
-    return;
-  }
+    const playerValue = player.value ?? 0;
 
-  const playerValue = player.value ?? 0;
+    if (playerValue > this.currentBudget) {
+      this.showToast(
+        `❌ Not enough budget. ${player.name} costs €${playerValue.toLocaleString()} and your budget is €${this.currentBudget.toLocaleString()}.`
+      );
+      return;
+    }
 
-  if (playerValue > this.currentBudget) {
-
-  this.errorMessage =
-    `❌ Not enough budget. ${player.name} costs €${playerValue.toLocaleString()} and your budget is €${this.currentBudget.toLocaleString()}.`;
-
-  this.cdr.detectChanges();
-
-  setTimeout(() => {
+    this.isPicking = true;
     this.errorMessage = '';
     this.cdr.detectChanges();
-  }, 3500);
 
-  return;
-}
+    this.draftService.makePick(this.seasonId, player.gamePlayerId)
+      .pipe(
+        finalize(() => {
+          this.isPicking = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.loadDraft();
+        },
+        error: err => {
+          console.error('Error making draft pick:', err);
 
-  this.isPicking = true;
-  this.errorMessage = '';
-  this.cdr.detectChanges();
+          this.errorMessage =
+            err?.error?.message ||
+            `Could not draft ${player.name}. Please try again.`;
 
-  this.draftService.makePick(this.seasonId, player.gamePlayerId)
-    .pipe(
-      finalize(() => {
-        this.isPicking = false;
-        this.cdr.detectChanges();
-      })
-    )
-    .subscribe({
-      next: () => {
-        this.loadDraft();
-      },
-      error: err => {
-        console.error('Error making draft pick:', err);
+          this.cdr.detectChanges();
+        }
+      });
+  }
 
-        this.errorMessage =
-          err?.error?.message ||
-          `Could not draft ${player.name}. Please try again.`;
+  getPrimaryPosition(position: string): string {
+    if (!position) {
+      return '';
+    }
 
+    return position.split(',')[0].trim();
+  }
+
+  private showToast(message: string): void {
+    this.errorMessage = message;
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      if (this.errorMessage === message) {
+        this.errorMessage = '';
         this.cdr.detectChanges();
       }
-    });
-}
-
-private showToast(message: string): void {
-  this.errorMessage = message;
-  this.cdr.detectChanges();
-
-  setTimeout(() => {
-    this.errorMessage = '';
-    this.cdr.detectChanges();
-  }, 3500);
-}
-
-get currentBudget(): number {
-  return this.draftCenter?.currentBudget ?? 0;
-}
+    }, 3500);
+  }
 
   private mapMySquadToSlots(): void {
     this.squadSlots = this.squadSlots.map(slot => ({
@@ -372,8 +488,10 @@ get currentBudget(): number {
     const squadPlayers = this.draftCenter?.mySquad.players ?? [];
 
     squadPlayers.forEach(player => {
+      const primaryPosition = this.getPrimaryPosition(player.position);
+
       const slot =
-        this.squadSlots.find(x => !x.player && x.position === player.position) ??
+        this.squadSlots.find(x => !x.player && x.position === primaryPosition) ??
         this.squadSlots.find(x => !x.player);
 
       if (slot) {
@@ -414,20 +532,4 @@ get currentBudget(): number {
       .toString()
       .padStart(2, '0')}`;
   }
-
-  getPrimaryPosition(position: string): string {
-  if (!position) {
-    return '';
-  }
-
-  return position.split(',')[0].trim();
-}
-get isMyTurn(): boolean {
-  if (!this.draftCenter) {
-    return false;
-  }
-
-  return this.draftCenter.myUserId ===
-         this.draftCenter.state.currentUserId;
-}
 }

@@ -1,6 +1,6 @@
 .notifications-wrapper {
   position: relative;
-  z-index: 1000;
+  z-index: 1000001;
 }
 
 .notification-button {
@@ -91,9 +91,10 @@
     0 24px 60px rgba(0, 0, 0, 0.55),
     0 0 30px rgba(0, 255, 136, 0.12);
 
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 
-  z-index: 1002;
+  z-index: 1000002;
 }
 
 .notifications-header {
@@ -276,7 +277,7 @@
 
   background: transparent;
 
-  z-index: 1001;
+  z-index: 1000000;
 }
 
 @media (max-width: 600px) {

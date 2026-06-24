@@ -3,6 +3,7 @@ using backend.Entities.Clubs;
 using backend.Entities.Draft;
 using backend.Entities.Transfers;
 using backend.Features.Draft.Dtos;
+using backend.Features.Messages.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Features.Draft.Services;
@@ -10,10 +11,88 @@ namespace backend.Features.Draft.Services;
 public class DraftService : IDraftService
 {
 	private readonly AppDbContext _context;
+	private readonly IMessageService _messageService;
 
-	public DraftService(AppDbContext context)
+	public DraftService(AppDbContext context, IMessageService messageService)
 	{
 		_context = context;
+		_messageService = messageService;
+	}
+
+	public async Task<DraftLotteryPreviewDto> PreviewDraftOrderAsync(
+	Guid seasonId,
+	int drawNumber,
+	string auth0Id)
+	{
+		var user = await _context.Users
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == auth0Id &&
+				!x.IsDeleted &&
+				x.IsActive);
+
+		if (user is null)
+			throw new Exception("User not found.");
+
+		if (!string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+			throw new Exception("Only admins can preview draft order.");
+
+		if (drawNumber < 1 || drawNumber > 3)
+			throw new Exception("Draw number must be between 1 and 3.");
+
+		var draftAlreadyExists = await _context.DraftSessions
+			.AnyAsync(x => x.SeasonId == seasonId);
+
+		if (draftAlreadyExists)
+			throw new Exception("Draft already exists for this season.");
+
+		var registrations = await _context.SeasonRegistrations
+			.AsNoTracking()
+			.Include(x => x.User)
+			.Where(x =>
+				x.SeasonId == seasonId &&
+				!x.User.IsDeleted &&
+				x.User.IsActive)
+			.ToListAsync();
+
+		if (registrations.Count == 0)
+			throw new Exception("No registered users found for this season.");
+
+		var userClubs = await _context.UserClubs
+			.AsNoTracking()
+			.Where(x =>
+				x.SeasonId == seasonId &&
+				!x.IsDeleted)
+			.ToDictionaryAsync(x => x.UserId);
+
+		var shuffled = registrations
+			.OrderBy(x => Guid.NewGuid())
+			.Select((registration, index) =>
+			{
+				userClubs.TryGetValue(registration.UserId, out var club);
+
+				return new DraftOrderDto
+				{
+					PickOrder = index + 1,
+					UserId = registration.UserId,
+					ClubName = club?.Name ?? registration.User.DisplayName,
+					LogoUrl = club?.LogoUrl ?? string.Empty,
+					IsCurrentPick = index == 0
+				};
+			})
+			.ToList();
+
+		await SendDraftLotteryMessagesAsync(
+			seasonId,
+			drawNumber,
+			shuffled);
+
+		return new DraftLotteryPreviewDto
+		{
+			DrawNumber = drawNumber,
+			IsFinal = drawNumber == 3,
+			DraftOrder = shuffled
+		};
 	}
 
 	public async Task<DraftCenterDto?> GetCenterAsync(Guid seasonId, string auth0Id)
@@ -25,98 +104,118 @@ public class DraftService : IDraftService
 		if (user is null)
 			return null;
 
-		var session = await EnsureDraftSessionAsync(seasonId);
-		await EnsureDraftOrderAsync(seasonId);
-
-		var userClubs = await _context.UserClubs
+		var session = await _context.DraftSessions
 			.AsNoTracking()
-			.Include(x => x.BaseGameClub)
-			.Where(x => x.SeasonId == seasonId && !x.IsDeleted)
-			.ToDictionaryAsync(x => x.UserId);
+			.FirstOrDefaultAsync(x => x.SeasonId == seasonId);
 
-		var myClub = userClubs.TryGetValue(user.UserId, out var foundClub)
-			? foundClub
-			: null;
-
-		var order = await _context.DraftOrders
-			.AsNoTracking()
-			.Include(x => x.User)
-			.Where(x => x.SeasonId == seasonId)
-			.OrderBy(x => x.PickOrder)
-			.Select(x => new DraftOrderDto
-			{
-				PickOrder = x.PickOrder,
-				UserId = x.UserId,
-				ClubName = x.User.DisplayName,
-				LogoUrl = null,
-				IsCurrentPick = false
-			})
-			.ToListAsync();
-
-		foreach (var item in order)
+		if (session is null)
 		{
-			if (userClubs.TryGetValue(item.UserId, out var club))
+			return new DraftCenterDto
 			{
-				item.ClubName = club.Name;
-				item.LogoUrl = club.LogoUrl ?? string.Empty;
-			}
+				MyUserId = user.UserId,
+				CurrentBudget = 0,
+
+				State = new DraftStateDto
+				{
+					DraftSessionId = Guid.Empty,
+					IsActive = false,
+					CurrentRound = 0,
+					CurrentPickNumber = 0,
+					CurrentUserId = null,
+					CurrentClubName = "Draft not started",
+					SecondsRemaining = 0,
+					TotalTeams = 0,
+					PlayersPerTeam = 25
+				},
+
+				DraftOrder = [],
+				RecentPicks = [],
+				MySquad = new MyDraftSquadDto
+				{
+					TotalPlayers = 0,
+					Players = []
+				}
+			};
 		}
 
-		var picks = await GetPicksAsync(seasonId);
+		return await BuildDraftCenterAsync(seasonId, user.UserId, session);
+	}
 
-		var totalTeams = order.Count;
-		var currentRound = totalTeams == 0
-			? 1
-			: ((session.CurrentPickNumber - 1) / totalTeams) + 1;
+	public async Task<DraftCenterDto> StartDraftAsync(
+	Guid seasonId,
+	string auth0Id,
+	StartDraftDto dto)
+	{
+		var user = await _context.Users
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == auth0Id &&
+				!x.IsDeleted &&
+				x.IsActive);
 
-		var currentOrderPosition = totalTeams == 0
-			? 0
-			: ((session.CurrentPickNumber - 1) % totalTeams) + 1;
+		if (user is null)
+			throw new Exception("User not found.");
 
-		var currentTeam = order.FirstOrDefault(x => x.PickOrder == currentOrderPosition);
+		if (!string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+			throw new Exception("Only admins can start the draft.");
 
-		foreach (var item in order)
-			item.IsCurrentPick = item.PickOrder == currentOrderPosition;
+		if (dto.UserIds.Count == 0)
+			throw new Exception("Draft order was not provided.");
 
-		var mySquadPlayers = picks
-			.Where(x => x.UserId == user.UserId)
-			.Select(x => new DraftSquadPlayerDto
+		var existingSession = await _context.DraftSessions
+			.AnyAsync(x => x.SeasonId == seasonId);
+
+		if (existingSession)
+			throw new Exception("Draft already exists for this season.");
+
+		await using var transaction = await _context.Database.BeginTransactionAsync();
+
+		var registrations = await _context.SeasonRegistrations
+			.AsNoTracking()
+			.Where(x => x.SeasonId == seasonId)
+			.Select(x => x.UserId)
+			.ToListAsync();
+
+		var invalidUserIds = dto.UserIds
+			.Where(x => !registrations.Contains(x))
+			.ToList();
+
+		if (invalidUserIds.Count > 0)
+			throw new Exception("Draft order contains invalid users.");
+
+		if (dto.UserIds.Distinct().Count() != dto.UserIds.Count)
+			throw new Exception("Draft order contains duplicated users.");
+
+		if (dto.UserIds.Count != registrations.Count)
+			throw new Exception("Draft order does not match registered users.");
+
+		var session = new DraftSession
+		{
+			DraftSessionId = Guid.NewGuid(),
+			SeasonId = seasonId,
+			IsActive = true,
+			CurrentPickNumber = 1,
+			PlayersPerTeam = 25,
+			CreatedAtUTC = DateTime.UtcNow
+		};
+
+		_context.DraftSessions.Add(session);
+
+		var draftOrders = dto.UserIds
+			.Select((userId, index) => new DraftOrder
 			{
-				GamePlayerId = x.GamePlayerId,
-				Name = x.PlayerName,
-				Position = x.Position,
-				Overall = x.Overall,
-				ImageUrl = x.PlayerImageUrl,
-				PickNumber = x.PickNumber
+				DraftOrderId = Guid.NewGuid(),
+				SeasonId = seasonId,
+				UserId = userId,
+				PickOrder = index + 1
 			})
 			.ToList();
 
-		return new DraftCenterDto
-		{
-			MyUserId = user.UserId,
-			CurrentBudget = myClub?.CurrentBudget ?? 0,
+		_context.DraftOrders.AddRange(draftOrders);
 
-			State = new DraftStateDto
-			{
-				DraftSessionId = session.DraftSessionId,
-				IsActive = session.IsActive,
-				CurrentRound = currentRound,
-				CurrentPickNumber = session.CurrentPickNumber,
-				CurrentUserId = currentTeam?.UserId,
-				CurrentClubName = currentTeam?.ClubName ?? string.Empty,
-				SecondsRemaining = 0,
-				TotalTeams = totalTeams,
-				PlayersPerTeam = session.PlayersPerTeam
-			},
+		await _context.SaveChangesAsync();
+		await transaction.CommitAsync();
 
-			DraftOrder = order,
-			RecentPicks = picks.OrderByDescending(x => x.PickNumber).Take(10).ToList(),
-			MySquad = new MyDraftSquadDto
-			{
-				TotalPlayers = mySquadPlayers.Count,
-				Players = mySquadPlayers
-			}
-		};
+		return await BuildDraftCenterAsync(seasonId, user.UserId, session);
 	}
 
 	public async Task<List<DraftPlayerDto>> GetAvailablePlayersAsync(
@@ -365,64 +464,101 @@ public class DraftService : IDraftService
 		return result.First(x => x.PickNumber == pick.PickNumber);
 	}
 
-	private async Task<DraftSession> EnsureDraftSessionAsync(Guid seasonId)
+	private async Task<DraftCenterDto> BuildDraftCenterAsync(
+		Guid seasonId,
+		Guid userId,
+		DraftSession session)
 	{
-		var session = await _context.DraftSessions
-			.FirstOrDefaultAsync(x => x.SeasonId == seasonId);
+		var userClubs = await _context.UserClubs
+			.AsNoTracking()
+			.Include(x => x.BaseGameClub)
+			.Where(x => x.SeasonId == seasonId && !x.IsDeleted)
+			.ToDictionaryAsync(x => x.UserId);
 
-		if (session is not null)
-			return session;
+		var myClub = userClubs.TryGetValue(userId, out var foundClub)
+			? foundClub
+			: null;
 
-		session = new DraftSession
-		{
-			DraftSessionId = Guid.NewGuid(),
-			SeasonId = seasonId,
-			IsActive = true,
-			CurrentPickNumber = 1,
-			PlayersPerTeam = 25,
-			CreatedAtUTC = DateTime.UtcNow
-		};
-
-		_context.DraftSessions.Add(session);
-
-		await _context.SaveChangesAsync();
-
-		return session;
-	}
-
-	private async Task EnsureDraftOrderAsync(Guid seasonId)
-	{
-		var alreadyExists = await _context.DraftOrders
-			.AnyAsync(x => x.SeasonId == seasonId);
-
-		if (alreadyExists)
-			return;
-
-		var registrations = await _context.SeasonRegistrations
+		var order = await _context.DraftOrders
 			.AsNoTracking()
 			.Include(x => x.User)
-			.Where(x =>
-				x.SeasonId == seasonId &&
-				!x.User.IsDeleted)
-			.OrderBy(x => x.RegisteredAtUTC)
+			.Where(x => x.SeasonId == seasonId)
+			.OrderBy(x => x.PickOrder)
+			.Select(x => new DraftOrderDto
+			{
+				PickOrder = x.PickOrder,
+				UserId = x.UserId,
+				ClubName = x.User.DisplayName,
+				LogoUrl = null,
+				IsCurrentPick = false
+			})
 			.ToListAsync();
 
-		if (registrations.Count == 0)
-			return;
-
-		var draftOrders = registrations
-			.Select((registration, index) => new DraftOrder
+		foreach (var item in order)
+		{
+			if (userClubs.TryGetValue(item.UserId, out var club))
 			{
-				DraftOrderId = Guid.NewGuid(),
-				SeasonId = seasonId,
-				UserId = registration.UserId,
-				PickOrder = index + 1
+				item.ClubName = club.Name;
+				item.LogoUrl = club.LogoUrl ?? string.Empty;
+			}
+		}
+
+		var picks = await GetPicksAsync(seasonId);
+
+		var totalTeams = order.Count;
+
+		var currentRound = totalTeams == 0
+			? 0
+			: ((session.CurrentPickNumber - 1) / totalTeams) + 1;
+
+		var currentOrderPosition = totalTeams == 0
+			? 0
+			: ((session.CurrentPickNumber - 1) % totalTeams) + 1;
+
+		var currentTeam = order.FirstOrDefault(x => x.PickOrder == currentOrderPosition);
+
+		foreach (var item in order)
+			item.IsCurrentPick = item.PickOrder == currentOrderPosition;
+
+		var mySquadPlayers = picks
+			.Where(x => x.UserId == userId)
+			.Select(x => new DraftSquadPlayerDto
+			{
+				GamePlayerId = x.GamePlayerId,
+				Name = x.PlayerName,
+				Position = x.Position,
+				Overall = x.Overall,
+				ImageUrl = x.PlayerImageUrl,
+				PickNumber = x.PickNumber
 			})
 			.ToList();
 
-		_context.DraftOrders.AddRange(draftOrders);
+		return new DraftCenterDto
+		{
+			MyUserId = userId,
+			CurrentBudget = myClub?.CurrentBudget ?? 0,
 
-		await _context.SaveChangesAsync();
+			State = new DraftStateDto
+			{
+				DraftSessionId = session.DraftSessionId,
+				IsActive = session.IsActive,
+				CurrentRound = currentRound,
+				CurrentPickNumber = session.CurrentPickNumber,
+				CurrentUserId = currentTeam?.UserId,
+				CurrentClubName = currentTeam?.ClubName ?? string.Empty,
+				SecondsRemaining = 0,
+				TotalTeams = totalTeams,
+				PlayersPerTeam = session.PlayersPerTeam
+			},
+
+			DraftOrder = order,
+			RecentPicks = picks.OrderByDescending(x => x.PickNumber).Take(10).ToList(),
+			MySquad = new MyDraftSquadDto
+			{
+				TotalPlayers = mySquadPlayers.Count,
+				Players = mySquadPlayers
+			}
+		};
 	}
 
 	private static decimal GetDraftPrice(int? valueEur, int overall)
@@ -440,5 +576,43 @@ public class DraftService : IDraftService
 			>= 70 => 1_000_000m,
 			_ => 500_000m
 		};
+	}
+
+	private async Task SendDraftLotteryMessagesAsync(
+	Guid seasonId,
+	int drawNumber,
+	List<DraftOrderDto> order)
+	{
+		var registeredUserIds = await _context.SeasonRegistrations
+			.AsNoTracking()
+			.Where(x => x.SeasonId == seasonId)
+			.Select(x => x.UserId)
+			.ToListAsync();
+
+		if (registeredUserIds.Count == 0)
+			return;
+
+		var fullOrder = order
+			.OrderBy(x => x.PickOrder)
+			.Select(x => $"{x.PickOrder}. {x.ClubName}")
+			.ToList();
+
+		var orderText = string.Join(Environment.NewLine, fullOrder);
+
+		var title = drawNumber < 3
+			? $"Draft Lottery Draw {drawNumber}/3 Completed"
+			: "Final Draft Lottery Completed";
+
+		var body = drawNumber < 3
+			? $"Draw {drawNumber} finished. Current draft order:{Environment.NewLine}{Environment.NewLine}{orderText}"
+			: $"Final draft order is ready:{Environment.NewLine}{Environment.NewLine}{orderText}";
+
+		foreach (var userId in registeredUserIds)
+		{
+			await _messageService.SendSystemMessageAsync(
+				userId,
+				title,
+				body);
+		}
 	}
 }

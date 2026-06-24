@@ -1,0 +1,15 @@
+<a
+  routerLink="/messages"
+  routerLinkActive="active"
+  class="message-button"
+  title="Messages">
+
+  <i class="fa-regular fa-envelope"></i>
+
+  <span
+    class="message-badge"
+    *ngIf="unreadMessagesCount > 0">
+    {{ unreadMessagesCount }}
+  </span>
+
+</a>

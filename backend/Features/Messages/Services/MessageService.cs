@@ -227,4 +227,84 @@ public class MessageService : IMessageService
 
 		await _context.SaveChangesAsync();
 	}
+
+	public async Task SendSystemMessageAsync(
+	Guid receiverUserId,
+	string title,
+	string body)
+	{
+		var receiver = await _context.Users
+			.FirstOrDefaultAsync(x =>
+				x.UserId == receiverUserId &&
+				!x.IsDeleted);
+
+		if (receiver is null)
+			return;
+
+		var systemUser = await _context.Users
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == "system" &&
+				!x.IsDeleted);
+
+		if (systemUser is null)
+		{
+			systemUser = new backend.Entities.Identity.User
+			{
+				UserId = Guid.NewGuid(),
+				Auth0Id = "system",
+				Email = "system@eleaguefutbol.com",
+				DisplayName = "eLeagueFutbol",
+				AvatarUrl = "/images/logo-clear.png",
+				TimeZone = "UTC",
+				IsActive = true,
+				Role = "System",
+				CreatedAtUTC = DateTime.UtcNow
+			};
+
+			_context.Users.Add(systemUser);
+			await _context.SaveChangesAsync();
+		}
+
+		var now = DateTime.UtcNow;
+
+		var text = $"{title}\n\n{body}";
+
+		var message = new Message
+		{
+			MessageId = Guid.NewGuid(),
+			SenderUserId = systemUser.UserId,
+			ReceiverUserId = receiver.UserId,
+			Text = text,
+			IsRead = false,
+			SentAtUTC = now
+		};
+
+		var notification = new Notification
+		{
+			NotificationId = Guid.NewGuid(),
+			UserId = receiver.UserId,
+			Title = title,
+			Message = body,
+			Type = "draft_lottery",
+			Url = "/draft",
+			IsRead = false,
+			CreatedAtUTC = now
+		};
+
+		_context.Messages.Add(message);
+		_context.Notifications.Add(notification);
+
+		await _context.SaveChangesAsync();
+
+		await _notificationService.SendToUserAsync(
+			receiver.UserId,
+			title,
+			body,
+			new Dictionary<string, string>
+			{
+			{ "type", "draft_lottery" },
+			{ "receiverUserId", receiver.UserId.ToString() },
+			{ "notificationId", notification.NotificationId.ToString() }
+			});
+	}
 }

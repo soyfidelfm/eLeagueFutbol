@@ -11,4 +11,8 @@ public interface IMessageService
 	Task<MessageDto> SendAsync(string auth0Id, SendMessageDto dto);
 
 	Task MarkAsReadAsync(string auth0Id, Guid messageId);
+	Task SendSystemMessageAsync(
+	Guid receiverUserId,
+	string title,
+	string body);
 }

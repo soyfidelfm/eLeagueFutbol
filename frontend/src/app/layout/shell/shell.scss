@@ -66,6 +66,9 @@
 ========================================= */
 
 .page-content {
+  position: relative;
+  z-index: 1;
+
   height: calc(
     100dvh - 92px - env(safe-area-inset-top) - 76px - env(safe-area-inset-bottom)
   );
@@ -82,10 +85,14 @@
    LAYERS
 ========================================= */
 
-app-sidebar,
+app-sidebar {
+  position: relative;
+  z-index: 10;
+}
+
 app-navbar {
   position: relative;
-  z-index: 2;
+  z-index: 9999;
 }
 
 /* =========================================
@@ -117,7 +124,7 @@ app-navbar {
 
     height: calc(92px + env(safe-area-inset-top));
 
-    z-index: 1000;
+    z-index: 9999;
   }
 
   app-footer {
@@ -128,7 +135,7 @@ app-navbar {
 
     height: calc(76px + env(safe-area-inset-bottom));
 
-    z-index: 1000;
+    z-index: 9999;
   }
 
   .main-layout {
@@ -139,6 +146,9 @@ app-navbar {
   }
 
   .page-content {
+    position: relative;
+    z-index: 1;
+
     height: calc(
       100dvh - 92px - env(safe-area-inset-top) - 76px - env(safe-area-inset-bottom)
     );

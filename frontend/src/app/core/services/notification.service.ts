@@ -60,24 +60,20 @@ export class NotificationService {
       const messaging = getMessaging(this.app);
 
       onMessage(messaging, payload => {
-        console.log('Foreground message:', payload);
+  console.log('Foreground message:', payload);
 
-        const type = payload.data?.['type'];
+  window.dispatchEvent(
+    new CustomEvent('eleague-message-received', {
+      detail: payload
+    })
+  );
 
-        if (type === 'message') {
-          window.dispatchEvent(
-            new CustomEvent('eleague-message-received', {
-              detail: payload
-            })
-          );
-        }
-
-        window.dispatchEvent(
-          new CustomEvent('eleague-notification-received', {
-            detail: payload
-          })
-        );
-      });
+  window.dispatchEvent(
+    new CustomEvent('eleague-notification-received', {
+      detail: payload
+    })
+  );
+});
     });
   }
 }

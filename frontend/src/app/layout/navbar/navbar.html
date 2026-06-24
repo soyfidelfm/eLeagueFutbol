@@ -54,21 +54,7 @@
   <div class="navbar-right">
 
     <!-- MESSAGES -->
-    <a
-      routerLink="/messages"
-      routerLinkActive="active"
-      class="icon-btn"
-      title="Messages">
-
-      <i class="fa-regular fa-envelope"></i>
-
-      <span
-        class="notification-dot"
-        *ngIf="unreadMessagesCount > 0">
-        {{ unreadMessagesCount }}
-      </span>
-
-    </a>
+    <app-message-notifications></app-message-notifications>
 
     <!-- NOTIFICATIONS -->
     <app-notifications></app-notifications>
