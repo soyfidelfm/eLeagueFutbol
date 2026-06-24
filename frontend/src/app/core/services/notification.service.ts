@@ -22,51 +22,55 @@ export class NotificationService {
   private app = initializeApp(FIREBASE_CONFIG);
   private isListening = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  async requestPermissionAndGetToken(): 
-  Promise<string | null> {
-    alert(
-`Supported: ${await isSupported()}
-Permission: ${Notification.permission}
-Standalone: ${window.matchMedia('(display-mode: standalone)').matches}
-NavigatorStandalone: ${(window.navigator as any).standalone}`
-);
-    const supported = await isSupported();
+  async requestPermissionAndGetToken(): Promise<string | null> {
+  const supported = await isSupported();
 
-    if (!supported) {
-      console.warn('Firebase messaging is not supported on this browser.');
-      return null;
-    }
-
-    const permission = await Notification.requestPermission();
-
-    if (permission !== 'granted') {
-      console.warn('Notification permission was not granted.');
-      return null;
-    }
-
-    const messaging = getMessaging(this.app);
-
-    const token = await getToken(messaging, {
-      vapidKey: FIREBASE_VAPID_KEY
-    });
-
-    console.log('FCM Token:', token);
-    console.log('Notification in window:', 'Notification' in window);
-console.log('Current permission:', Notification.permission);
-console.log('Standalone media:', window.matchMedia('(display-mode: standalone)').matches);
-console.log('Navigator standalone:', (window.navigator as any).standalone);
-
-    return token;
+  if (!supported) {
+    console.warn('Firebase messaging is not supported on this browser.');
+    return null;
   }
 
-  saveToken(token: string) {
-  return this.http.post(`${API_ENDPOINTS.notifications}/token`, {
-    token: token,
-    deviceType: 'web'
+  if (!('Notification' in window)) {
+    console.warn('Notifications are not supported on this browser.');
+    return null;
+  }
+
+  let permission = Notification.permission;
+
+  if (permission === 'default') {
+    permission = await Notification.requestPermission();
+  }
+
+  if (permission !== 'granted') {
+    console.warn('Notification permission was not granted:', permission);
+    return null;
+  }
+
+  const messaging = getMessaging(this.app);
+
+  const token = await getToken(messaging, {
+    vapidKey: FIREBASE_VAPID_KEY,
+    serviceWorkerRegistration: await navigator.serviceWorker.ready
   });
+
+  if (!token) {
+    console.warn('FCM token was not generated.');
+    return null;
+  }
+
+  console.log('FCM Token:', token);
+
+  return token;
 }
+
+  saveToken(token: string) {
+    return this.http.post(`${API_ENDPOINTS.notifications}/token`, {
+      token: token,
+      deviceType: 'web'
+    });
+  }
 
   listenForMessages(): void {
     if (this.isListening) {
