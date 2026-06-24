@@ -320,12 +320,8 @@ public sealed class RankingService : IRankingService
 
 	private static string GetClubLogo(UserClub club)
 	{
-		if (!string.IsNullOrWhiteSpace(club.LogoUrl))
-			return club.LogoUrl;
-
-		if (!string.IsNullOrWhiteSpace(club.BaseGameClub?.LogoUrl))
-			return club.BaseGameClub.LogoUrl;
-
-		return string.Empty;
+		return string.IsNullOrWhiteSpace(club.LogoUrl)
+			? string.Empty
+			: club.LogoUrl;
 	}
 }

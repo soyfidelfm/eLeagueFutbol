@@ -233,12 +233,10 @@ public class DashboardService : IDashboardService
 						Record = $"{x.Wins}/{x.Losses}",
 
 						Avatar = !string.IsNullOrWhiteSpace(club?.LogoUrl)
-							? club.LogoUrl
-							: !string.IsNullOrWhiteSpace(club?.BaseGameClub?.LogoUrl)
-								? club.BaseGameClub.LogoUrl
-								: string.IsNullOrWhiteSpace(x.User.AvatarUrl)
-									? "/images/avatar1.png"
-									: x.User.AvatarUrl,
+	? club.LogoUrl
+	: string.IsNullOrWhiteSpace(x.User.AvatarUrl)
+		? "/images/avatar1.png"
+		: x.User.AvatarUrl,
 
 						Form = string.IsNullOrWhiteSpace(x.Form)
 							? []
@@ -298,13 +296,12 @@ public class DashboardService : IDashboardService
 					Rank = 1,
 					Rating = Math.Min(99, 80 + topPlayer.Wins),
 
-					Image = userClubs.TryGetValue(topPlayer.UserId, out var playerClub)
-						? !string.IsNullOrWhiteSpace(playerClub.LogoUrl)
-							? playerClub.LogoUrl
-							: playerClub.BaseGameClub?.LogoUrl ?? "/images/player1.png"
-						: string.IsNullOrWhiteSpace(topPlayer.User.AvatarUrl)
-							? "/images/player1.png"
-							: topPlayer.User.AvatarUrl,
+					Image = userClubs.TryGetValue(topPlayer.UserId, out var playerClub) &&
+		!string.IsNullOrWhiteSpace(playerClub.LogoUrl)
+	? playerClub.LogoUrl
+	: string.IsNullOrWhiteSpace(topPlayer.User.AvatarUrl)
+		? "/images/player1.png"
+		: topPlayer.User.AvatarUrl,
 
 					Streak = $"{topPlayer.Wins} Wins · {topPlayer.Points} PTS"
 				},
@@ -406,23 +403,20 @@ public class DashboardService : IDashboardService
 	}
 
 	private static string GetClubImage(
-		Guid? userId,
-		User? user,
-		GameClub gameClub,
-		Dictionary<Guid, UserClub> userClubs)
+	Guid? userId,
+	User? user,
+	GameClub gameClub,
+	Dictionary<Guid, UserClub> userClubs)
 	{
 		if (userId.HasValue && userClubs.TryGetValue(userId.Value, out var club))
 		{
 			if (!string.IsNullOrWhiteSpace(club.LogoUrl))
 				return club.LogoUrl;
-
-			if (!string.IsNullOrWhiteSpace(club.BaseGameClub?.LogoUrl))
-				return club.BaseGameClub.LogoUrl;
 		}
 
 		if (!string.IsNullOrWhiteSpace(user?.AvatarUrl))
 			return user.AvatarUrl;
 
-		return gameClub.LogoUrl ?? string.Empty;
+		return string.Empty;
 	}
 }

@@ -154,8 +154,8 @@ public class ClubService : IClubService
 
 			Abbreviation = baseClub?.Code ?? string.Empty,
 			LogoUrl = string.IsNullOrWhiteSpace(userClub.LogoUrl)
-				? baseClub?.LogoUrl ?? string.Empty
-				: userClub.LogoUrl,
+	? string.Empty
+	: userClub.LogoUrl,
 
 			Description = string.Empty,
 			Slogan = null,

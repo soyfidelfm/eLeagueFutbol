@@ -265,12 +265,12 @@ public class MatchService : IMatchService
 				: match.AwayGameClub.Name);
 
 		var homeLogo = !string.IsNullOrWhiteSpace(homeClub?.LogoUrl)
-			? homeClub.LogoUrl
-			: homeClub?.BaseGameClub?.LogoUrl ?? match.HomeGameClub.LogoUrl ?? "";
+	? homeClub.LogoUrl
+	: "";
 
 		var awayLogo = !string.IsNullOrWhiteSpace(awayClub?.LogoUrl)
 			? awayClub.LogoUrl
-			: awayClub?.BaseGameClub?.LogoUrl ?? match.AwayGameClub.LogoUrl ?? "";
+			: "";
 
 		return new MatchDto
 		{

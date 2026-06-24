@@ -58,9 +58,7 @@ public class DraftService : IDraftService
 			if (userClubs.TryGetValue(item.UserId, out var club))
 			{
 				item.ClubName = club.Name;
-				item.LogoUrl = string.IsNullOrWhiteSpace(club.LogoUrl)
-					? club.BaseGameClub?.LogoUrl
-					: club.LogoUrl;
+				item.LogoUrl = club.LogoUrl ?? string.Empty;
 			}
 		}
 
