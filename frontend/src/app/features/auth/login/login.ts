@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Subject, filter, switchMap, take, takeUntil } from 'rxjs';
 
 import { UserService } from '../../../core/services/user.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { SyncUserDto } from '../../../core/models/user.model';
 
 @Component({
@@ -19,6 +20,10 @@ export class Login implements OnDestroy {
   showExploreModal = false;
   showArenaWord = false;
 
+  notificationRequired = false;
+  installPwaRequired = false;
+  isEnablingNotifications = false;
+
   private destroy$ = new Subject<void>();
 
   @ViewChild('loginCard') loginCard!: ElementRef<HTMLDivElement>;
@@ -26,7 +31,8 @@ export class Login implements OnDestroy {
   constructor(
     public auth: AuthService,
     private router: Router,
-    private userService: UserService
+    private userService: UserService,
+    private notificationService: NotificationService
   ) {
     this.auth.isAuthenticated$
       .pipe(
@@ -55,7 +61,7 @@ export class Login implements OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe({
-        next: user => {
+        next: async user => {
           localStorage.setItem('userId', user.userId);
           localStorage.setItem('auth0Id', user.auth0Id);
           localStorage.setItem('email', user.email ?? '');
@@ -70,7 +76,7 @@ export class Login implements OnDestroy {
 
           localStorage.setItem('userSynced', 'true');
 
-          this.router.navigateByUrl('/dashboard');
+          await this.requireNotificationsBeforeEntering();
         },
         error: error => {
           console.error('Error syncing user:', error);
@@ -79,13 +85,56 @@ export class Login implements OnDestroy {
       });
   }
 
+  async enableNotifications(): Promise<void> {
+    await this.requireNotificationsBeforeEntering();
+  }
+
+  private async requireNotificationsBeforeEntering(): Promise<void> {
+    this.notificationRequired = false;
+    this.installPwaRequired = false;
+    this.isEnablingNotifications = true;
+
+    try {
+      const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true;
+
+      if (isIos && !isStandalone) {
+        this.installPwaRequired = true;
+        return;
+      }
+
+      const token =
+        await this.notificationService.requestPermissionAndGetToken();
+
+      if (!token) {
+        this.notificationRequired = true;
+        return;
+      }
+
+      await this.notificationService.saveToken(token).toPromise();
+
+      this.notificationRequired = false;
+      this.installPwaRequired = false;
+
+      this.router.navigateByUrl('/dashboard');
+    } catch (error) {
+      console.error('Error enabling notifications:', error);
+      this.notificationRequired = true;
+    } finally {
+      this.isEnablingNotifications = false;
+    }
+  }
+
   loginWithEmail(): void {
     this.clearUserSyncState();
 
     this.auth.loginWithRedirect({
       appState: {
-  target: '/login'
-},
+        target: '/login'
+      },
       authorizationParams: {
         connection: 'Username-Password-Authentication',
         redirect_uri: window.location.origin,
@@ -100,8 +149,8 @@ export class Login implements OnDestroy {
 
     this.auth.loginWithRedirect({
       appState: {
-  target: '/login'
-},
+        target: '/login'
+      },
       authorizationParams: {
         screen_hint: 'signup',
         connection: 'Username-Password-Authentication',
@@ -117,8 +166,8 @@ export class Login implements OnDestroy {
 
     this.auth.loginWithRedirect({
       appState: {
-  target: '/login'
-},
+        target: '/login'
+      },
       authorizationParams: {
         connection: provider,
         redirect_uri: window.location.origin,

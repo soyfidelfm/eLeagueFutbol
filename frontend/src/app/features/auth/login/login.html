@@ -10,7 +10,10 @@
       <div class="hero-grid"></div>
 
       <div class="brand">
-        <img src="/images/logo-clear.png" alt="eLeagueFutbol Logo" class="brand-logo" />
+        <img
+          src="/images/logo-clear.png"
+          alt="eLeagueFutbol Logo"
+          class="brand-logo" />
       </div>
 
       <div class="hero-content">
@@ -28,11 +31,17 @@
 
         <div class="hero-buttons">
 
-          <button class="primary-btn" type="button" (click)="enterArena()">
+          <button
+            class="primary-btn"
+            type="button"
+            (click)="enterArena()">
             GET STARTED
           </button>
 
-          <button class="secondary-btn" type="button" (click)="openExploreModal()">
+          <button
+            class="secondary-btn"
+            type="button"
+            (click)="openExploreModal()">
             EXPLORE
           </button>
 
@@ -43,7 +52,7 @@
     </div>
 
     <!-- RIGHT SIDE -->
-<div class="login-card" #loginCard tabindex="-1">
+    <div class="login-card" #loginCard tabindex="-1">
 
       <div class="login-header auth-header">
 
@@ -51,8 +60,7 @@
           <img
             src="/images/iOSicon-clear.png"
             alt="eLeagueFutbol Logo"
-            class="brand-logo"
-          />
+            class="brand-logo" />
         </div>
 
         <h2>LOGIN</h2>
@@ -65,17 +73,21 @@
 
       <div class="email-auth-actions">
 
-  <button class="email-login-btn" type="button" (click)="loginWithEmail()">
-    <span>LOGIN</span>
-    <!-- <small>Use your email and password</small> -->
-  </button>
+        <button
+          class="email-login-btn"
+          type="button"
+          (click)="loginWithEmail()">
+          <span>LOGIN</span>
+        </button>
 
-  <button class="email-signup-btn" type="button" (click)="signUpWithEmail()">
-    <span>SIGN UP</span>
-    <!-- <small>Create your player account</small> -->
-  </button>
+        <button
+          class="email-signup-btn"
+          type="button"
+          (click)="signUpWithEmail()">
+          <span>SIGN UP</span>
+        </button>
 
-</div>
+      </div>
 
       <div class="divider">
 
@@ -87,24 +99,39 @@
 
       </div>
 
-      <button class="social-btn google" type="button" (click)="loginWithProvider('google-oauth2')">
-        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" />
+      <button
+        class="social-btn google"
+        type="button"
+        (click)="loginWithProvider('google-oauth2')">
+        <img
+          src="https://developers.google.com/identity/images/g-logo.png"
+          alt="Google" />
 
         <span>
           Continue with Google
         </span>
       </button>
 
-      <button class="social-btn microsoft" type="button" (click)="loginWithProvider('windowslive')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft" />
+      <button
+        class="social-btn microsoft"
+        type="button"
+        (click)="loginWithProvider('windowslive')">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
+          alt="Microsoft" />
 
         <span>
           Continue with Microsoft
         </span>
       </button>
 
-      <button class="social-btn apple" type="button" (click)="loginWithProvider('apple')">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" />
+      <button
+        class="social-btn apple"
+        type="button"
+        (click)="loginWithProvider('apple')">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
+          alt="Apple" />
 
         <span>
           Continue with Apple
@@ -135,11 +162,17 @@
   </div>
 
   <!-- EXPLORE MODAL -->
-  <div class="explore-overlay" *ngIf="showExploreModal" (click)="closeExploreModal()">
+  <div
+    class="explore-overlay"
+    *ngIf="showExploreModal"
+    (click)="closeExploreModal()">
 
     <div class="explore-modal" (click)="$event.stopPropagation()">
 
-      <button class="explore-close" type="button" (click)="closeExploreModal()">
+      <button
+        class="explore-close"
+        type="button"
+        (click)="closeExploreModal()">
         ×
       </button>
 
@@ -275,11 +308,60 @@
 
       <div class="explore-actions">
 
-        <button class="primary-btn" type="button" (click)="startFromExplore()">
+        <button
+          class="primary-btn"
+          type="button"
+          (click)="startFromExplore()">
           START COMPETING
         </button>
 
       </div>
+
+    </div>
+
+  </div>
+
+  <!-- NOTIFICATIONS REQUIRED -->
+  <div
+    class="notification-required-overlay"
+    *ngIf="notificationRequired">
+
+    <div class="notification-required-card">
+
+      <h2>🔔 Notifications Required</h2>
+
+      <p>
+        eLeagueFutbol requires notifications for draft turns, messages,
+        match schedules and league updates.
+      </p>
+
+      <button
+        type="button"
+        [disabled]="isEnablingNotifications"
+        (click)="enableNotifications()">
+        {{ isEnablingNotifications ? 'Enabling...' : 'Enable Notifications' }}
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- INSTALL PWA REQUIRED -->
+  <div
+    class="notification-required-overlay"
+    *ngIf="installPwaRequired">
+
+    <div class="notification-required-card">
+
+      <h2>📲 Install eLeagueFutbol</h2>
+
+      <p>
+        On iPhone, notifications require installing eLeagueFutbol first.
+      </p>
+
+      <p>
+        Open Safari → Share → Add to Home Screen.
+      </p>
 
     </div>
 
