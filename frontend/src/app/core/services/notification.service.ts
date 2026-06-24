@@ -24,7 +24,14 @@ export class NotificationService {
 
   constructor(private http: HttpClient) {}
 
-  async requestPermissionAndGetToken(): Promise<string | null> {
+  async requestPermissionAndGetToken(): 
+  Promise<string | null> {
+    alert(
+`Supported: ${await isSupported()}
+Permission: ${Notification.permission}
+Standalone: ${window.matchMedia('(display-mode: standalone)').matches}
+NavigatorStandalone: ${(window.navigator as any).standalone}`
+);
     const supported = await isSupported();
 
     if (!supported) {
@@ -46,6 +53,10 @@ export class NotificationService {
     });
 
     console.log('FCM Token:', token);
+    console.log('Notification in window:', 'Notification' in window);
+console.log('Current permission:', Notification.permission);
+console.log('Standalone media:', window.matchMedia('(display-mode: standalone)').matches);
+console.log('Navigator standalone:', (window.navigator as any).standalone);
 
     return token;
   }
