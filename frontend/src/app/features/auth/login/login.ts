@@ -68,12 +68,10 @@ export class Login implements OnDestroy {
           localStorage.setItem('displayName', user.displayName ?? '');
           localStorage.setItem('avatarUrl', user.avatarUrl ?? '');
           localStorage.setItem('timeZone', user.timeZone ?? 'UTC');
-
           localStorage.setItem('clubName', user.clubName ?? '');
           localStorage.setItem('gamerTag', user.gamerTag ?? '');
           localStorage.setItem('gameClubId', user.gameClubId ?? '');
           localStorage.setItem('gameClubLeague', user.gameClubLeague ?? '');
-
           localStorage.setItem('userSynced', 'true');
 
           await this.requireNotificationsBeforeEntering();
@@ -86,7 +84,32 @@ export class Login implements OnDestroy {
   }
 
   async enableNotifications(): Promise<void> {
-    await this.requireNotificationsBeforeEntering();
+    this.isEnablingNotifications = true;
+
+    try {
+      const token =
+        await this.notificationService.requestPermissionAndGetToken();
+
+      if (token) {
+        await this.notificationService.saveToken(token).toPromise();
+      } else {
+        console.warn('Notifications enabled but token was not generated.');
+      }
+
+      this.notificationRequired = false;
+      this.installPwaRequired = false;
+
+      this.router.navigateByUrl('/dashboard');
+    } catch (error) {
+      console.error('Error enabling notifications:', error);
+
+      this.notificationRequired = false;
+      this.installPwaRequired = false;
+
+      this.router.navigateByUrl('/dashboard');
+    } finally {
+      this.isEnablingNotifications = false;
+    }
   }
 
   private async requireNotificationsBeforeEntering(): Promise<void> {
@@ -103,18 +126,34 @@ export class Login implements OnDestroy {
 
       if (isIos && !isStandalone) {
         this.installPwaRequired = true;
+        this.router.navigateByUrl('/dashboard');
+        return;
+      }
+
+      if (!('Notification' in window)) {
+        this.router.navigateByUrl('/dashboard');
+        return;
+      }
+
+      if (Notification.permission === 'denied') {
+        this.router.navigateByUrl('/dashboard');
+        return;
+      }
+
+      if (Notification.permission !== 'granted') {
+        this.notificationRequired = true;
+        this.router.navigateByUrl('/dashboard');
         return;
       }
 
       const token =
         await this.notificationService.requestPermissionAndGetToken();
 
-      if (!token) {
-        this.notificationRequired = true;
-        return;
+      if (token) {
+        await this.notificationService.saveToken(token).toPromise();
+      } else {
+        console.warn('No FCM token generated, but login continues.');
       }
-
-      await this.notificationService.saveToken(token).toPromise();
 
       this.notificationRequired = false;
       this.installPwaRequired = false;
@@ -122,7 +161,11 @@ export class Login implements OnDestroy {
       this.router.navigateByUrl('/dashboard');
     } catch (error) {
       console.error('Error enabling notifications:', error);
-      this.notificationRequired = true;
+
+      this.notificationRequired = false;
+      this.installPwaRequired = false;
+
+      this.router.navigateByUrl('/dashboard');
     } finally {
       this.isEnablingNotifications = false;
     }
@@ -216,7 +259,6 @@ export class Login implements OnDestroy {
       setTimeout(() => {
         loginCard?.classList.remove('login-card-active');
       }, 1200);
-
     }, 1200);
   }
 
