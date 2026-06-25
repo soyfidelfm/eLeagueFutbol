@@ -264,96 +264,135 @@ export class Draft implements OnInit, OnDestroy
       });
   }
 
-  startDraft(): void {
-    if (!this.seasonId || this.isLotteryRunning || this.isStartingDraft) {
-      return;
-    }
-
-    this.isLotteryRunning = true;
-    this.isStartingDraft = true;
-    this.errorMessage = '';
-    this.lotteryDrawNumber = 1;
-
-    this.showToast('🎲 Starting draft lottery...');
-    this.runLotteryDraw(1);
+startDraft(): void {
+  if (!this.seasonId || this.isLotteryRunning || this.isStartingDraft) {
+    return;
   }
 
-  private runLotteryDraw(drawNumber: number): void {
-    this.lotteryDrawNumber = drawNumber;
-    this.cdr.detectChanges();
+  this.errorMessage = '';
 
-    this.draftService.previewDraftOrder(
-      this.seasonId,
-      drawNumber
-    )
-      .subscribe({
-        next: preview => {
-          this.draftOrder = preview.draftOrder ?? [];
-          this.lastPicks = [];
+  // Si ya existe el orden del draft, ahora sí iniciar el draft.
+  if (this.draftOrder.length > 0) {
+    this.isStartingDraft = true;
 
+    this.draftService.startDraft(this.seasonId)
+      .pipe(
+        finalize(() => {
+          this.isStartingDraft = false;
           this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: center => {
+          this.draftCenter = center;
+          this.draftOrder = center.draftOrder ?? [];
+          this.lastPicks = center.recentPicks ?? [];
 
-          if (drawNumber < 3) {
-            this.showToast(`🎲 Draft lottery draw ${drawNumber} of 3...`);
+          this.mapMySquadToSlots();
+          this.startTimer(center.state.secondsRemaining);
+          this.loadPlayers();
 
-            this.lotteryTimeoutId = window.setTimeout(() => {
-              this.runLotteryDraw(drawNumber + 1);
-            }, 5000);
-
-            return;
-          }
-
-          const finalUserIds = this.draftOrder.map(x => x.userId);
-
-          this.draftService.startDraft(
-            this.seasonId,
-            finalUserIds
-          )
-            .pipe(
-              finalize(() => {
-                this.isLotteryRunning = false;
-                this.isStartingDraft = false;
-                this.cdr.detectChanges();
-              })
-            )
-            .subscribe({
-              next: center => {
-                this.draftCenter = center;
-                this.draftOrder = center.draftOrder ?? [];
-                this.lastPicks = center.recentPicks ?? [];
-
-                this.mapMySquadToSlots();
-                this.startTimer(center.state.secondsRemaining);
-                this.loadPlayers();
-
-                this.showToast('🏆 Final draft order saved.');
-                this.cdr.detectChanges();
-              },
-              error: err => {
-                console.error('Error saving final draft order:', err);
-
-                this.errorMessage =
-                  err?.error?.message ||
-                  'Could not save final draft order.';
-
-                this.cdr.detectChanges();
-              }
-            });
+          this.showToast('🚀 Draft started.');
+          this.cdr.detectChanges();
         },
         error: err => {
-          console.error('Error generating draft order preview:', err);
+          console.error('Error starting draft:', err);
 
           this.errorMessage =
             err?.error?.message ||
-            'Could not generate draft order preview.';
-
-          this.isLotteryRunning = false;
-          this.isStartingDraft = false;
+            'Could not start draft.';
 
           this.cdr.detectChanges();
         }
       });
+
+    return;
   }
+
+  // Si aún no existe el orden, correr la lotería.
+  this.isLotteryRunning = true;
+  this.isStartingDraft = true;
+  this.lotteryDrawNumber = 1;
+
+  this.showToast('🎲 Starting draft lottery...');
+  this.runLotteryDraw(1);
+}
+
+  private runLotteryDraw(drawNumber: number): void {
+  this.lotteryDrawNumber = drawNumber;
+  this.cdr.detectChanges();
+
+  this.draftService.previewDraftOrder(
+    this.seasonId,
+    drawNumber
+  )
+    .subscribe({
+      next: preview => {
+        this.draftOrder = preview.draftOrder ?? [];
+        this.lastPicks = [];
+
+        this.cdr.detectChanges();
+
+        if (drawNumber < 3) {
+          this.showToast(`🎲 Draft lottery draw ${drawNumber} of 3...`);
+
+          this.lotteryTimeoutId = window.setTimeout(() => {
+            this.runLotteryDraw(drawNumber + 1);
+          }, 5000);
+
+          return;
+        }
+
+        const finalUserIds = this.draftOrder.map(x => x.userId);
+
+        this.draftService.generateDraftOrder(
+          this.seasonId,
+          finalUserIds
+        )
+          .pipe(
+            finalize(() => {
+              this.isLotteryRunning = false;
+              this.isStartingDraft = false;
+              this.cdr.detectChanges();
+            })
+          )
+          .subscribe({
+            next: center => {
+              this.draftCenter = center;
+              this.draftOrder = center.draftOrder ?? [];
+              this.lastPicks = center.recentPicks ?? [];
+
+              this.mapMySquadToSlots();
+              this.loadPlayers();
+
+              this.showToast('🏆 Final draft order saved. Ready to start.');
+              this.cdr.detectChanges();
+            },
+            error: err => {
+              console.error('Error saving final draft order:', err);
+
+              this.errorMessage =
+                err?.error?.message ||
+                'Could not save final draft order.';
+
+              this.cdr.detectChanges();
+            }
+          });
+      },
+      error: err => {
+        console.error('Error generating draft order preview:', err);
+
+        this.errorMessage =
+          err?.error?.message ||
+          'Could not generate draft order preview.';
+
+        this.isLotteryRunning = false;
+        this.isStartingDraft = false;
+
+        this.cdr.detectChanges();
+      }
+    });
+}
 
   loadPlayers(): void {
     if (!this.seasonId) {

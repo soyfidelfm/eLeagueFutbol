@@ -36,16 +36,26 @@ export class DraftService extends ApiService {
     );
   }
 
-  startDraft(
+  generateDraftOrder(
     seasonId: string,
     userIds: string[]
   ): Observable<DraftCenter> {
 
     return this.post<DraftCenter>(
-      `${API_ENDPOINTS.draft}/start?seasonId=${seasonId}`,
+      `${API_ENDPOINTS.draft}/generate-order?seasonId=${seasonId}`,
       {
         userIds
       }
+    );
+  }
+
+  startDraft(
+    seasonId: string
+  ): Observable<DraftCenter> {
+
+    return this.post<DraftCenter>(
+      `${API_ENDPOINTS.draft}/start?seasonId=${seasonId}`,
+      {}
     );
   }
 

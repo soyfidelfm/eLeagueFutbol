@@ -34,10 +34,37 @@ public class DraftController : ControllerBase
 		return Ok(result);
 	}
 
+	[HttpPost("generate-order")]
+	public async Task<ActionResult<DraftCenterDto>> GenerateDraftOrder(
+		[FromQuery] Guid seasonId,
+		[FromBody] StartDraftDto dto)
+	{
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		try
+		{
+			var result = await _draftService.GenerateDraftOrderAsync(
+				seasonId,
+				auth0Id,
+				dto);
+
+			return Ok(result);
+		}
+		catch (Exception ex)
+		{
+			return BadRequest(new
+			{
+				message = ex.Message
+			});
+		}
+	}
+
 	[HttpPost("start")]
 	public async Task<ActionResult<DraftCenterDto>> StartDraft(
-	[FromQuery] Guid seasonId,
-	[FromBody] StartDraftDto dto)
+		[FromQuery] Guid seasonId)
 	{
 		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -48,14 +75,16 @@ public class DraftController : ControllerBase
 		{
 			var result = await _draftService.StartDraftAsync(
 				seasonId,
-				auth0Id,
-				dto);
+				auth0Id);
 
 			return Ok(result);
 		}
 		catch (Exception ex)
 		{
-			return BadRequest(new { message = ex.Message });
+			return BadRequest(new
+			{
+				message = ex.Message
+			});
 		}
 	}
 
@@ -78,7 +107,8 @@ public class DraftController : ControllerBase
 	}
 
 	[HttpGet("picks")]
-	public async Task<ActionResult<List<DraftPickDto>>> GetPicks([FromQuery] Guid seasonId)
+	public async Task<ActionResult<List<DraftPickDto>>> GetPicks(
+		[FromQuery] Guid seasonId)
 	{
 		var result = await _draftService.GetPicksAsync(seasonId);
 
@@ -115,8 +145,8 @@ public class DraftController : ControllerBase
 
 	[HttpGet("preview-order")]
 	public async Task<ActionResult<DraftLotteryPreviewDto>> PreviewDraftOrder(
-	[FromQuery] Guid seasonId,
-	[FromQuery] int drawNumber)
+		[FromQuery] Guid seasonId,
+		[FromQuery] int drawNumber)
 	{
 		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -134,7 +164,10 @@ public class DraftController : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			return BadRequest(new { message = ex.Message });
+			return BadRequest(new
+			{
+				message = ex.Message
+			});
 		}
 	}
 }

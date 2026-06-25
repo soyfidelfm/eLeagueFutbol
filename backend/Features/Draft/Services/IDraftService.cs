@@ -8,10 +8,14 @@ public interface IDraftService
 		Guid seasonId,
 		string auth0Id);
 
+	Task<DraftCenterDto> GenerateDraftOrderAsync(
+		Guid seasonId,
+		string auth0Id,
+		StartDraftDto dto);
+
 	Task<DraftCenterDto> StartDraftAsync(
-	Guid seasonId,
-	string auth0Id,
-	StartDraftDto dto);
+		Guid seasonId,
+		string auth0Id);
 
 	Task<List<DraftPlayerDto>> GetAvailablePlayersAsync(
 		Guid seasonId,
@@ -29,7 +33,7 @@ public interface IDraftService
 		MakeDraftPickDto dto);
 
 	Task<DraftLotteryPreviewDto> PreviewDraftOrderAsync(
-	Guid seasonId,
-	int drawNumber,
-	string auth0Id);
+		Guid seasonId,
+		int drawNumber,
+		string auth0Id);
 }

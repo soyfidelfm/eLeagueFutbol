@@ -1,7 +1,8 @@
-﻿using backend.Entities.Identity;
+﻿using backend.Entities.Common;
+using backend.Entities.Identity;
 using backend.Entities.Tournaments;
 
-public class DraftOrder
+public class DraftOrder : BaseEntity
 {
 	public Guid DraftOrderId { get; set; }
 

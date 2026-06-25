@@ -82,26 +82,29 @@
         </div>
 
         <button
-          *ngIf="!isDraftActive"
-          type="button"
-          class="draft-start-btn"
-          [disabled]="isStartingDraft || isLotteryRunning"
-          (click)="startDraft()">
+  *ngIf="!isDraftActive"
+  type="button"
+  class="draft-start-btn"
+  [disabled]="isStartingDraft || isLotteryRunning"
+  (click)="startDraft()">
 
-          <i
-            class="fa-solid"
-            [class.fa-shuffle]="!isLotteryRunning"
-            [class.fa-spinner]="isLotteryRunning"
-            [class.fa-spin]="isLotteryRunning">
-          </i>
+  <i
+    class="fa-solid"
+    [class.fa-shuffle]="!isLotteryRunning && !draftCenter?.draftOrder?.length"
+    [class.fa-play]="!isLotteryRunning && draftCenter?.draftOrder?.length"
+    [class.fa-spinner]="isLotteryRunning"
+    [class.fa-spin]="isLotteryRunning">
+  </i>
 
-          {{
-            isLotteryRunning
-              ? 'Running Lottery...'
-              : 'Start Draft Lottery'
-          }}
+  {{
+    isLotteryRunning
+      ? 'Running Lottery...'
+      : draftCenter?.draftOrder?.length
+        ? 'Start Draft'
+        : 'Start Draft Lottery'
+  }}
 
-        </button>
+</button>
 
         <button
           *ngIf="isDraftActive"

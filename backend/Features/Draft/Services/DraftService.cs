@@ -146,9 +146,8 @@ public class DraftService : IDraftService
 	}
 
 	public async Task<DraftCenterDto> StartDraftAsync(
-		Guid seasonId,
-		string auth0Id,
-		StartDraftDto dto)
+	Guid seasonId,
+	string auth0Id)
 	{
 		var user = await _context.Users
 			.FirstOrDefaultAsync(x =>
@@ -161,6 +160,62 @@ public class DraftService : IDraftService
 
 		if (!string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase))
 			throw new Exception("Only admins can start the draft.");
+
+		await using var transaction = await _context.Database.BeginTransactionAsync();
+
+		var session = await _context.DraftSessions
+			.FirstOrDefaultAsync(x => x.SeasonId == seasonId);
+
+		if (session is null)
+			throw new Exception("Draft order has not been generated.");
+
+		if (session.IsActive)
+			throw new Exception("Draft is already active.");
+
+		var order = await GetDraftOrderAsync(seasonId);
+
+		if (order.Count == 0)
+			throw new Exception("Draft order has not been generated.");
+
+		var now = DateTime.UtcNow;
+
+		session.IsActive = true;
+		session.CurrentPickNumber = 1;
+		session.CurrentPickStartedAtUTC = now;
+		session.OneMinuteWarningSent = false;
+
+		var firstTurn = GetCurrentTurn(session, order);
+
+		if (firstTurn is null)
+			throw new Exception("First draft turn not found.");
+
+		await SendSystemAsync(
+			firstTurn.UserId,
+			"Es tu turno en el Draft",
+			"Estás en turno. Tienes 10 minutos para seleccionar tu jugador.");
+
+		await _context.SaveChangesAsync();
+		await transaction.CommitAsync();
+
+		return await BuildDraftCenterAsync(seasonId, user.UserId, session);
+	}
+
+	public async Task<DraftCenterDto> GenerateDraftOrderAsync(
+	Guid seasonId,
+	string auth0Id,
+	StartDraftDto dto)
+	{
+		var user = await _context.Users
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == auth0Id &&
+				!x.IsDeleted &&
+				x.IsActive);
+
+		if (user is null)
+			throw new Exception("User not found.");
+
+		if (!string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+			throw new Exception("Only admins can generate the draft order.");
 
 		if (dto.UserIds.Count == 0)
 			throw new Exception("Draft order was not provided.");
@@ -194,10 +249,10 @@ public class DraftService : IDraftService
 		{
 			DraftSessionId = Guid.NewGuid(),
 			SeasonId = seasonId,
-			IsActive = true,
+			IsActive = false,
 			CurrentPickNumber = 1,
 			PlayersPerTeam = 25,
-			CurrentPickStartedAtUTC = now,
+			CurrentPickStartedAtUTC = null,
 			OneMinuteWarningSent = false,
 			CreatedAtUTC = now
 		};
@@ -210,19 +265,14 @@ public class DraftService : IDraftService
 				DraftOrderId = Guid.NewGuid(),
 				SeasonId = seasonId,
 				UserId = userId,
-				PickOrder = index + 1
+				PickOrder = index + 1,
+				CreatedAtUTC = now
 			})
 			.ToList();
 
 		_context.DraftOrders.AddRange(draftOrders);
 
 		await _context.SaveChangesAsync();
-
-		await SendSystemAsync(
-			dto.UserIds.First(),
-			"Es tu turno en el Draft",
-			"Estás en turno. Tienes 10 minutos para seleccionar tu jugador.");
-
 		await transaction.CommitAsync();
 
 		return await BuildDraftCenterAsync(seasonId, user.UserId, session);
@@ -565,7 +615,9 @@ public class DraftService : IDraftService
 				CurrentRound = session.IsActive ? currentRound : 0,
 				CurrentPickNumber = session.IsActive ? session.CurrentPickNumber : 0,
 				CurrentUserId = session.IsActive ? currentTeam?.UserId : null,
-				CurrentClubName = session.IsActive ? currentTeam?.ClubName ?? string.Empty : "Draft finished",
+				CurrentClubName = session.IsActive
+	? currentTeam?.ClubName ?? string.Empty
+	: "Draft order ready",
 				SecondsRemaining = GetSecondsRemaining(session),
 				TotalTeams = totalTeams,
 				PlayersPerTeam = session.PlayersPerTeam
