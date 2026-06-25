@@ -13,6 +13,8 @@ public class DraftService : IDraftService
 	private readonly AppDbContext _context;
 	private readonly IMessageService _messageService;
 
+	private const int PickSeconds = 600; // 10 minutes
+
 	public DraftService(AppDbContext context, IMessageService messageService)
 	{
 		_context = context;
@@ -20,9 +22,9 @@ public class DraftService : IDraftService
 	}
 
 	public async Task<DraftLotteryPreviewDto> PreviewDraftOrderAsync(
-	Guid seasonId,
-	int drawNumber,
-	string auth0Id)
+		Guid seasonId,
+		int drawNumber,
+		string auth0Id)
 	{
 		var user = await _context.Users
 			.AsNoTracking()
@@ -82,10 +84,7 @@ public class DraftService : IDraftService
 			})
 			.ToList();
 
-		await SendDraftLotteryMessagesAsync(
-			seasonId,
-			drawNumber,
-			shuffled);
+		await SendDraftLotteryMessagesAsync(seasonId, drawNumber, shuffled);
 
 		return new DraftLotteryPreviewDto
 		{
@@ -105,16 +104,20 @@ public class DraftService : IDraftService
 			return null;
 
 		var session = await _context.DraftSessions
-			.AsNoTracking()
 			.FirstOrDefaultAsync(x => x.SeasonId == seasonId);
+
+		var currentBudget = await _context.UserClubs
+			.AsNoTracking()
+			.Where(x => x.SeasonId == seasonId && x.UserId == user.UserId)
+			.Select(x => x.CurrentBudget)
+			.FirstOrDefaultAsync();
 
 		if (session is null)
 		{
 			return new DraftCenterDto
 			{
 				MyUserId = user.UserId,
-				CurrentBudget = 0,
-
+				CurrentBudget = currentBudget,
 				State = new DraftStateDto
 				{
 					DraftSessionId = Guid.Empty,
@@ -127,7 +130,6 @@ public class DraftService : IDraftService
 					TotalTeams = 0,
 					PlayersPerTeam = 25
 				},
-
 				DraftOrder = [],
 				RecentPicks = [],
 				MySquad = new MyDraftSquadDto
@@ -138,13 +140,15 @@ public class DraftService : IDraftService
 			};
 		}
 
+		await ProcessDraftTimerAsync(session);
+
 		return await BuildDraftCenterAsync(seasonId, user.UserId, session);
 	}
 
 	public async Task<DraftCenterDto> StartDraftAsync(
-	Guid seasonId,
-	string auth0Id,
-	StartDraftDto dto)
+		Guid seasonId,
+		string auth0Id,
+		StartDraftDto dto)
 	{
 		var user = await _context.Users
 			.FirstOrDefaultAsync(x =>
@@ -175,11 +179,7 @@ public class DraftService : IDraftService
 			.Select(x => x.UserId)
 			.ToListAsync();
 
-		var invalidUserIds = dto.UserIds
-			.Where(x => !registrations.Contains(x))
-			.ToList();
-
-		if (invalidUserIds.Count > 0)
+		if (dto.UserIds.Any(x => !registrations.Contains(x)))
 			throw new Exception("Draft order contains invalid users.");
 
 		if (dto.UserIds.Distinct().Count() != dto.UserIds.Count)
@@ -188,6 +188,8 @@ public class DraftService : IDraftService
 		if (dto.UserIds.Count != registrations.Count)
 			throw new Exception("Draft order does not match registered users.");
 
+		var now = DateTime.UtcNow;
+
 		var session = new DraftSession
 		{
 			DraftSessionId = Guid.NewGuid(),
@@ -195,7 +197,9 @@ public class DraftService : IDraftService
 			IsActive = true,
 			CurrentPickNumber = 1,
 			PlayersPerTeam = 25,
-			CreatedAtUTC = DateTime.UtcNow
+			CurrentPickStartedAtUTC = now,
+			OneMinuteWarningSent = false,
+			CreatedAtUTC = now
 		};
 
 		_context.DraftSessions.Add(session);
@@ -213,6 +217,12 @@ public class DraftService : IDraftService
 		_context.DraftOrders.AddRange(draftOrders);
 
 		await _context.SaveChangesAsync();
+
+		await SendSystemAsync(
+			dto.UserIds.First(),
+			"Es tu turno en el Draft",
+			"Estás en turno. Tienes 10 minutos para seleccionar tu jugador.");
+
 		await transaction.CommitAsync();
 
 		return await BuildDraftCenterAsync(seasonId, user.UserId, session);
@@ -225,6 +235,12 @@ public class DraftService : IDraftService
 		int page,
 		int pageSize)
 	{
+		var session = await _context.DraftSessions
+			.FirstOrDefaultAsync(x => x.SeasonId == seasonId && x.IsActive);
+
+		if (session is not null)
+			await ProcessDraftTimerAsync(session);
+
 		page = page <= 0 ? 1 : page;
 		pageSize = pageSize <= 0 ? 30 : pageSize;
 
@@ -254,7 +270,6 @@ public class DraftService : IDraftService
 		if (!string.IsNullOrWhiteSpace(position) && position != "All")
 		{
 			var pos = position.Trim().ToLower();
-
 			query = query.Where(x => x.Position.ToLower().Contains(pos));
 		}
 
@@ -270,16 +285,13 @@ public class DraftService : IDraftService
 				Position = x.Position,
 				Overall = x.Overall,
 				Potential = x.Potential,
-
 				Pace = x.Pace ?? 0,
 				Shooting = x.Shooting ?? 0,
 				Passing = x.Passing ?? 0,
 				Dribbling = x.Dribbling ?? 0,
 				Defending = x.Defending ?? 0,
 				Physic = x.Physic ?? 0,
-
 				Value = x.ValueEur ?? 0,
-
 				Nation = x.Nation,
 				Age = x.Age,
 				ImageUrl = x.ImageUrl,
@@ -355,18 +367,17 @@ public class DraftService : IDraftService
 		if (session is null)
 			throw new Exception("Draft is not active.");
 
-		var order = await _context.DraftOrders
-			.AsNoTracking()
-			.Where(x => x.SeasonId == seasonId)
-			.OrderBy(x => x.PickOrder)
-			.ToListAsync();
+		await ProcessDraftTimerAsync(session);
+
+		if (!session.IsActive)
+			throw new Exception("Draft is not active.");
+
+		var order = await GetDraftOrderAsync(seasonId);
 
 		if (order.Count == 0)
 			throw new Exception("Draft order has not been generated.");
 
-		var currentOrderPosition = ((session.CurrentPickNumber - 1) % order.Count) + 1;
-
-		var currentTurn = order.FirstOrDefault(x => x.PickOrder == currentOrderPosition);
+		var currentTurn = GetCurrentTurn(session, order);
 
 		if (currentTurn is null)
 			throw new Exception("Current draft turn not found.");
@@ -454,7 +465,13 @@ public class DraftService : IDraftService
 		});
 
 		userClub.CurrentBudget -= price;
-		session.CurrentPickNumber++;
+
+		await SendSystemAsync(
+			user.UserId,
+			"Pick seleccionado",
+			$"Seleccionaste a {player.Name} en el Draft.");
+
+		await AdvanceDraftTurnAsync(session, order);
 
 		await _context.SaveChangesAsync();
 		await transaction.CommitAsync();
@@ -537,20 +554,18 @@ public class DraftService : IDraftService
 		{
 			MyUserId = userId,
 			CurrentBudget = myClub?.CurrentBudget ?? 0,
-
 			State = new DraftStateDto
 			{
 				DraftSessionId = session.DraftSessionId,
 				IsActive = session.IsActive,
-				CurrentRound = currentRound,
-				CurrentPickNumber = session.CurrentPickNumber,
-				CurrentUserId = currentTeam?.UserId,
-				CurrentClubName = currentTeam?.ClubName ?? string.Empty,
-				SecondsRemaining = 0,
+				CurrentRound = session.IsActive ? currentRound : 0,
+				CurrentPickNumber = session.IsActive ? session.CurrentPickNumber : 0,
+				CurrentUserId = session.IsActive ? currentTeam?.UserId : null,
+				CurrentClubName = session.IsActive ? currentTeam?.ClubName ?? string.Empty : "Draft finished",
+				SecondsRemaining = GetSecondsRemaining(session),
 				TotalTeams = totalTeams,
 				PlayersPerTeam = session.PlayersPerTeam
 			},
-
 			DraftOrder = order,
 			RecentPicks = picks.OrderByDescending(x => x.PickNumber).Take(10).ToList(),
 			MySquad = new MyDraftSquadDto
@@ -559,6 +574,107 @@ public class DraftService : IDraftService
 				Players = mySquadPlayers
 			}
 		};
+	}
+
+	private async Task ProcessDraftTimerAsync(DraftSession session)
+	{
+		if (!session.IsActive || session.CurrentPickStartedAtUTC is null)
+			return;
+
+		var order = await GetDraftOrderAsync(session.SeasonId);
+
+		if (order.Count == 0)
+			return;
+
+		var currentTurn = GetCurrentTurn(session, order);
+
+		if (currentTurn is null)
+			return;
+
+		var remaining = GetSecondsRemaining(session);
+
+		if (remaining <= 60 && !session.OneMinuteWarningSent && remaining > 0)
+		{
+			session.OneMinuteWarningSent = true;
+
+			await SendSystemAsync(
+				currentTurn.UserId,
+				"Te queda 1 minuto",
+				"Te queda 1 minuto para seleccionar tu pick del Draft.");
+		}
+
+		if (remaining <= 0)
+		{
+			await SendSystemAsync(
+				currentTurn.UserId,
+				"Tu turno terminó",
+				"Se acabó tu tiempo para seleccionar. Tu turno fue saltado.");
+
+			await AdvanceDraftTurnAsync(session, order);
+		}
+
+		await _context.SaveChangesAsync();
+	}
+
+	private async Task AdvanceDraftTurnAsync(DraftSession session, List<DraftOrder> order)
+	{
+		var totalPicks = order.Count * session.PlayersPerTeam;
+
+		if (session.CurrentPickNumber >= totalPicks)
+		{
+			session.IsActive = false;
+			session.CurrentPickStartedAtUTC = null;
+			session.OneMinuteWarningSent = false;
+			return;
+		}
+
+		session.CurrentPickNumber++;
+		session.CurrentPickStartedAtUTC = DateTime.UtcNow;
+		session.OneMinuteWarningSent = false;
+
+		var nextTurn = GetCurrentTurn(session, order);
+
+		if (nextTurn is not null)
+		{
+			await SendSystemAsync(
+				nextTurn.UserId,
+				"Es tu turno en el Draft",
+				"Estás en turno. Tienes 10 minutos para seleccionar tu jugador.");
+		}
+	}
+
+	private async Task<List<DraftOrder>> GetDraftOrderAsync(Guid seasonId)
+	{
+		return await _context.DraftOrders
+			.AsNoTracking()
+			.Where(x => x.SeasonId == seasonId)
+			.OrderBy(x => x.PickOrder)
+			.ToListAsync();
+	}
+
+	private static DraftOrder? GetCurrentTurn(DraftSession session, List<DraftOrder> order)
+	{
+		if (order.Count == 0)
+			return null;
+
+		var currentOrderPosition = ((session.CurrentPickNumber - 1) % order.Count) + 1;
+
+		return order.FirstOrDefault(x => x.PickOrder == currentOrderPosition);
+	}
+
+	private static int GetSecondsRemaining(DraftSession session)
+	{
+		if (!session.IsActive || session.CurrentPickStartedAtUTC is null)
+			return 0;
+
+		var elapsedSeconds = (int)(DateTime.UtcNow - session.CurrentPickStartedAtUTC.Value).TotalSeconds;
+
+		return Math.Max(0, PickSeconds - elapsedSeconds);
+	}
+
+	private async Task SendSystemAsync(Guid userId, string title, string body)
+	{
+		await _messageService.SendSystemMessageAsync(userId, title, body);
 	}
 
 	private static decimal GetDraftPrice(int? valueEur, int overall)
@@ -579,9 +695,9 @@ public class DraftService : IDraftService
 	}
 
 	private async Task SendDraftLotteryMessagesAsync(
-	Guid seasonId,
-	int drawNumber,
-	List<DraftOrderDto> order)
+		Guid seasonId,
+		int drawNumber,
+		List<DraftOrderDto> order)
 	{
 		var registeredUserIds = await _context.SeasonRegistrations
 			.AsNoTracking()
@@ -609,10 +725,7 @@ public class DraftService : IDraftService
 
 		foreach (var userId in registeredUserIds)
 		{
-			await _messageService.SendSystemMessageAsync(
-				userId,
-				title,
-				body);
+			await SendSystemAsync(userId, title, body);
 		}
 	}
 }

@@ -1,17 +1,21 @@
 ﻿namespace backend.Entities.Draft
 {
 	public class DraftSession
-{
-	public Guid DraftSessionId { get; set; }
+	{
+		public Guid DraftSessionId { get; set; }
 
-	public Guid SeasonId { get; set; }
+		public Guid SeasonId { get; set; }
 
-	public bool IsActive { get; set; }
+		public bool IsActive { get; set; }
 
-	public int CurrentPickNumber { get; set; }
+		public int CurrentPickNumber { get; set; }
 
-	public int PlayersPerTeam { get; set; }
+		public int PlayersPerTeam { get; set; }
 
-	public DateTime CreatedAtUTC { get; set; }
-}
+		public DateTime? CurrentPickStartedAtUTC { get; set; }
+
+		public bool OneMinuteWarningSent { get; set; }
+
+		public DateTime CreatedAtUTC { get; set; }
+	}
 }

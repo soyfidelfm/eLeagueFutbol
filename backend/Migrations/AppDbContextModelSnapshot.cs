@@ -371,7 +371,13 @@ namespace backend.Migrations
                     b.Property<int>("CurrentPickNumber")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("CurrentPickStartedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("OneMinuteWarningSent")
                         .HasColumnType("boolean");
 
                     b.Property<int>("PlayersPerTeam")

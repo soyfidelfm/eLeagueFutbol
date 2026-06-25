@@ -27,7 +27,8 @@ interface SquadSlot {
   templateUrl: './draft.html',
   styleUrl: './draft.scss'
 })
-export class Draft implements OnInit, OnDestroy {
+export class Draft implements OnInit, OnDestroy 
+{
   isLoading = true;
   isPicking = false;
   isStartingDraft = false;
@@ -79,7 +80,7 @@ export class Draft implements OnInit, OnDestroy {
     private draftService: DraftService,
     private seasonService: SeasonService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.route.queryParamMap
@@ -509,27 +510,32 @@ export class Draft implements OnInit, OnDestroy {
     this.timerText = this.formatTime(this.secondsRemaining);
     this.cdr.detectChanges();
 
-    this.timerId = window.setInterval(() => {
-      if (this.secondsRemaining <= 0) {
-        window.clearInterval(this.timerId);
-        this.timerText = '00:00:00';
-        this.cdr.detectChanges();
-        return;
-      }
+    if (!this.isDraftActive || this.secondsRemaining <= 0) {
+      return;
+    }
 
+    this.timerId = window.setInterval(() => {
       this.secondsRemaining--;
       this.timerText = this.formatTime(this.secondsRemaining);
       this.cdr.detectChanges();
+
+      if (this.secondsRemaining <= 0) {
+        window.clearInterval(this.timerId);
+
+        setTimeout(() => {
+          this.loadDraft();
+        }, 1200);
+      }
     }, 1000);
   }
 
   private formatTime(totalSeconds: number): string {
-    const safeSeconds = Math.max(0, totalSeconds);
-    const minutes = Math.floor(safeSeconds / 60);
-    const seconds = safeSeconds % 60;
+  const safeSeconds = Math.max(0, totalSeconds);
+  const minutes = Math.floor(safeSeconds / 60);
+  const seconds = safeSeconds % 60;
 
-    return `00:${minutes.toString().padStart(2, '0')}:${seconds
-      .toString()
-      .padStart(2, '0')}`;
-  }
+  return `${minutes.toString().padStart(2, '0')}:${seconds
+    .toString()
+    .padStart(2, '0')}`;
+}
 }
