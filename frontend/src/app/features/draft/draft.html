@@ -47,8 +47,8 @@
 
         <div class="hero-meta">
           <span>
-            <i class="fa-solid fa-list-ol"></i>
-            Linear Draft
+            <i class="fa-solid fa-shuffle"></i>
+              Snake Draft
           </span>
 
           <span>
@@ -121,66 +121,80 @@
 
     <section class="draft-layout">
       <aside class="panel draft-order-panel">
-        <div class="panel-header">
-          <div>
-            <h2>Draft Order</h2>
-            <p>Round {{ currentRound }} of {{ playersPerTeam }}</p>
-          </div>
-        </div>
 
-        <div class="draft-order-list">
-          <div
-            class="draft-order-item"
-            *ngFor="let team of draftOrder"
-            [class.current]="team.isCurrentPick">
+  <div class="panel-header">
+    <div>
+      <h2>Current Round Order</h2>
+      <p>Round {{ currentRound }} of {{ playersPerTeam }}</p>
+    </div>
+  </div>
 
-            <span class="pick-number">{{ team.pickOrder }}</span>
+  <div class="draft-order-list">
+    <div
+      class="draft-order-item"
+      *ngFor="let team of draftOrder"
+      [class.current]="team.isCurrentPick">
 
-            <span class="team-logo">
-              <img
-                *ngIf="team.logoUrl; else teamLogoFallback"
-                [src]="team.logoUrl"
-                [alt]="team.clubName" />
+      <span class="pick-number">{{ team.pickOrder }}</span>
 
-              <ng-template #teamLogoFallback>
-                ⚽
-              </ng-template>
-            </span>
+      <span class="team-logo">
+        <img
+          *ngIf="team.logoUrl; else teamLogoFallback"
+          [src]="team.logoUrl"
+          [alt]="team.clubName" />
 
-            <span class="team-name">{{ team.clubName }}</span>
+        <ng-template #teamLogoFallback>
+          ⚽
+        </ng-template>
+      </span>
 
-            <span class="current-badge" *ngIf="team.isCurrentPick">
-              Current pick
-            </span>
-          </div>
-        </div>
+      <span class="team-name">
+        {{ team.clubName }}
+      </span>
 
-        <div class="round-divider">
-          Linear order
-        </div>
+      <span
+        class="current-badge"
+        *ngIf="team.isCurrentPick">
+        Current Pick
+      </span>
 
-        <div class="draft-order-list reverse">
-          <div
-            class="draft-order-item"
-            *ngFor="let team of draftOrder">
+    </div>
+  </div>
 
-            <span class="pick-number">{{ team.pickOrder }}</span>
+  <div class="round-divider">
+    Next Round Order
+  </div>
 
-            <span class="team-logo">
-              <img
-                *ngIf="team.logoUrl; else reverseLogoFallback"
-                [src]="team.logoUrl"
-                [alt]="team.clubName" />
+  <div class="draft-order-list reverse">
 
-              <ng-template #reverseLogoFallback>
-                ⚽
-              </ng-template>
-            </span>
+    <div
+      class="draft-order-item"
+      *ngFor="let team of draftOrder.slice().reverse()">
 
-            <span class="team-name">{{ team.clubName }}</span>
-          </div>
-        </div>
-      </aside>
+      <span class="pick-number">
+        {{ team.pickOrder }}
+      </span>
+
+      <span class="team-logo">
+        <img
+          *ngIf="team.logoUrl; else nextLogoFallback"
+          [src]="team.logoUrl"
+          [alt]="team.clubName" />
+
+        <ng-template #nextLogoFallback>
+          ⚽
+        </ng-template>
+      </span>
+
+      <span class="team-name">
+        {{ team.clubName }}
+      </span>
+
+    </div>
+
+  </div>
+
+</aside>
 
       <main class="panel players-panel">
         <div class="panel-header players-header">
@@ -449,8 +463,8 @@
         <div class="info-card">
           <i class="fa-solid fa-list-ol"></i>
           <span>Format</span>
-          <strong>Linear Draft</strong>
-          <small>Same order every round</small>
+          <strong>Snake Draft</strong>
+<small>Order reverses every round</small>
         </div>
 
         <div class="info-card">

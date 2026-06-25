@@ -530,12 +530,16 @@ public class DraftService : IDraftService
 
 		var currentOrderPosition = totalTeams == 0
 			? 0
-			: ((session.CurrentPickNumber - 1) % totalTeams) + 1;
+			: GetSnakeOrderPosition(session.CurrentPickNumber, totalTeams);
 
 		var currentTeam = order.FirstOrDefault(x => x.PickOrder == currentOrderPosition);
 
 		foreach (var item in order)
-			item.IsCurrentPick = item.PickOrder == currentOrderPosition;
+			item.IsCurrentPick = session.IsActive && item.PickOrder == currentOrderPosition;
+
+		var visibleDraftOrder = session.IsActive && currentRound % 2 == 0
+			? order.OrderByDescending(x => x.PickOrder).ToList()
+			: order.OrderBy(x => x.PickOrder).ToList();
 
 		var mySquadPlayers = picks
 			.Where(x => x.UserId == userId)
@@ -566,7 +570,7 @@ public class DraftService : IDraftService
 				TotalTeams = totalTeams,
 				PlayersPerTeam = session.PlayersPerTeam
 			},
-			DraftOrder = order,
+			DraftOrder = visibleDraftOrder,
 			RecentPicks = picks.OrderByDescending(x => x.PickNumber).Take(10).ToList(),
 			MySquad = new MyDraftSquadDto
 			{
@@ -657,9 +661,26 @@ public class DraftService : IDraftService
 		if (order.Count == 0)
 			return null;
 
-		var currentOrderPosition = ((session.CurrentPickNumber - 1) % order.Count) + 1;
+		var currentOrderPosition = GetSnakeOrderPosition(
+			session.CurrentPickNumber,
+			order.Count);
 
 		return order.FirstOrDefault(x => x.PickOrder == currentOrderPosition);
+	}
+
+	private static int GetSnakeOrderPosition(int currentPickNumber, int totalTeams)
+	{
+		if (totalTeams <= 0)
+			return 0;
+
+		var roundNumber = ((currentPickNumber - 1) / totalTeams) + 1;
+		var positionInRound = ((currentPickNumber - 1) % totalTeams) + 1;
+
+		var isOddRound = roundNumber % 2 == 1;
+
+		return isOddRound
+			? positionInRound
+			: totalTeams - positionInRound + 1;
 	}
 
 	private static int GetSecondsRemaining(DraftSession session)
