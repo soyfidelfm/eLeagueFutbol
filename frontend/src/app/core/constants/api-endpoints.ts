@@ -20,5 +20,9 @@ export const API_ENDPOINTS = {
   sidebar: `${environment.api.baseUrl}/api/sidebar`,
   draft: `${environment.api.baseUrl}/api/draft`,
   notifications: `${environment.api.baseUrl}/api/notifications`,
-  messages: `${environment.api.baseUrl}/api/messages`
+  messages: `${environment.api.baseUrl}/api/messages`,
+
+  // SignalR Hub (no lleva /api)
+  realtimeHub: `${environment.api.baseUrl}/hubs/realtime`,
+  draftHub: `${environment.api.baseUrl}/hubs/draft`
 };

@@ -12,10 +12,14 @@ namespace backend.Features.Draft.Controllers;
 public class DraftController : ControllerBase
 {
 	private readonly IDraftService _draftService;
+	private readonly IDraftPickTradeService _draftPickTradeService;
 
-	public DraftController(IDraftService draftService)
+	public DraftController(
+		IDraftService draftService,
+		IDraftPickTradeService draftPickTradeService)
 	{
 		_draftService = draftService;
+		_draftPickTradeService = draftPickTradeService;
 	}
 
 	[HttpGet("center")]
@@ -55,16 +59,12 @@ public class DraftController : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			return BadRequest(new
-			{
-				message = ex.Message
-			});
+			return BadRequest(new { message = ex.Message });
 		}
 	}
 
 	[HttpPost("start")]
-	public async Task<ActionResult<DraftCenterDto>> StartDraft(
-		[FromQuery] Guid seasonId)
+	public async Task<ActionResult<DraftCenterDto>> StartDraft([FromQuery] Guid seasonId)
 	{
 		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -73,18 +73,13 @@ public class DraftController : ControllerBase
 
 		try
 		{
-			var result = await _draftService.StartDraftAsync(
-				seasonId,
-				auth0Id);
+			var result = await _draftService.StartDraftAsync(seasonId, auth0Id);
 
 			return Ok(result);
 		}
 		catch (Exception ex)
 		{
-			return BadRequest(new
-			{
-				message = ex.Message
-			});
+			return BadRequest(new { message = ex.Message });
 		}
 	}
 
@@ -107,8 +102,7 @@ public class DraftController : ControllerBase
 	}
 
 	[HttpGet("picks")]
-	public async Task<ActionResult<List<DraftPickDto>>> GetPicks(
-		[FromQuery] Guid seasonId)
+	public async Task<ActionResult<List<DraftPickDto>>> GetPicks([FromQuery] Guid seasonId)
 	{
 		var result = await _draftService.GetPicksAsync(seasonId);
 
@@ -136,10 +130,7 @@ public class DraftController : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			return BadRequest(new
-			{
-				message = ex.Message
-			});
+			return BadRequest(new { message = ex.Message });
 		}
 	}
 
@@ -164,10 +155,130 @@ public class DraftController : ControllerBase
 		}
 		catch (Exception ex)
 		{
-			return BadRequest(new
-			{
-				message = ex.Message
-			});
+			return BadRequest(new { message = ex.Message });
+		}
+	}
+
+	[HttpGet("tradable-picks")]
+	public async Task<ActionResult<List<DraftPickAssetDto>>> GetMyTradablePicks(
+		[FromQuery] Guid seasonId)
+	{
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		try
+		{
+			var result = await _draftPickTradeService.GetMyTradablePicksAsync(
+				seasonId,
+				auth0Id);
+
+			return Ok(result);
+		}
+		catch (Exception ex)
+		{
+			return BadRequest(new { message = ex.Message });
+		}
+	}
+
+	[HttpPost("pick-trades")]
+	public async Task<ActionResult<DraftPickTradeDto>> ProposePickTrade(
+		[FromQuery] Guid seasonId,
+		[FromBody] ProposeDraftPickTradeDto dto)
+	{
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		try
+		{
+			var result = await _draftPickTradeService.ProposeTradeAsync(
+				seasonId,
+				auth0Id,
+				dto);
+
+			return Ok(result);
+		}
+		catch (Exception ex)
+		{
+			return BadRequest(new { message = ex.Message });
+		}
+	}
+
+	[HttpPost("pick-trades/{tradeId:guid}/accept")]
+	public async Task<ActionResult<DraftPickTradeDto>> AcceptPickTrade(
+		[FromQuery] Guid seasonId,
+		[FromRoute] Guid tradeId)
+	{
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		try
+		{
+			var result = await _draftPickTradeService.AcceptTradeAsync(
+				seasonId,
+				auth0Id,
+				tradeId);
+
+			return Ok(result);
+		}
+		catch (Exception ex)
+		{
+			return BadRequest(new { message = ex.Message });
+		}
+	}
+
+	[HttpPost("pick-trades/{tradeId:guid}/reject")]
+	public async Task<IActionResult> RejectPickTrade(
+		[FromQuery] Guid seasonId,
+		[FromRoute] Guid tradeId)
+	{
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		try
+		{
+			await _draftPickTradeService.RejectTradeAsync(
+				seasonId,
+				auth0Id,
+				tradeId);
+
+			return Ok(new { message = "Trade rejected." });
+		}
+		catch (Exception ex)
+		{
+			return BadRequest(new { message = ex.Message });
+		}
+	}
+
+	[HttpPost("pick-trades/{tradeId:guid}/cancel")]
+	public async Task<IActionResult> CancelPickTrade(
+		[FromQuery] Guid seasonId,
+		[FromRoute] Guid tradeId)
+	{
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		try
+		{
+			await _draftPickTradeService.CancelTradeAsync(
+				seasonId,
+				auth0Id,
+				tradeId);
+
+			return Ok(new { message = "Trade cancelled." });
+		}
+		catch (Exception ex)
+		{
+			return BadRequest(new { message = ex.Message });
 		}
 	}
 }

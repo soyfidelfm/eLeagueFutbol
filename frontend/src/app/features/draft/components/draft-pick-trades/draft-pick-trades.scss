@@ -1,0 +1,283 @@
+:host {
+  display: block;
+}
+
+.trade-button {
+  width: 100%;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  margin-top: 14px;
+
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 255, 136, .12),
+      rgba(0, 255, 136, .05)
+    );
+
+  color: #00ff88;
+
+  font-size: .9rem;
+  font-weight: 900;
+
+  cursor: pointer;
+
+  transition: .22s ease;
+
+  i {
+    font-size: .95rem;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0,255,136,.18);
+  }
+
+  &:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+  }
+}
+
+.trade-notification {
+  margin-top: 16px;
+  padding: 16px;
+
+  border: 1px solid rgba(255,193,7,.25);
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,193,7,.10),
+      rgba(255,193,7,.04)
+    );
+
+  box-shadow:
+    inset 0 0 12px rgba(255,255,255,.03);
+}
+
+.trade-notification-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  i {
+    color: #ffc107;
+    font-size: 1.35rem;
+  }
+
+  strong {
+    display: block;
+    color: #fff;
+    font-size: .95rem;
+  }
+
+  small {
+    display: block;
+    margin-top: 3px;
+
+    color: rgba(255,255,255,.6);
+    font-size: .78rem;
+  }
+}
+
+.trade-notification p {
+  margin: 14px 0;
+
+  color: rgba(255,255,255,.75);
+  font-size: .88rem;
+  line-height: 1.5;
+}
+
+.trade-actions {
+  display: flex;
+  gap: 12px;
+
+  button {
+    flex: 1;
+    height: 40px;
+
+    border: none;
+    border-radius: 12px;
+
+    font-weight: 900;
+
+    cursor: pointer;
+
+    transition: .22s ease;
+
+    &:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+  }
+
+  .accept {
+    background: linear-gradient(135deg,#00ff88,#00cf6d);
+    color: #021008;
+  }
+
+  .reject {
+    background: rgba(255,255,255,.08);
+    color: #fff;
+  }
+}
+
+.trade-modal-backdrop {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(10px);
+
+  z-index: 10000;
+}
+
+.trade-modal {
+  width: min(720px,100%);
+  max-height: 88vh;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(0,255,136,.18);
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8,18,22,.98),
+      rgba(2,7,9,.99)
+    );
+
+  box-shadow:
+    0 0 50px rgba(0,255,136,.12);
+}
+
+.trade-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 22px;
+
+  border-bottom: 1px solid rgba(255,255,255,.08);
+
+  h2 {
+    margin: 0;
+
+    color: #fff;
+
+    font-family: Orbitron,sans-serif;
+    font-size: 1rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  button {
+    width: 34px;
+    height: 34px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: rgba(255,255,255,.08);
+    color: #fff;
+
+    cursor: pointer;
+  }
+}
+
+.trade-modal-body {
+  flex: 1;
+
+  overflow-y: auto;
+
+  padding: 22px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.trade-modal-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  color: rgba(255,255,255,.72);
+
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.trade-modal-body select,
+.trade-modal-body textarea {
+  width: 100%;
+
+  padding: 12px 14px;
+
+  border: 1px solid rgba(0,255,136,.18);
+  border-radius: 14px;
+
+  background: rgba(255,255,255,.04);
+  color: #fff;
+
+  resize: vertical;
+
+  outline: none;
+
+  &:focus {
+    border-color: #00ff88;
+  }
+}
+
+.loading-state,
+.empty-state {
+  padding: 26px;
+
+  text-align: center;
+
+  color: rgba(255,255,255,.6);
+}
+@media (max-width: 700px) {
+  .trade-modal-backdrop {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .trade-modal {
+    width: 100%;
+    max-height: 86vh;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .trade-modal-header {
+    padding: 18px;
+  }
+
+  .trade-modal-body {
+    padding: 18px;
+  }
+
+  .trade-actions {
+    flex-direction: column;
+  }
+}

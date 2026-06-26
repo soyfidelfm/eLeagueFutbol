@@ -1,0 +1,180 @@
+:host {
+  display: block;
+}
+
+.squad-panel {
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 20px;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.panel-header p {
+  margin: 6px 0 0;
+  color: rgba(246, 255, 249, 0.55);
+  font-size: 12px;
+}
+
+.budget-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(0, 255, 136, 0.08);
+}
+
+.budget-display i,
+.budget-display strong {
+  color: #00ff88;
+}
+
+.budget-display small {
+  display: block;
+  color: rgba(246, 255, 249, 0.55);
+  font-size: 11px;
+}
+
+.pitch {
+  position: relative;
+  height: 420px;
+  margin: 0 16px 18px;
+  border-radius: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at center, rgba(0, 255, 136, 0.18), transparent 45%),
+    #072014;
+}
+
+.squad-slot {
+  position: absolute;
+  width: 72px;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(246, 255, 249, 0.7);
+  font-size: 12px;
+  font-weight: 900;
+  transform: translate(-50%, -50%);
+}
+
+.squad-slot.filled {
+  border-color: rgba(0, 255, 136, 0.45);
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.mini-player {
+  text-align: center;
+}
+
+.mini-player strong {
+  display: block;
+  color: #00ff88;
+  font-size: 16px;
+}
+
+.mini-player small {
+  display: block;
+  color: rgba(246, 255, 249, 0.62);
+  font-size: 10px;
+}
+
+.mini-player span {
+  display: block;
+  max-width: 58px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #fff;
+  font-size: 11px;
+}
+
+.position-summary,
+.last-picks {
+  margin: 0 16px 18px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.position-summary h3,
+.last-picks h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: 38px 1fr 42px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.summary-row > div {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.summary-row > div span {
+  display: block;
+  height: 100%;
+  background: #00ff88;
+}
+
+.last-pick-item {
+  display: grid;
+  grid-template-columns: 62px 1fr 1fr 34px;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.last-pick-item span,
+.last-pick-item small {
+  color: rgba(246, 255, 249, 0.55);
+  font-size: 11px;
+}
+
+.last-pick-item strong {
+  color: #fff;
+  font-size: 12px;
+}
+
+.last-pick-item em {
+  color: #00ff88;
+  font-style: normal;
+  font-weight: 900;
+  text-align: right;
+}
+
+.last-picks button {
+  width: 100%;
+  height: 40px;
+  margin-top: 14px;
+  border: 1px solid rgba(0, 255, 136, 0.22);
+  border-radius: 14px;
+  background: rgba(0, 255, 136, 0.06);
+  color: #00ff88;
+  font-weight: 900;
+}

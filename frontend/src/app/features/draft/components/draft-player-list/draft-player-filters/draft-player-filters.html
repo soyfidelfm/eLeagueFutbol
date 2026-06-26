@@ -1,0 +1,56 @@
+<div class="panel-header players-header">
+
+  <div>
+    <h2>Available Players</h2>
+  </div>
+
+  <button
+    class="ghost-icon"
+    type="button"
+    (click)="onReload()">
+
+    <i class="fa-solid fa-rotate-right"></i>
+
+  </button>
+
+</div>
+
+<div class="search-box">
+
+  <i class="fa-solid fa-magnifying-glass"></i>
+
+  <input
+    type="text"
+    [ngModel]="searchTerm"
+    (ngModelChange)="onSearchChange($event)"
+    (keyup.enter)="onSearch()"
+    placeholder="Search player..." />
+
+</div>
+
+<div class="filters-row">
+
+  <div class="position-tabs">
+
+    <button
+      type="button"
+      *ngFor="let position of positions"
+      [class.active]="selectedPosition === position"
+      (click)="onPositionChange(position)">
+
+      {{ position }}
+
+    </button>
+
+  </div>
+
+  <div class="sort-box">
+
+    Sort:
+    <strong>Overall</strong>
+
+    <i class="fa-solid fa-chevron-down"></i>
+
+  </div>
+
+</div>

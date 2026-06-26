@@ -374,6 +374,107 @@ namespace backend.Migrations
                     b.ToTable("PlayerRankings");
                 });
 
+            modelBuilder.Entity("backend.Entities.Draft.DraftPickAsset", b =>
+                {
+                    b.Property<Guid>("DraftPickAssetId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CurrentOwnerUserClubId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("OriginalUserClubId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("PickNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RoundNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("DraftPickAssetId");
+
+                    b.HasIndex("CurrentOwnerUserClubId");
+
+                    b.HasIndex("OriginalUserClubId");
+
+                    b.ToTable("DraftPickAssets");
+                });
+
+            modelBuilder.Entity("backend.Entities.Draft.DraftPickTrade", b =>
+                {
+                    b.Property<Guid>("DraftPickTradeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FromUserClubId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RespondedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ToUserClubId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("DraftPickTradeId");
+
+                    b.HasIndex("FromUserClubId");
+
+                    b.HasIndex("ToUserClubId");
+
+                    b.ToTable("DraftPickTrades");
+                });
+
+            modelBuilder.Entity("backend.Entities.Draft.DraftPickTradeAsset", b =>
+                {
+                    b.Property<Guid>("DraftPickTradeAssetId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DraftPickAssetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("DraftPickTradeId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("DraftPickTradeAssetId");
+
+                    b.HasIndex("DraftPickAssetId");
+
+                    b.HasIndex("DraftPickTradeId");
+
+                    b.ToTable("DraftPickTradeAssets");
+                });
+
             modelBuilder.Entity("backend.Entities.Draft.DraftSession", b =>
                 {
                     b.Property<Guid>("DraftSessionId")
@@ -428,7 +529,7 @@ namespace backend.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime>("UpdatedAtUTC")
+                    b.Property<DateTime?>("UpdatedAtUTC")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedByUserId")
@@ -1646,6 +1747,63 @@ namespace backend.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("backend.Entities.Draft.DraftPickAsset", b =>
+                {
+                    b.HasOne("backend.Entities.Clubs.UserClub", "CurrentOwnerUserClub")
+                        .WithMany()
+                        .HasForeignKey("CurrentOwnerUserClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Clubs.UserClub", "OriginalUserClub")
+                        .WithMany()
+                        .HasForeignKey("OriginalUserClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CurrentOwnerUserClub");
+
+                    b.Navigation("OriginalUserClub");
+                });
+
+            modelBuilder.Entity("backend.Entities.Draft.DraftPickTrade", b =>
+                {
+                    b.HasOne("backend.Entities.Clubs.UserClub", "FromUserClub")
+                        .WithMany()
+                        .HasForeignKey("FromUserClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Clubs.UserClub", "ToUserClub")
+                        .WithMany()
+                        .HasForeignKey("ToUserClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FromUserClub");
+
+                    b.Navigation("ToUserClub");
+                });
+
+            modelBuilder.Entity("backend.Entities.Draft.DraftPickTradeAsset", b =>
+                {
+                    b.HasOne("backend.Entities.Draft.DraftPickAsset", "DraftPickAsset")
+                        .WithMany()
+                        .HasForeignKey("DraftPickAssetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("backend.Entities.Draft.DraftPickTrade", "DraftPickTrade")
+                        .WithMany("TradeAssets")
+                        .HasForeignKey("DraftPickTradeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DraftPickAsset");
+
+                    b.Navigation("DraftPickTrade");
+                });
+
             modelBuilder.Entity("backend.Entities.Draft.DraftSession", b =>
                 {
                     b.HasOne("backend.Entities.Tournaments.Season", null)
@@ -1956,6 +2114,11 @@ namespace backend.Migrations
             modelBuilder.Entity("backend.Entities.Clubs.UserClubPlayer", b =>
                 {
                     b.Navigation("LineupPlayers");
+                });
+
+            modelBuilder.Entity("backend.Entities.Draft.DraftPickTrade", b =>
+                {
+                    b.Navigation("TradeAssets");
                 });
 
             modelBuilder.Entity("backend.Entities.GameData.ClubLineup", b =>

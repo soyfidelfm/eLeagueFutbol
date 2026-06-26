@@ -1,0 +1,80 @@
+<main class="panel players-panel">
+
+  <app-draft-player-filters
+    [searchTerm]="searchTerm"
+    [selectedPosition]="selectedPosition"
+    [positions]="positions"
+    (searchTermChange)="onSearchTermChanged($event)"
+    (positionChange)="setPosition($event)"
+    (search)="searchPlayers()"
+    (reload)="reloadPlayers()">
+  </app-draft-player-filters>
+
+  <div
+    class="players-count"
+    *ngIf="hasPlayers">
+    {{ pagedPlayers.length }} players found
+  </div>
+
+  <div
+    class="player-grid"
+    *ngIf="hasPlayers; else noPlayers">
+
+    <app-draft-player-card
+      *ngFor="let player of pagedPlayers; trackBy: trackByPlayer"
+      [player]="player"
+      [canDraft]="canDraft"
+      [isPicking]="isPicking"
+      [currentBudget]="currentBudget"
+      (draft)="draftPlayer($event)">
+    </app-draft-player-card>
+
+  </div>
+
+  <ng-template #noPlayers>
+
+    <div class="empty-state">
+
+      <i class="fa-solid fa-user-slash"></i>
+
+      <span>No players found.</span>
+
+    </div>
+
+  </ng-template>
+
+  <div
+    class="pagination"
+    *ngIf="totalPages > 1">
+
+    <button
+      type="button"
+      (click)="previousPage()"
+      [disabled]="!canGoPrevious">
+
+      <i class="fa-solid fa-chevron-left"></i>
+
+    </button>
+
+    <span class="active">
+      {{ currentPage }}
+    </span>
+
+    <span>of</span>
+
+    <span>
+      {{ totalPages }}
+    </span>
+
+    <button
+      type="button"
+      (click)="nextPage()"
+      [disabled]="!canGoNext">
+
+      <i class="fa-solid fa-chevron-right"></i>
+
+    </button>
+
+  </div>
+
+</main>

@@ -10,7 +10,10 @@ import {
   DraftPick,
   DraftPlayer,
   DraftOrder,
-  MakeDraftPick
+  MakeDraftPick,
+  DraftPickAsset,
+  DraftPickTrade,
+  ProposeDraftPickTrade
 } from '../models/draft.model';
 
 export interface DraftLotteryPreview {
@@ -40,19 +43,13 @@ export class DraftService extends ApiService {
     seasonId: string,
     userIds: string[]
   ): Observable<DraftCenter> {
-
     return this.post<DraftCenter>(
       `${API_ENDPOINTS.draft}/generate-order?seasonId=${seasonId}`,
-      {
-        userIds
-      }
+      { userIds }
     );
   }
 
-  startDraft(
-    seasonId: string
-  ): Observable<DraftCenter> {
-
+  startDraft(seasonId: string): Observable<DraftCenter> {
     return this.post<DraftCenter>(
       `${API_ENDPOINTS.draft}/start?seasonId=${seasonId}`,
       {}
@@ -63,7 +60,6 @@ export class DraftService extends ApiService {
     seasonId: string,
     drawNumber: number
   ): Observable<DraftLotteryPreview> {
-
     return this.get<DraftLotteryPreview>(
       `${API_ENDPOINTS.draft}/preview-order?seasonId=${seasonId}&drawNumber=${drawNumber}`
     );
@@ -76,7 +72,6 @@ export class DraftService extends ApiService {
     page = 1,
     pageSize = 30
   ): Observable<DraftPlayer[]> {
-
     const params = new URLSearchParams();
 
     params.set('seasonId', seasonId);
@@ -106,7 +101,6 @@ export class DraftService extends ApiService {
     seasonId: string,
     gamePlayerId: string
   ): Observable<DraftPick> {
-
     const body: MakeDraftPick = {
       gamePlayerId
     };
@@ -114,6 +108,60 @@ export class DraftService extends ApiService {
     return this.post<DraftPick>(
       `${API_ENDPOINTS.draft}/picks?seasonId=${seasonId}`,
       body
+    );
+  }
+
+  getTradablePicks(seasonId: string): Observable<DraftPickAsset[]> {
+    return this.get<DraftPickAsset[]>(
+      `${API_ENDPOINTS.draft}/tradable-picks?seasonId=${seasonId}`
+    );
+  }
+
+  proposePickTrade(
+    seasonId: string,
+    toUserClubId: string,
+    draftPickAssetIds: string[],
+    message = ''
+  ): Observable<DraftPickTrade> {
+    const body: ProposeDraftPickTrade = {
+      toUserClubId,
+      draftPickAssetIds,
+      message
+    };
+
+    return this.post<DraftPickTrade>(
+      `${API_ENDPOINTS.draft}/pick-trades?seasonId=${seasonId}`,
+      body
+    );
+  }
+
+  acceptPickTrade(
+    seasonId: string,
+    tradeId: string
+  ): Observable<DraftPickTrade> {
+    return this.post<DraftPickTrade>(
+      `${API_ENDPOINTS.draft}/pick-trades/${tradeId}/accept?seasonId=${seasonId}`,
+      {}
+    );
+  }
+
+  rejectPickTrade(
+    seasonId: string,
+    tradeId: string
+  ): Observable<{ message: string }> {
+    return this.post<{ message: string }>(
+      `${API_ENDPOINTS.draft}/pick-trades/${tradeId}/reject?seasonId=${seasonId}`,
+      {}
+    );
+  }
+
+  cancelPickTrade(
+    seasonId: string,
+    tradeId: string
+  ): Observable<{ message: string }> {
+    return this.post<{ message: string }>(
+      `${API_ENDPOINTS.draft}/pick-trades/${tradeId}/cancel?seasonId=${seasonId}`,
+      {}
     );
   }
 }

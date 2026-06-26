@@ -5,19 +5,23 @@ using backend.Entities.Messaging;
 using backend.Entities.Notifications;
 using backend.Features.Messages.Dtos;
 using backend.Features.Notifications.Services;
+using backend.Features.Realtime.Services;
 using Microsoft.EntityFrameworkCore;
 
 public class MessageService : IMessageService
 {
 	private readonly AppDbContext _context;
 	private readonly INotificationService _notificationService;
+	private readonly IRealtimeService _realtimeService;
 
 	public MessageService(
 		AppDbContext context,
-		INotificationService notificationService)
+		INotificationService notificationService,
+		IRealtimeService realtimeService)
 	{
 		_context = context;
 		_notificationService = notificationService;
+		_realtimeService = realtimeService;
 	}
 
 	public async Task<List<ConversationDto>> GetConversationsAsync(string auth0Id)
@@ -160,7 +164,7 @@ public class MessageService : IMessageService
 		{
 			NotificationId = Guid.NewGuid(),
 			UserId = receiver.UserId,
-			Title = "New message",
+			Title = "New Message",
 			Message = $"{sender.DisplayName}: {preview}",
 			Type = "message",
 			Url = $"/messages?userId={sender.UserId}",
@@ -173,9 +177,38 @@ public class MessageService : IMessageService
 
 		await _context.SaveChangesAsync();
 
+		await _realtimeService.SendToUserAsync(
+			receiver.UserId,
+			"MessageReceived",
+			new
+			{
+				messageId = message.MessageId,
+				senderUserId = sender.UserId,
+				senderName = sender.DisplayName,
+				senderAvatarUrl = sender.AvatarUrl,
+				receiverUserId = receiver.UserId,
+				text = message.Text,
+				isRead = message.IsRead,
+				sentAtUTC = message.SentAtUTC
+			});
+
+		await _realtimeService.SendToUserAsync(
+			receiver.UserId,
+			"NotificationReceived",
+			new
+			{
+				notificationId = notification.NotificationId,
+				title = notification.Title,
+				message = notification.Message,
+				type = notification.Type,
+				url = notification.Url,
+				isRead = notification.IsRead,
+				createdAtUTC = notification.CreatedAtUTC
+			});
+
 		await _notificationService.SendToUserAsync(
 			receiver.UserId,
-			"New message",
+			"New Message",
 			$"{sender.DisplayName}: {preview}",
 			new Dictionary<string, string>
 			{
@@ -226,12 +259,21 @@ public class MessageService : IMessageService
 		message.ReadAtUTC = DateTime.UtcNow;
 
 		await _context.SaveChangesAsync();
+
+		await _realtimeService.SendToUserAsync(
+			message.SenderUserId,
+			"MessageRead",
+			new
+			{
+				messageId = message.MessageId,
+				readAtUTC = message.ReadAtUTC
+			});
 	}
 
 	public async Task SendSystemMessageAsync(
-	Guid receiverUserId,
-	string title,
-	string body)
+		Guid receiverUserId,
+		string title,
+		string body)
 	{
 		var receiver = await _context.Users
 			.FirstOrDefaultAsync(x =>
@@ -285,8 +327,8 @@ public class MessageService : IMessageService
 			UserId = receiver.UserId,
 			Title = title,
 			Message = body,
-			Type = "draft_lottery",
-			Url = "/draft",
+			Type = "system",
+			Url = "/notifications",
 			IsRead = false,
 			CreatedAtUTC = now
 		};
@@ -296,15 +338,44 @@ public class MessageService : IMessageService
 
 		await _context.SaveChangesAsync();
 
+		await _realtimeService.SendToUserAsync(
+			receiver.UserId,
+			"MessageReceived",
+			new
+			{
+				messageId = message.MessageId,
+				senderUserId = systemUser.UserId,
+				senderName = systemUser.DisplayName,
+				senderAvatarUrl = systemUser.AvatarUrl,
+				receiverUserId = receiver.UserId,
+				text = message.Text,
+				isRead = message.IsRead,
+				sentAtUTC = message.SentAtUTC
+			});
+
+		await _realtimeService.SendToUserAsync(
+			receiver.UserId,
+			"NotificationReceived",
+			new
+			{
+				notificationId = notification.NotificationId,
+				title = notification.Title,
+				message = notification.Message,
+				type = notification.Type,
+				url = notification.Url,
+				isRead = notification.IsRead,
+				createdAtUTC = notification.CreatedAtUTC
+			});
+
 		await _notificationService.SendToUserAsync(
 			receiver.UserId,
 			title,
 			body,
 			new Dictionary<string, string>
 			{
-			{ "type", "draft_lottery" },
-			{ "receiverUserId", receiver.UserId.ToString() },
-			{ "notificationId", notification.NotificationId.ToString() }
+				{ "type", "system" },
+				{ "receiverUserId", receiver.UserId.ToString() },
+				{ "notificationId", notification.NotificationId.ToString() }
 			});
 	}
 }

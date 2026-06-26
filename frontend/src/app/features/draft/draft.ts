@@ -1,84 +1,77 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize, forkJoin, take } from 'rxjs';
+import { AuthService } from '@auth0/auth0-angular';
+import {
+  HubConnection,
+  HubConnectionBuilder,
+  HubConnectionState,
+  LogLevel
+} from '@microsoft/signalr';
+import { finalize, firstValueFrom, take } from 'rxjs';
 
 import { DraftService } from '../../core/services/draft.service';
 import { SeasonService } from '../../core/services/season.service';
+import { API_ENDPOINTS } from '../../core/constants/api-endpoints';
 
 import {
   DraftCenter,
   DraftOrder,
   DraftPick,
-  DraftPlayer,
-  DraftSquadPlayer
+  DraftPickTrade
 } from '../../core/models/draft.model';
 
-interface SquadSlot {
-  position: string;
-  player?: DraftSquadPlayer;
-}
+import { DraftOrderBoard } from './components/draft-order-board/draft-order-board';
+import { DraftPlayerList } from './components/draft-player-list/draft-player-list';
+import { DraftSquadBoard } from './components/draft-squad-board/draft-squad-board';
+import { DraftPickTrades } from './components/draft-pick-trades/draft-pick-trades';
 
 @Component({
   selector: 'app-draft',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    DraftOrderBoard,
+    DraftPlayerList,
+    DraftSquadBoard,
+    DraftPickTrades
+  ],
   templateUrl: './draft.html',
   styleUrl: './draft.scss'
 })
-export class Draft implements OnInit, OnDestroy 
-{
+export class Draft implements OnInit, OnDestroy {
   isLoading = true;
-  isPicking = false;
   isStartingDraft = false;
   isLotteryRunning = false;
 
   errorMessage = '';
 
-  searchTerm = '';
-  selectedPosition = 'All';
-  currentPage = 1;
-  pageSize = 9;
-
   secondsRemaining = 0;
-  timerText = '00:00:00';
+  timerText = '00:00';
 
   lotteryDrawNumber = 0;
 
   draftCenter: DraftCenter | null = null;
-
   draftOrder: DraftOrder[] = [];
-  players: DraftPlayer[] = [];
   lastPicks: DraftPick[] = [];
+
+  incomingTrade: DraftPickTrade | null = null;
 
   seasonId = '';
 
+  playerRefreshKey = 0;
+  tradeRefreshKey = 0;
+
   private timerId?: number;
   private lotteryTimeoutId?: number;
-
-  readonly playerImageFallback = 'https://cdn.sofifa.net/players/239/085/26_120.png';
-
-  positions = ['All', 'ST', 'LW', 'RW', 'CM', 'CDM', 'CB', 'LB', 'RB', 'GK'];
-
-  squadSlots: SquadSlot[] = [
-    { position: 'ST' },
-    { position: 'LW' },
-    { position: 'RW' },
-    { position: 'CM' },
-    { position: 'CM' },
-    { position: 'CDM' },
-    { position: 'LB' },
-    { position: 'CB' },
-    { position: 'CB' },
-    { position: 'RB' },
-    { position: 'GK' }
-  ];
+  private hubConnection?: HubConnection;
+  private isConnectingHub = false;
 
   constructor(
     private route: ActivatedRoute,
     private draftService: DraftService,
     private seasonService: SeasonService,
+    private auth: AuthService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -89,6 +82,7 @@ export class Draft implements OnInit, OnDestroy
         this.seasonId = params.get('seasonId') ?? '';
 
         if (this.seasonId) {
+          this.connectDraftHub();
           this.loadDraft();
           return;
         }
@@ -105,32 +99,23 @@ export class Draft implements OnInit, OnDestroy
     if (this.lotteryTimeoutId) {
       window.clearTimeout(this.lotteryTimeoutId);
     }
-  }
 
-  get draftedCount(): number {
-    return this.draftCenter?.mySquad.totalPlayers ?? 0;
-  }
-
-  get filteredPlayers(): DraftPlayer[] {
-    return this.players;
-  }
-
-  get pagedPlayers(): DraftPlayer[] {
-    return this.players;
-  }
-
-  get totalPages(): number {
-    return this.players.length < this.pageSize
-      ? this.currentPage
-      : this.currentPage + 1;
+    this.disconnectDraftHub();
   }
 
   get currentRound(): number {
     return this.draftCenter?.state.currentRound ?? 0;
   }
 
+  get mySquadPlayers() {
+    return this.draftCenter?.mySquad?.players ?? [];
+  }
   get playersPerTeam(): number {
-    return this.draftCenter?.state.playersPerTeam ?? this.squadSlots.length;
+    return this.draftCenter?.state.playersPerTeam ?? 25;
+  }
+
+  get draftedCount(): number {
+    return this.draftCenter?.mySquad.totalPlayers ?? 0;
   }
 
   get totalTeams(): number {
@@ -169,18 +154,6 @@ export class Draft implements OnInit, OnDestroy
     return `Draft Lottery Draw ${this.lotteryDrawNumber} of 3`;
   }
 
-  getPlayerImageUrl(player: DraftPlayer): string {
-    return player.imageUrl?.trim() || this.playerImageFallback;
-  }
-
-  onPlayerImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-
-    if (img.src !== this.playerImageFallback) {
-      img.src = this.playerImageFallback;
-    }
-  }
-
   loadCurrentSeasonAndDraft(): void {
     this.isLoading = true;
     this.errorMessage = '';
@@ -189,9 +162,7 @@ export class Draft implements OnInit, OnDestroy
     this.seasonService.getAll()
       .pipe(
         take(1),
-        finalize(() => {
-          this.cdr.detectChanges();
-        })
+        finalize(() => this.cdr.detectChanges())
       )
       .subscribe({
         next: seasons => {
@@ -207,6 +178,7 @@ export class Draft implements OnInit, OnDestroy
           }
 
           this.seasonId = currentSeason.seasonId;
+          this.connectDraftHub();
           this.loadDraft();
         },
         error: err => {
@@ -228,16 +200,7 @@ export class Draft implements OnInit, OnDestroy
     this.errorMessage = '';
     this.cdr.detectChanges();
 
-    forkJoin({
-      center: this.draftService.getCenter(this.seasonId),
-      players: this.draftService.getPlayers(
-        this.seasonId,
-        this.searchTerm,
-        this.selectedPosition === 'All' ? '' : this.selectedPosition,
-        this.currentPage,
-        this.pageSize
-      )
-    })
+    this.draftService.getCenter(this.seasonId)
       .pipe(
         finalize(() => {
           this.isLoading = false;
@@ -245,16 +208,8 @@ export class Draft implements OnInit, OnDestroy
         })
       )
       .subscribe({
-        next: ({ center, players }) => {
-          this.draftCenter = center;
-          this.draftOrder = center.draftOrder ?? [];
-          this.lastPicks = center.recentPicks ?? [];
-          this.players = players ?? [];
-
-          this.mapMySquadToSlots();
-          this.startTimer(center.state.secondsRemaining);
-
-          this.cdr.detectChanges();
+        next: center => {
+          this.applyDraftCenter(center);
         },
         error: err => {
           console.error('Error loading draft:', err);
@@ -264,248 +219,289 @@ export class Draft implements OnInit, OnDestroy
       });
   }
 
-startDraft(): void {
-  if (!this.seasonId || this.isLotteryRunning || this.isStartingDraft) {
-    return;
-  }
+  startDraft(): void {
+    if (!this.seasonId || this.isLotteryRunning || this.isStartingDraft) {
+      return;
+    }
 
-  this.errorMessage = '';
+    this.errorMessage = '';
 
-  // Si ya existe el orden del draft, ahora sí iniciar el draft.
-  if (this.draftOrder.length > 0) {
+    if (this.draftOrder.length > 0) {
+      this.isStartingDraft = true;
+
+      this.draftService.startDraft(this.seasonId)
+        .pipe(
+          finalize(() => {
+            this.isStartingDraft = false;
+            this.cdr.detectChanges();
+          })
+        )
+        .subscribe({
+          next: center => {
+            this.applyDraftCenter(center);
+            this.showToast('🚀 Draft started.');
+          },
+          error: err => {
+            console.error('Error starting draft:', err);
+            this.errorMessage = err?.error?.message || 'Could not start draft.';
+            this.cdr.detectChanges();
+          }
+        });
+
+      return;
+    }
+
+    this.isLotteryRunning = true;
     this.isStartingDraft = true;
+    this.lotteryDrawNumber = 1;
 
-    this.draftService.startDraft(this.seasonId)
-      .pipe(
-        finalize(() => {
-          this.isStartingDraft = false;
-          this.cdr.detectChanges();
-        })
-      )
-      .subscribe({
-        next: center => {
-          this.draftCenter = center;
-          this.draftOrder = center.draftOrder ?? [];
-          this.lastPicks = center.recentPicks ?? [];
-
-          this.mapMySquadToSlots();
-          this.startTimer(center.state.secondsRemaining);
-          this.loadPlayers();
-
-          this.showToast('🚀 Draft started.');
-          this.cdr.detectChanges();
-        },
-        error: err => {
-          console.error('Error starting draft:', err);
-
-          this.errorMessage =
-            err?.error?.message ||
-            'Could not start draft.';
-
-          this.cdr.detectChanges();
-        }
-      });
-
-    return;
+    this.showToast('🎲 Starting draft lottery...');
+    this.runLotteryDraw(1);
   }
-
-  // Si aún no existe el orden, correr la lotería.
-  this.isLotteryRunning = true;
-  this.isStartingDraft = true;
-  this.lotteryDrawNumber = 1;
-
-  this.showToast('🎲 Starting draft lottery...');
-  this.runLotteryDraw(1);
-}
 
   private runLotteryDraw(drawNumber: number): void {
-  this.lotteryDrawNumber = drawNumber;
-  this.cdr.detectChanges();
-
-  this.draftService.previewDraftOrder(
-    this.seasonId,
-    drawNumber
-  )
-    .subscribe({
-      next: preview => {
-        this.draftOrder = preview.draftOrder ?? [];
-        this.lastPicks = [];
-
-        this.cdr.detectChanges();
-
-        if (drawNumber < 3) {
-          this.showToast(`🎲 Draft lottery draw ${drawNumber} of 3...`);
-
-          this.lotteryTimeoutId = window.setTimeout(() => {
-            this.runLotteryDraw(drawNumber + 1);
-          }, 5000);
-
-          return;
-        }
-
-        const finalUserIds = this.draftOrder.map(x => x.userId);
-
-        this.draftService.generateDraftOrder(
-          this.seasonId,
-          finalUserIds
-        )
-          .pipe(
-            finalize(() => {
-              this.isLotteryRunning = false;
-              this.isStartingDraft = false;
-              this.cdr.detectChanges();
-            })
-          )
-          .subscribe({
-            next: center => {
-              this.draftCenter = center;
-              this.draftOrder = center.draftOrder ?? [];
-              this.lastPicks = center.recentPicks ?? [];
-
-              this.mapMySquadToSlots();
-              this.loadPlayers();
-
-              this.showToast('🏆 Final draft order saved. Ready to start.');
-              this.cdr.detectChanges();
-            },
-            error: err => {
-              console.error('Error saving final draft order:', err);
-
-              this.errorMessage =
-                err?.error?.message ||
-                'Could not save final draft order.';
-
-              this.cdr.detectChanges();
-            }
-          });
-      },
-      error: err => {
-        console.error('Error generating draft order preview:', err);
-
-        this.errorMessage =
-          err?.error?.message ||
-          'Could not generate draft order preview.';
-
-        this.isLotteryRunning = false;
-        this.isStartingDraft = false;
-
-        this.cdr.detectChanges();
-      }
-    });
-}
-
-  loadPlayers(): void {
-    if (!this.seasonId) {
-      return;
-    }
-
-    this.draftService.getPlayers(
-      this.seasonId,
-      this.searchTerm,
-      this.selectedPosition === 'All' ? '' : this.selectedPosition,
-      this.currentPage,
-      this.pageSize
-    )
-      .pipe(
-        finalize(() => {
-          this.cdr.detectChanges();
-        })
-      )
-      .subscribe({
-        next: players => {
-          this.players = players ?? [];
-        },
-        error: err => {
-          console.error('Error loading players:', err);
-          this.errorMessage = err?.error?.message || 'Error loading players.';
-        }
-      });
-  }
-
-  setPosition(position: string): void {
-    this.selectedPosition = position;
-    this.currentPage = 1;
-    this.loadPlayers();
-  }
-
-  nextPage(): void {
-    this.currentPage++;
-    this.loadPlayers();
-  }
-
-  previousPage(): void {
-    if (this.currentPage <= 1) {
-      return;
-    }
-
-    this.currentPage--;
-    this.loadPlayers();
-  }
-
-  draftPlayer(player: DraftPlayer): void {
-    if (!this.isMyTurn) {
-      this.showToast(
-        `⏳ You're on deck. ${this.currentClubName} is currently on the clock.`
-      );
-      return;
-    }
-
-    if (!this.seasonId) {
-      this.showToast('Season was not found.');
-      return;
-    }
-
-    if (!this.isDraftActive) {
-      this.showToast('The draft is not active right now.');
-      return;
-    }
-
-    if (this.isPicking) {
-      return;
-    }
-
-    const playerValue = player.value ?? 0;
-
-    if (playerValue > this.currentBudget) {
-      this.showToast(
-        `❌ Not enough budget. ${player.name} costs €${playerValue.toLocaleString()} and your budget is €${this.currentBudget.toLocaleString()}.`
-      );
-      return;
-    }
-
-    this.isPicking = true;
-    this.errorMessage = '';
+    this.lotteryDrawNumber = drawNumber;
     this.cdr.detectChanges();
 
-    this.draftService.makePick(this.seasonId, player.gamePlayerId)
-      .pipe(
-        finalize(() => {
-          this.isPicking = false;
-          this.cdr.detectChanges();
-        })
-      )
+    this.draftService.previewDraftOrder(this.seasonId, drawNumber)
       .subscribe({
-        next: () => {
-          this.loadDraft();
+        next: preview => {
+          this.draftOrder = preview.draftOrder ?? [];
+          this.lastPicks = [];
+          this.cdr.detectChanges();
+
+          if (drawNumber < 3) {
+            this.showToast(`🎲 Draft lottery draw ${drawNumber} of 3...`);
+
+            this.lotteryTimeoutId = window.setTimeout(() => {
+              this.runLotteryDraw(drawNumber + 1);
+            }, 5000);
+
+            return;
+          }
+
+          const finalUserIds = this.draftOrder.map(x => x.userId);
+
+          this.draftService.generateDraftOrder(this.seasonId, finalUserIds)
+            .pipe(
+              finalize(() => {
+                this.isLotteryRunning = false;
+                this.isStartingDraft = false;
+                this.cdr.detectChanges();
+              })
+            )
+            .subscribe({
+              next: center => {
+                this.applyDraftCenter(center);
+                this.showToast('🏆 Final draft order saved. Ready to start.');
+              },
+              error: err => {
+                console.error('Error saving final draft order:', err);
+                this.errorMessage = err?.error?.message || 'Could not save final draft order.';
+                this.cdr.detectChanges();
+              }
+            });
         },
         error: err => {
-          console.error('Error making draft pick:', err);
-
-          this.errorMessage =
-            err?.error?.message ||
-            `Could not draft ${player.name}. Please try again.`;
-
+          console.error('Error generating draft order preview:', err);
+          this.errorMessage = err?.error?.message || 'Could not generate draft order preview.';
+          this.isLotteryRunning = false;
+          this.isStartingDraft = false;
           this.cdr.detectChanges();
         }
       });
   }
 
-  getPrimaryPosition(position: string): string {
-    if (!position) {
-      return '';
+  onChildRefreshRequested(): void {
+    this.loadDraft();
+  }
+
+  onChildToast(message: string): void {
+    this.showToast(message);
+  }
+
+  onIncomingTradeCleared(): void {
+    this.incomingTrade = null;
+  }
+
+  private applyDraftCenter(center: DraftCenter): void {
+    this.draftCenter = center;
+    this.draftOrder = center.draftOrder ?? [];
+    this.lastPicks = center.recentPicks ?? [];
+
+    this.playerRefreshKey++;
+    this.tradeRefreshKey++;
+
+    this.startTimer(center.state.secondsRemaining);
+    this.cdr.detectChanges();
+  }
+
+  private async connectDraftHub(): Promise<void> {
+    if (!this.seasonId || this.isConnectingHub) {
+      return;
     }
 
-    return position.split(',')[0].trim();
+    if (this.hubConnection?.state === HubConnectionState.Connected) {
+      await this.joinDraftGroup();
+      return;
+    }
+
+    this.isConnectingHub = true;
+
+    try {
+      const apiBaseUrl = API_ENDPOINTS.draft.replace('/api/draft', '');
+      const hubUrl = `${apiBaseUrl}/hubs/draft`;
+
+      this.hubConnection = new HubConnectionBuilder()
+        .withUrl(hubUrl, {
+          accessTokenFactory: async () => {
+            return await firstValueFrom(this.auth.getAccessTokenSilently());
+          }
+        })
+        .withAutomaticReconnect()
+        .configureLogging(LogLevel.Information)
+        .build();
+
+      this.registerDraftHubListeners();
+
+      this.hubConnection.onreconnected(async () => {
+        await this.joinDraftGroup();
+        this.loadDraft();
+      });
+
+      await this.hubConnection.start();
+      await this.joinDraftGroup();
+
+      console.log('Draft SignalR connected.');
+    } catch (err) {
+      console.error('Error connecting Draft SignalR:', err);
+    } finally {
+      this.isConnectingHub = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private async joinDraftGroup(): Promise<void> {
+    if (!this.hubConnection || !this.seasonId) {
+      return;
+    }
+
+    if (this.hubConnection.state !== HubConnectionState.Connected) {
+      return;
+    }
+
+    try {
+      await this.hubConnection.invoke('JoinDraft', this.seasonId);
+    } catch (err) {
+      console.error('Error joining draft group:', err);
+    }
+  }
+
+  private registerDraftHubListeners(): void {
+    if (!this.hubConnection) {
+      return;
+    }
+
+    this.hubConnection.off('DraftTurnStarted');
+    this.hubConnection.off('DraftPickMade');
+    this.hubConnection.off('DraftCompleted');
+    this.hubConnection.off('DraftPickTradeProposed');
+    this.hubConnection.off('DraftPickTradeAccepted');
+    this.hubConnection.off('DraftPickTradeRejected');
+    this.hubConnection.off('DraftPickTradeCancelled');
+
+    this.hubConnection.on('DraftTurnStarted', payload => {
+      this.showToast(`⏱️ ${payload?.clubName ?? 'Next team'} is on the clock.`);
+      this.loadDraft();
+    });
+
+    this.hubConnection.on('DraftPickMade', payload => {
+      this.showToast(
+        `✅ ${payload?.clubName ?? 'A club'} selected ${payload?.playerName ?? 'a player'}.`
+      );
+
+      this.loadDraft();
+    });
+
+    this.hubConnection.on('DraftCompleted', () => {
+      this.showToast('🏁 Draft completed.');
+      this.loadDraft();
+    });
+
+    this.hubConnection.on('DraftPickTradeProposed', (trade: DraftPickTrade) => {
+      if (this.isIncomingTradeForMe(trade)) {
+        this.incomingTrade = trade;
+        this.showToast(`⚡ Trade offer from ${trade.fromClubName}`);
+      } else {
+        this.showToast(`⚡ New draft pick trade proposed: ${trade.fromClubName} → ${trade.toClubName}`);
+      }
+
+      this.tradeRefreshKey++;
+      this.loadDraft();
+      this.cdr.detectChanges();
+    });
+
+    this.hubConnection.on('DraftPickTradeAccepted', (trade: DraftPickTrade) => {
+      this.showToast(`✅ Draft pick trade accepted: ${trade.fromClubName} → ${trade.toClubName}`);
+      this.tradeRefreshKey++;
+      this.loadDraft();
+    });
+
+    this.hubConnection.on('DraftPickTradeRejected', (trade: DraftPickTrade) => {
+      this.showToast(`❌ Draft pick trade rejected: ${trade.fromClubName} → ${trade.toClubName}`);
+      this.tradeRefreshKey++;
+      this.loadDraft();
+    });
+
+    this.hubConnection.on('DraftPickTradeCancelled', (trade: DraftPickTrade) => {
+      this.showToast(`🚫 Draft pick trade cancelled: ${trade.fromClubName} → ${trade.toClubName}`);
+      this.tradeRefreshKey++;
+      this.loadDraft();
+    });
+  }
+
+  private async disconnectDraftHub(): Promise<void> {
+    if (!this.hubConnection) {
+      return;
+    }
+
+    try {
+      if (this.hubConnection.state === HubConnectionState.Connected && this.seasonId) {
+        await this.hubConnection.invoke('LeaveDraft', this.seasonId);
+      }
+
+      await this.hubConnection.stop();
+    } catch (err) {
+      console.error('Error disconnecting Draft SignalR:', err);
+    }
+  }
+
+  private getMyClubName(): string {
+    const myOrder = (this.draftCenter?.draftOrder ?? [])
+      .find(team => team.userId === this.draftCenter?.myUserId);
+
+    return myOrder?.clubName ?? '';
+  }
+
+  private getMyUserClubId(): string {
+    const myOrder = (this.draftCenter?.draftOrder ?? [])
+      .find(team => team.userId === this.draftCenter?.myUserId) as
+      | (DraftOrder & { userClubId?: string })
+      | undefined;
+
+    return myOrder?.userClubId ?? '';
+  }
+
+  private isIncomingTradeForMe(trade: DraftPickTrade): boolean {
+    const myUserClubId = this.getMyUserClubId();
+
+    if (myUserClubId) {
+      return trade.toUserClubId === myUserClubId;
+    }
+
+    const myClubName = this.getMyClubName();
+
+    return !!myClubName && trade.toClubName === myClubName;
   }
 
   private showToast(message: string): void {
@@ -518,26 +514,6 @@ startDraft(): void {
         this.cdr.detectChanges();
       }
     }, 3500);
-  }
-
-  private mapMySquadToSlots(): void {
-    this.squadSlots = this.squadSlots.map(slot => ({
-      position: slot.position
-    }));
-
-    const squadPlayers = this.draftCenter?.mySquad.players ?? [];
-
-    squadPlayers.forEach(player => {
-      const primaryPosition = this.getPrimaryPosition(player.position);
-
-      const slot =
-        this.squadSlots.find(x => !x.player && x.position === primaryPosition) ??
-        this.squadSlots.find(x => !x.player);
-
-      if (slot) {
-        slot.player = player;
-      }
-    });
   }
 
   private startTimer(seconds: number): void {
@@ -569,12 +545,12 @@ startDraft(): void {
   }
 
   private formatTime(totalSeconds: number): string {
-  const safeSeconds = Math.max(0, totalSeconds);
-  const minutes = Math.floor(safeSeconds / 60);
-  const seconds = safeSeconds % 60;
+    const safeSeconds = Math.max(0, totalSeconds);
+    const minutes = Math.floor(safeSeconds / 60);
+    const seconds = safeSeconds % 60;
 
-  return `${minutes.toString().padStart(2, '0')}:${seconds
-    .toString()
-    .padStart(2, '0')}`;
-}
+    return `${minutes.toString().padStart(2, '0')}:${seconds
+      .toString()
+      .padStart(2, '0')}`;
+  }
 }

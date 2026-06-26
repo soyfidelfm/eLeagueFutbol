@@ -51,6 +51,9 @@ public class AppDbContext : DbContext
 	public DbSet<DraftSession> DraftSessions => Set<DraftSession>();
 	public DbSet<DraftOrder> DraftOrders => Set<DraftOrder>();
 	public DbSet<DraftPick> DraftPicks => Set<DraftPick>();
+	public DbSet<DraftPickAsset> DraftPickAssets { get; set; }
+	public DbSet<DraftPickTrade> DraftPickTrades { get; set; }
+	public DbSet<DraftPickTradeAsset> DraftPickTradeAssets { get; set; }
 
 	public DbSet<NotificationToken> NotificationTokens => Set<NotificationToken>();
 	public DbSet<Message> Messages => Set<Message>();

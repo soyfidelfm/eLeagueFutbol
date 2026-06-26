@@ -21,7 +21,5 @@ public class Notification : BaseEntity
 
 	public bool IsRead { get; set; }
 
-	public DateTime CreatedAtUTC { get; set; }
-
 	public DateTime? ReadAtUTC { get; set; }
 }

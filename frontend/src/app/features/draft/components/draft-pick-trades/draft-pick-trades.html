@@ -1,0 +1,187 @@
+<button
+  class="trade-button"
+  type="button"
+  (click)="openTradeModal()"
+  [disabled]="isLotteryRunning">
+
+  <i class="fa-solid fa-arrow-right-arrow-left"></i>
+  Trade Picks
+
+</button>
+
+<div
+  class="trade-notification"
+  *ngIf="hasIncomingTrade">
+
+  <div class="trade-notification-header">
+
+    <i class="fa-solid fa-handshake"></i>
+
+    <div>
+      <strong>Trade Offer</strong>
+      <small>{{ incomingTrade?.fromClubName }}</small>
+    </div>
+
+  </div>
+
+  <p *ngIf="incomingTrade?.message">
+    "{{ incomingTrade?.message }}"
+  </p>
+
+  <div class="trade-actions">
+
+    <button
+      class="accept"
+      type="button"
+      [disabled]="!canRespondTrade"
+      (click)="acceptIncomingTrade()">
+
+      Accept
+
+    </button>
+
+    <button
+      class="reject"
+      type="button"
+      [disabled]="!canRespondTrade"
+      (click)="rejectIncomingTrade()">
+
+      Reject
+
+    </button>
+
+  </div>
+
+</div>
+
+<div
+  class="trade-modal-backdrop"
+  *ngIf="showTradeModal">
+
+  <div class="trade-modal">
+
+    <div class="trade-modal-header">
+
+      <h2>Trade Draft Picks</h2>
+
+      <button
+        type="button"
+        (click)="closeTradeModal()">
+
+        ✕
+
+      </button>
+
+    </div>
+
+    <div class="trade-modal-body">
+
+      <label>
+
+        Trade With
+
+        <select [(ngModel)]="selectedTradeClubId">
+
+          <option value="">
+            Select Club
+          </option>
+
+          <option
+            *ngFor="let club of tradeTargetClubs; trackBy: trackByClub"
+            [value]="club.userClubId">
+
+            {{ club.clubName }}
+
+          </option>
+
+        </select>
+
+      </label>
+
+      <label>
+
+        Message
+
+        <textarea
+          rows="3"
+          [(ngModel)]="tradeMessage"
+          placeholder="Optional message...">
+        </textarea>
+
+      </label>
+
+      <div
+        class="loading-state"
+        *ngIf="isLoadingTradablePicks">
+
+        Loading tradable picks...
+
+      </div>
+
+      <div
+        class="empty-state"
+        *ngIf="!isLoadingTradablePicks && !hasTradablePicks">
+
+        No tradable picks available.
+
+      </div>
+
+      <div
+        class="trade-picks"
+        *ngIf="!isLoadingTradablePicks && hasTradablePicks">
+
+        <div
+          class="trade-pick-card"
+          *ngFor="let pick of tradablePicks; trackBy: trackByPick"
+          [class.selected]="isPickSelected(pick.draftPickAssetId)"
+          (click)="togglePickSelection(pick.draftPickAssetId)">
+
+          <div>
+
+            <strong>
+              Round {{ pick.roundNumber }}
+            </strong>
+
+            <small>
+              Pick {{ pick.pickNumber }}
+            </small>
+
+          </div>
+
+          <i
+            class="fa-solid"
+            [class.fa-circle]="!isPickSelected(pick.draftPickAssetId)"
+            [class.fa-circle-check]="isPickSelected(pick.draftPickAssetId)">
+          </i>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="trade-modal-footer">
+
+      <button
+        type="button"
+        (click)="closeTradeModal()">
+
+        Cancel
+
+      </button>
+
+      <button
+        class="primary"
+        type="button"
+        [disabled]="!canSubmitTrade"
+        (click)="sendTradeOffer()">
+
+        Send Offer
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>

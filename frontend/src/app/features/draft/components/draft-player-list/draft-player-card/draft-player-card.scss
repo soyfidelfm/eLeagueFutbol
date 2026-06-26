@@ -1,0 +1,441 @@
+.player-card-shell {
+  width: 220px;
+  max-width: 220px;
+  margin: 0 auto 26px;
+
+  flex-shrink: 0;
+
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    filter: drop-shadow(0 0 18px rgba(0, 255, 136, 0.25));
+  }
+}
+
+.player-card-art {
+  position: relative;
+
+  width: 220px;
+  height: 310px;
+
+  overflow: visible;
+}
+
+.card-background {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.player-rating,
+.player-position,
+.club-badge,
+.player-image,
+.player-name,
+.player-meta,
+.player-card-stats {
+  position: absolute;
+  z-index: 2;
+}
+
+.player-rating {
+  top: 43px;
+  left: 39px;
+
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 31px;
+  font-weight: 900;
+  line-height: 1;
+
+  text-shadow:
+    0 3px 5px rgba(0, 0, 0, 0.85),
+    0 0 12px rgba(0, 255, 136, 0.35);
+}
+
+.player-position {
+  top: 78px;
+  left: 40px;
+
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+
+  text-shadow:
+    0 3px 5px rgba(0, 0, 0, 0.85),
+    0 0 8px rgba(0, 255, 136, 0.3);
+}
+
+.club-badge {
+  top: 46px;
+  right: 34px;
+
+  max-width: 92px;
+  padding: 6px 9px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 9px;
+  font-weight: 800;
+  text-align: center;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-image {
+  top: 78px;
+  left: 47px;
+  right: 47px;
+  height: 112px;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.player-image img {
+  max-width: 100%;
+  max-height: 124px;
+
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+
+  filter:
+    drop-shadow(0 13px 13px rgba(0, 0, 0, 0.65))
+    drop-shadow(0 0 8px rgba(0, 255, 136, 0.18));
+}
+
+.player-name {
+  top: 195px;
+  left: 31px;
+  right: 31px;
+
+  color: #fff;
+  text-align: center;
+
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  text-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.9),
+    0 0 10px rgba(0, 255, 136, 0.22);
+}
+
+.player-meta {
+  top: 221px;
+  left: 31px;
+  right: 31px;
+
+  color: rgba(190, 198, 216, 0.82);
+  text-align: center;
+
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
+}
+
+.player-card-stats {
+  top: 252px;
+  left: 29px;
+  right: 29px;
+
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+
+  color: #fff;
+  text-align: center;
+}
+
+.player-card-stats div {
+  min-width: 0;
+  padding: 5px 2px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.player-card-stats strong {
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.85),
+    0 0 7px rgba(0, 255, 136, 0.25);
+}
+
+.player-card-stats span {
+  margin-top: 3px;
+
+  color: rgba(190, 198, 216, 0.8);
+  font-size: 7px;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
+}
+
+.player-card-actions {
+  margin-top: 12px;
+  padding: 0 4px;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.player-value {
+  min-width: 0;
+
+  small {
+    display: block;
+    margin-bottom: 6px;
+
+    color: rgba(190, 198, 216, 0.78);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  strong {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    color: #00ff88;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1;
+
+    white-space: nowrap;
+
+    text-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.85),
+      0 0 10px rgba(0, 255, 136, 0.55);
+  }
+
+  i {
+    width: 16px;
+    height: 16px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+
+    background: #00ff88;
+    color: #052011;
+
+    font-size: 8px;
+    text-shadow: none;
+  }
+}
+
+.draft-button {
+  min-width: 92px;
+  height: 38px;
+  padding: 0 12px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border: 0;
+  border-radius: 15px;
+
+  background: linear-gradient(135deg, #00ff88, #00a85b);
+  color: #03130a;
+
+  font-size: 13px;
+  font-weight: 900;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 0 16px rgba(0, 255, 136, 0.3),
+    inset 0 0 10px rgba(255, 255, 255, 0.18);
+
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    filter 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  i {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .player-card-shell {
+    width: 180px;
+    max-width: 180px;
+    margin-bottom: 22px;
+  }
+
+  .player-card-art {
+    width: 180px;
+    height: 255px;
+  }
+
+  .player-rating {
+    top: 35px;
+    left: 32px;
+    font-size: 25px;
+  }
+
+  .player-position {
+    top: 64px;
+    left: 33px;
+    font-size: 11px;
+  }
+
+  .club-badge {
+    top: 37px;
+    right: 27px;
+
+    max-width: 76px;
+    padding: 5px 7px;
+
+    font-size: 8px;
+  }
+
+  .player-image {
+    top: 64px;
+    left: 39px;
+    right: 39px;
+    height: 91px;
+  }
+
+  .player-image img {
+    max-height: 102px;
+  }
+
+  .player-name {
+    top: 160px;
+    left: 25px;
+    right: 25px;
+
+    font-size: 16px;
+  }
+
+  .player-meta {
+    top: 181px;
+    left: 25px;
+    right: 25px;
+
+    font-size: 9px;
+  }
+
+  .player-card-stats {
+    top: 207px;
+    left: 23px;
+    right: 23px;
+    gap: 2px;
+  }
+
+  .player-card-stats div {
+    padding: 4px 1px;
+    border-radius: 9px;
+  }
+
+  .player-card-stats strong {
+    font-size: 10px;
+  }
+
+  .player-card-stats span {
+    font-size: 6px;
+  }
+
+  .player-card-actions {
+    margin-top: 10px;
+    padding: 0 2px;
+    gap: 6px;
+  }
+
+  .player-value {
+    small {
+      margin-bottom: 5px;
+      font-size: 9px;
+    }
+
+    strong {
+      gap: 5px;
+      font-size: 11px;
+    }
+
+    i {
+      width: 14px;
+      height: 14px;
+      font-size: 7px;
+    }
+  }
+
+  .draft-button {
+    min-width: 76px;
+    height: 34px;
+    padding: 0 10px;
+
+    border-radius: 13px;
+
+    font-size: 11px;
+
+    i {
+      font-size: 12px;
+    }
+  }
+}

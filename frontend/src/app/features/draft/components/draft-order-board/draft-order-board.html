@@ -1,0 +1,106 @@
+<aside class="panel draft-order-panel">
+
+  <div class="order-header">
+    <div>
+      <h2>Current Round Order</h2>
+      <p>{{ roundLabel }}</p>
+    </div>
+
+    <span
+      class="current-club"
+      *ngIf="currentPickTeam">
+      {{ currentPickClubName }}
+    </span>
+  </div>
+
+  <div
+    class="empty-state"
+    *ngIf="!hasDraftOrder">
+
+    <i class="fa-solid fa-hourglass-half"></i>
+    <span>Waiting for draft lottery...</span>
+
+  </div>
+
+  <div
+    class="draft-order-list"
+    *ngIf="hasDraftOrder">
+
+    <div
+      class="draft-order-item"
+      *ngFor="let team of currentRoundOrder; trackBy: trackByUserId"
+      [class.current]="team.isCurrentPick">
+
+      <span class="pick-number">
+        {{ team.pickOrder }}
+      </span>
+
+      <span class="team-logo">
+
+        <img
+          *ngIf="team.logoUrl; else currentLogoFallback"
+          [src]="team.logoUrl"
+          [alt]="team.clubName" />
+
+        <ng-template #currentLogoFallback>
+          ⚽
+        </ng-template>
+
+      </span>
+
+      <span class="team-name">
+        {{ team.clubName }}
+      </span>
+
+      <span
+        class="current-badge"
+        *ngIf="team.isCurrentPick">
+        Current Pick
+      </span>
+
+    </div>
+
+  </div>
+
+  <div
+    class="round-divider"
+    *ngIf="hasDraftOrder">
+
+    {{ nextRoundLabel }}
+
+  </div>
+
+  <div
+    class="draft-order-list reverse"
+    *ngIf="hasDraftOrder">
+
+    <div
+      class="draft-order-item"
+      *ngFor="let team of nextRoundOrder; trackBy: trackByUserId">
+
+      <span class="pick-number">
+        {{ team.pickOrder }}
+      </span>
+
+      <span class="team-logo">
+
+        <img
+          *ngIf="team.logoUrl; else nextLogoFallback"
+          [src]="team.logoUrl"
+          [alt]="team.clubName" />
+
+        <ng-template #nextLogoFallback>
+          ⚽
+        </ng-template>
+
+      </span>
+
+      <span class="team-name">
+        {{ team.clubName }}
+      </span>
+
+    </div>
+
+  </div>
+
+</aside>

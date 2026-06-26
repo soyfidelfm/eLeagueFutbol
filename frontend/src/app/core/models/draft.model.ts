@@ -82,3 +82,34 @@ export interface DraftPlayer {
 export interface MakeDraftPick {
   gamePlayerId: string;
 }
+export interface DraftPickAsset {
+  draftPickAssetId: string;
+  seasonId: string;
+  roundNumber: number;
+  pickNumber: number;
+  originalUserClubId: string;
+  originalClubName: string;
+  currentOwnerUserClubId: string;
+  currentOwnerClubName: string;
+  isUsed: boolean;
+}
+
+export interface DraftPickTrade {
+  draftPickTradeId: string;
+  seasonId: string;
+  fromUserClubId: string;
+  fromClubName: string;
+  toUserClubId: string;
+  toClubName: string;
+  status: 'Pending' | 'Accepted' | 'Rejected' | 'Cancelled' | string;
+  message: string;
+  createdAtUTC: string;
+  respondedAtUTC?: string | null;
+  picks: DraftPickAsset[];
+}
+
+export interface ProposeDraftPickTrade {
+  toUserClubId: string;
+  draftPickAssetIds: string[];
+  message?: string;
+}

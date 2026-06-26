@@ -2,15 +2,20 @@
 
 using backend.Data;
 using backend.Features.Notifications.Dtos;
+using backend.Features.Realtime.Services;
 using Microsoft.EntityFrameworkCore;
 
 public class NotificationInboxService : INotificationInboxService
 {
 	private readonly AppDbContext _context;
+	private readonly IRealtimeService _realtimeService;
 
-	public NotificationInboxService(AppDbContext context)
+	public NotificationInboxService(
+		AppDbContext context,
+		IRealtimeService realtimeService)
 	{
 		_context = context;
+		_realtimeService = realtimeService;
 	}
 
 	public async Task<List<NotificationDto>> GetMyNotificationsAsync(string auth0Id)
@@ -93,6 +98,21 @@ public class NotificationInboxService : INotificationInboxService
 		notification.ReadAtUTC = DateTime.UtcNow;
 
 		await _context.SaveChangesAsync();
+
+		var unreadCount = await _context.Notifications
+			.CountAsync(x =>
+				x.UserId == me.UserId &&
+				!x.IsDeleted &&
+				!x.IsRead);
+
+		await _realtimeService.SendToUserAsync(
+			me.UserId,
+			"NotificationRead",
+			new
+			{
+				notificationId = notification.NotificationId,
+				unreadCount
+			});
 	}
 
 	public async Task MarkAllAsReadAsync(string auth0Id)
@@ -124,5 +144,13 @@ public class NotificationInboxService : INotificationInboxService
 		}
 
 		await _context.SaveChangesAsync();
+
+		await _realtimeService.SendToUserAsync(
+			me.UserId,
+			"AllNotificationsRead",
+			new
+			{
+				unreadCount = 0
+			});
 	}
 }

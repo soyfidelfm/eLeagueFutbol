@@ -1,0 +1,130 @@
+<aside class="panel squad-panel">
+
+  <div class="panel-header">
+
+    <div>
+
+      <h2>Your Squad</h2>
+
+      <p>
+        {{ draftedCount }}/{{ squadSlots.length }} players
+      </p>
+
+      <div class="budget-display">
+
+        <i class="fa-solid fa-coins"></i>
+
+        <div>
+
+          <small>
+            Budget Remaining
+          </small>
+
+          <strong>
+            ${{ currentBudget | number:'1.0-0' }}
+          </strong>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="pitch">
+
+    <div
+      class="squad-slot"
+      *ngFor="let slot of squadSlots; trackBy: trackBySlot"
+      [class.filled]="slot.player">
+
+      <span *ngIf="!slot.player">
+        {{ slot.position }}
+      </span>
+
+      <div
+        class="mini-player"
+        *ngIf="slot.player">
+
+        <strong>
+          {{ slot.player.overall }}
+        </strong>
+
+        <small>
+          {{ slot.player.position }}
+        </small>
+
+        <span>
+          {{ slot.player.name }}
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="position-summary">
+
+    <h3>Position Summary</h3>
+
+    <div
+      class="summary-row"
+      *ngFor="let summary of positionSummary">
+
+      <span>
+        {{ summary.position }}
+      </span>
+
+      <div>
+        <span
+          [style.width.%]="summary.percent">
+        </span>
+      </div>
+
+      <small>
+        {{ summary.current }}/{{ summary.total }}
+      </small>
+
+    </div>
+
+  </div>
+
+  <div class="last-picks">
+
+    <h3>Last Picks</h3>
+
+    <p>
+      Round {{ currentRound }}
+    </p>
+
+    <div
+      class="last-pick-item"
+      *ngFor="let pick of lastPicks; trackBy: trackByPick">
+
+      <span>
+        Pick {{ pick.pickNumber }}
+      </span>
+
+      <strong>
+        {{ pick.clubName }}
+      </strong>
+
+      <small>
+        {{ pick.playerName }}
+      </small>
+
+      <em>
+        {{ pick.overall }}
+      </em>
+
+    </div>
+
+    <button type="button">
+      View all picks
+    </button>
+
+  </div>
+
+</aside>

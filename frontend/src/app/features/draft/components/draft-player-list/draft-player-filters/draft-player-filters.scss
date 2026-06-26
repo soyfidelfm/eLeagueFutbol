@@ -1,0 +1,70 @@
+:host {
+  display: block;
+}
+
+.players-header {
+  padding: 20px 20px 12px;
+}
+
+.search-box {
+  margin: 0 18px 14px;
+}
+
+.search-box input:focus {
+  color: #fff;
+}
+
+.filters-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  padding: 0 18px 18px;
+}
+
+.position-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.position-tabs button {
+  width: auto;
+  min-width: 42px;
+
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    color .2s ease;
+}
+
+.position-tabs button:hover:not(.active) {
+  border-color: rgba(0, 255, 136, .35);
+  color: #fff;
+}
+
+.sort-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+
+  strong {
+    color: var(--text-main);
+  }
+
+  i {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 700px) {
+  .filters-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
