@@ -1,94 +1,80 @@
-<article class="player-card-shell">
+<article class="player-card">
 
-  <div class="player-card-art">
+  <div class="card-top">
 
-    <img
-      class="card-background"
-      src="https://res.cloudinary.com/dwgojz5cu/image/upload/v1781595337/cardRegular_ivakii.png"
-      alt="Player Card" />
-
-    <div class="player-rating">
-      {{ player.overall }}
-    </div>
-
-    <div class="player-position">
-      {{ primaryPosition }}
+    <div class="rating-box">
+      <strong>{{ player.overall }}</strong>
+      <span>{{ primaryPosition }}</span>
     </div>
 
     <div class="club-badge">
       {{ player.gameClubName || 'Free Agent' }}
     </div>
 
-    <div class="player-image">
+  </div>
 
-      <img
-        [src]="playerImage"
-        [alt]="player.name"
-        loading="lazy" />
+  <div class="player-image-wrap">
+    <img
+      [src]="playerImage"
+      [alt]="player.name"
+      class="player-image" />
+  </div>
 
-    </div>
+  <div class="player-info">
 
-    <div class="player-name">
-      {{ player.name }}
-    </div>
+    <h3>{{ player.name }}</h3>
 
-    <div class="player-meta">
+    <p>
       {{ player.nation || 'Unknown' }}
       <span *ngIf="player.age">• {{ player.age }} yrs</span>
+    </p>
+
+  </div>
+
+  <div class="stats-grid">
+
+    <div>
+      <strong>{{ player.pace ?? '-' }}</strong>
+      <span>PAC</span>
     </div>
 
-    <div class="player-card-stats">
+    <div>
+      <strong>{{ player.shooting ?? '-' }}</strong>
+      <span>SHO</span>
+    </div>
 
-      <div>
-        <strong>{{ player.pace ?? '-' }}</strong>
-        <span>PAC</span>
-      </div>
+    <div>
+      <strong>{{ player.passing ?? '-' }}</strong>
+      <span>PAS</span>
+    </div>
 
-      <div>
-        <strong>{{ player.shooting ?? '-' }}</strong>
-        <span>SHO</span>
-      </div>
+    <div>
+      <strong>{{ player.dribbling ?? '-' }}</strong>
+      <span>DRI</span>
+    </div>
 
-      <div>
-        <strong>{{ player.passing ?? '-' }}</strong>
-        <span>PAS</span>
-      </div>
+    <div>
+      <strong>{{ player.defending ?? '-' }}</strong>
+      <span>DEF</span>
+    </div>
 
-      <div>
-        <strong>{{ player.dribbling ?? '-' }}</strong>
-        <span>DRI</span>
-      </div>
-
-      <div>
-        <strong>{{ player.defending ?? '-' }}</strong>
-        <span>DEF</span>
-      </div>
-
-      <div>
-        <strong>{{ player.physic ?? '-' }}</strong>
-        <span>PHY</span>
-      </div>
-
+    <div>
+      <strong>{{ player.physic ?? '-' }}</strong>
+      <span>PHY</span>
     </div>
 
   </div>
 
-  <div class="player-card-actions">
+  <div class="card-bottom">
 
-    <div class="player-value">
-
+    <div class="price">
       <small>Value</small>
-
-      <strong>
-        <i class="fa-solid fa-sack-dollar"></i>
-        €{{ price | number:'1.0-0' }}
-      </strong>
-
+      <strong>${{ price | number:'1.0-0' }}</strong>
     </div>
 
     <button
-      class="draft-button"
       type="button"
+      class="draft-btn"
       [disabled]="isDisabled"
       (click)="onDraft()">
 
@@ -99,7 +85,13 @@
         [class.fa-plus]="!isPicking">
       </i>
 
-      <span>Draft</span>
+      {{
+        !canAfford
+          ? 'No Budget'
+          : isPicking
+            ? 'Picking...'
+            : 'Draft'
+      }}
 
     </button>
 
