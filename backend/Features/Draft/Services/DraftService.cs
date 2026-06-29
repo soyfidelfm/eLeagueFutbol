@@ -126,7 +126,7 @@ public class DraftService : IDraftService
 					CurrentPickNumber = 0,
 					CurrentUserId = null,
 					CurrentClubName = "Draft not started",
-					SecondsRemaining = 0,
+					//SecondsRemaining = 0,
 					TotalTeams = 0,
 					PlayersPerTeam = 25
 				},
@@ -140,7 +140,7 @@ public class DraftService : IDraftService
 			};
 		}
 
-		await ProcessDraftTimerAsync(session);
+		//await ProcessDraftTimerAsync(session);
 
 		return await BuildDraftCenterAsync(seasonId, user.UserId, session);
 	}
@@ -190,9 +190,10 @@ public class DraftService : IDraftService
 			throw new Exception("First draft turn not found.");
 
 		await SendSystemAsync(
-			firstTurn.UserId,
-			"Es tu turno en el Draft",
-			"Estás en turno. Tienes 10 minutos para seleccionar tu jugador.");
+	firstTurn.UserId,
+	"It's Your Turn!",
+	"Choose wisely. Your next player could change everything."
+);
 
 		await _context.SaveChangesAsync();
 		await transaction.CommitAsync();
@@ -289,7 +290,7 @@ public class DraftService : IDraftService
 			.FirstOrDefaultAsync(x => x.SeasonId == seasonId && x.IsActive);
 
 		if (session is not null)
-			await ProcessDraftTimerAsync(session);
+			//await ProcessDraftTimerAsync(session);
 
 		page = page <= 0 ? 1 : page;
 		pageSize = pageSize <= 0 ? 30 : pageSize;
@@ -417,7 +418,7 @@ public class DraftService : IDraftService
 		if (session is null)
 			throw new Exception("Draft is not active.");
 
-		await ProcessDraftTimerAsync(session);
+		//await ProcessDraftTimerAsync(session);
 
 		if (!session.IsActive)
 			throw new Exception("Draft is not active.");
@@ -618,7 +619,8 @@ public class DraftService : IDraftService
 				CurrentClubName = session.IsActive
 	? currentTeam?.ClubName ?? string.Empty
 	: "Draft order ready",
-				SecondsRemaining = GetSecondsRemaining(session),
+				//SecondsRemaining = GetSecondsRemaining(session),
+				SecondsRemaining = -1,
 				TotalTeams = totalTeams,
 				PlayersPerTeam = session.PlayersPerTeam
 			},
@@ -694,8 +696,8 @@ public class DraftService : IDraftService
 		{
 			await SendSystemAsync(
 				nextTurn.UserId,
-				"Es tu turno en el Draft",
-				"Estás en turno. Tienes 10 minutos para seleccionar tu jugador.");
+				 "It's Your Turn!",
+	"Choose wisely. Your next player could change everything.");
 		}
 	}
 
