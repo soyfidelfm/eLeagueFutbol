@@ -29,7 +29,6 @@
   font-weight: 900;
 
   cursor: pointer;
-
   transition: .22s ease;
 
   i {
@@ -84,7 +83,6 @@
   small {
     display: block;
     margin-top: 3px;
-
     color: rgba(255,255,255,.6);
     font-size: .78rem;
   }
@@ -110,9 +108,7 @@
     border-radius: 12px;
 
     font-weight: 900;
-
     cursor: pointer;
-
     transition: .22s ease;
 
     &:disabled {
@@ -228,24 +224,101 @@
   font-weight: 800;
 }
 
-.trade-modal-body select,
 .trade-modal-body textarea {
   width: 100%;
 
   padding: 12px 14px;
 
-  border: 1px solid rgba(0,255,136,.18);
+  border: 1px solid rgba(0,255,136,.22);
   border-radius: 14px;
 
   background: rgba(255,255,255,.04);
   color: #fff;
 
+  outline: none;
   resize: vertical;
 
-  outline: none;
+  transition:
+    border-color .22s ease,
+    box-shadow .22s ease,
+    background .22s ease;
 
   &:focus {
     border-color: #00ff88;
+
+    box-shadow:
+      0 0 0 3px rgba(0,255,136,.12),
+      0 0 20px rgba(0,255,136,.14);
+
+    background: rgba(255,255,255,.06);
+  }
+}
+
+.trade-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  padding: 20px 22px;
+
+  border-top: 1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8,18,22,.9),
+      rgba(2,7,9,.98)
+    );
+
+  button {
+    min-width: 140px;
+    height: 46px;
+
+    border: none;
+    border-radius: 14px;
+
+    font-weight: 900;
+    font-size: .9rem;
+
+    cursor: pointer;
+    transition: .22s ease;
+
+    &:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+  }
+
+  button:first-child {
+    background: rgba(255,255,255,.08);
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: rgba(255,255,255,.12);
+    }
+  }
+
+  .primary {
+    background:
+      linear-gradient(
+        135deg,
+        #00ff88,
+        #00cf6d
+      );
+
+    color: #021008;
+
+    box-shadow:
+      0 0 20px rgba(0,255,136,.22);
+
+    &:hover:not(:disabled) {
+      box-shadow:
+        0 0 28px rgba(0,255,136,.32);
+    }
   }
 }
 
@@ -257,6 +330,7 @@
 
   color: rgba(255,255,255,.6);
 }
+
 @media (max-width: 700px) {
   .trade-modal-backdrop {
     align-items: flex-end;
@@ -279,5 +353,17 @@
 
   .trade-actions {
     flex-direction: column;
+  }
+
+  .trade-modal-footer {
+    flex-direction: column-reverse;
+    padding-bottom: calc(
+      18px + env(safe-area-inset-bottom)
+    );
+
+    button {
+      width: 100%;
+      min-width: unset;
+    }
   }
 }

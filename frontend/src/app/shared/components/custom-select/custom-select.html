@@ -1,0 +1,64 @@
+<div
+  class="custom-select"
+  (click)="stopPropagation($event)">
+
+  <button
+    type="button"
+    class="select-trigger"
+    [class.open]="isOpen"
+    [disabled]="disabled"
+    (click)="toggle()">
+
+    <div class="selected-value">
+
+      <img
+        *ngIf="selectedItem?.imageUrl"
+        [src]="selectedItem?.imageUrl">
+
+      <i
+        *ngIf="selectedItem?.icon"
+        [class]="selectedItem?.icon">
+      </i>
+
+      <span>
+        {{ selectedItem?.label ?? placeholder }}
+      </span>
+
+    </div>
+
+    <i
+      class="fa-solid fa-chevron-down"
+      [class.rotated]="isOpen">
+    </i>
+
+  </button>
+
+  <div
+    class="select-panel"
+    *ngIf="isOpen">
+
+    <button
+      type="button"
+      class="option"
+      *ngFor="let item of items"
+      [class.selected]="item.value === value"
+      (click)="select(item)">
+
+      <img
+        *ngIf="item.imageUrl"
+        [src]="item.imageUrl">
+
+      <i
+        *ngIf="item.icon"
+        [class]="item.icon">
+      </i>
+
+      <span>
+        {{ item.label }}
+      </span>
+
+    </button>
+
+  </div>
+
+</div>

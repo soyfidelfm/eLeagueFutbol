@@ -1,0 +1,134 @@
+:host {
+  display: block;
+}
+
+.custom-select {
+  position: relative;
+}
+
+.select-trigger {
+  width: 100%;
+  min-height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+
+  border: 1px solid rgba(0,255,136,.25);
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.06),
+      rgba(255,255,255,.03)
+    );
+
+  color: #fff;
+
+  cursor: pointer;
+
+  transition: .22s ease;
+
+  &:hover:not(:disabled) {
+    border-color: rgba(0,255,136,.7);
+
+    box-shadow:
+      0 0 20px rgba(0,255,136,.12);
+  }
+
+  &:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+  }
+}
+
+.selected-value {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  font-weight: 800;
+}
+
+.selected-value img,
+.option img {
+  width: 24px;
+  height: 24px;
+
+  object-fit: contain;
+}
+
+.select-trigger i:last-child {
+  transition: transform .22s ease;
+}
+
+.rotated {
+  transform: rotate(180deg);
+}
+
+.select-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(0,255,136,.25);
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5,15,12,.98),
+      rgba(3,10,8,.99)
+    );
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.55),
+    0 0 30px rgba(0,255,136,.10);
+
+  z-index: 1000;
+}
+
+.option {
+  width: 100%;
+  min-height: 46px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 16px;
+
+  border: none;
+  background: transparent;
+
+  color: #fff;
+
+  font-weight: 700;
+  text-align: left;
+
+  cursor: pointer;
+
+  transition: .18s ease;
+
+  &:hover {
+    background: rgba(0,255,136,.10);
+    color: #00ff88;
+  }
+
+  &.selected {
+    background:
+      linear-gradient(
+        135deg,
+        #00ff88,
+        #00cf6d
+      );
+
+    color: #021008;
+  }
+}

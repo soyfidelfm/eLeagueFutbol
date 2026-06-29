@@ -76,21 +76,22 @@ public class DraftService : IDraftService
 			.ToDictionaryAsync(x => x.UserId);
 
 		var shuffled = registrations
-			.OrderBy(x => Guid.NewGuid())
-			.Select((registration, index) =>
-			{
-				userClubs.TryGetValue(registration.UserId, out var club);
+	.OrderBy(x => Guid.NewGuid())
+	.Select((registration, index) =>
+	{
+		userClubs.TryGetValue(registration.UserId, out var club);
 
-				return new DraftOrderDto
-				{
-					PickOrder = index + 1,
-					UserId = registration.UserId,
-					ClubName = club?.Name ?? registration.User.DisplayName,
-					LogoUrl = club?.LogoUrl ?? string.Empty,
-					IsCurrentPick = index == 0
-				};
-			})
-			.ToList();
+		return new DraftOrderDto
+		{
+			PickOrder = index + 1,
+			UserId = registration.UserId,
+			UserClubId = club?.UserClubId ?? Guid.Empty,
+			ClubName = club?.Name ?? registration.User.DisplayName,
+			LogoUrl = club?.LogoUrl ?? string.Empty,
+			IsCurrentPick = index == 0
+		};
+	})
+	.ToList();
 
 		await SendDraftLotteryMessagesAsync(seasonId, drawNumber, shuffled);
 

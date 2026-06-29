@@ -28,9 +28,9 @@ public class DraftTurnService : IDraftTurnService
 	}
 
 	public async Task<DraftCenterDto> BuildDraftCenterAsync(
-		Guid seasonId,
-		Guid userId,
-		DraftSession session)
+	Guid seasonId,
+	Guid userId,
+	DraftSession session)
 	{
 		var userClubs = await _context.UserClubs
 			.AsNoTracking()
@@ -61,6 +61,7 @@ public class DraftTurnService : IDraftTurnService
 		{
 			if (userClubs.TryGetValue(item.UserId, out var club))
 			{
+				item.UserClubId = club.UserClubId;
 				item.ClubName = club.Name;
 				item.LogoUrl = club.LogoUrl ?? string.Empty;
 			}

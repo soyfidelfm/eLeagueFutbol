@@ -7,6 +7,7 @@ export interface DraftCenter {
   recentPicks: DraftPick[];
   mySquad: MyDraftSquad;
 }
+
 export interface DraftState {
   draftSessionId: string;
   isActive: boolean;
@@ -22,6 +23,7 @@ export interface DraftState {
 export interface DraftOrder {
   pickOrder: number;
   userId: string;
+  userClubId: string;
   clubName: string;
   logoUrl?: string;
   isCurrentPick: boolean;
@@ -82,6 +84,7 @@ export interface DraftPlayer {
 export interface MakeDraftPick {
   gamePlayerId: string;
 }
+
 export interface DraftPickAsset {
   draftPickAssetId: string;
   seasonId: string;

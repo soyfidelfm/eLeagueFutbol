@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 import { DraftService } from '../../../../core/services/draft.service';
+import { CustomSelect, SelectOption } from '../../../../shared/components/custom-select/custom-select';
 
 import {
   DraftCenter,
@@ -28,7 +29,11 @@ interface TradeTargetClub {
 @Component({
   selector: 'app-draft-pick-trades',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CustomSelect
+  ],
   templateUrl: './draft-pick-trades.html',
   styleUrl: './draft-pick-trades.scss'
 })
@@ -47,7 +52,7 @@ export class DraftPickTrades implements OnChanges {
   tradablePicks: DraftPickAsset[] = [];
 
   selectedPickIds: string[] = [];
-  selectedTradeClubId = '';
+  selectedTradeClubId: string | number | null = null;
   tradeMessage = '';
 
   showTradeModal = false;
@@ -68,30 +73,27 @@ export class DraftPickTrades implements OnChanges {
   }
 
   get tradeTargetClubs(): TradeTargetClub[] {
+    const draftCenter = this.draftCenter;
 
-  const draftCenter = this.draftCenter;
+    if (!draftCenter) {
+      return [];
+    }
 
-  if (!draftCenter) {
-    return [];
+    return (draftCenter.draftOrder as DraftOrder[])
+  .filter(team => team.userId !== draftCenter.myUserId)
+  .map(team => ({
+    userClubId: team.userClubId,
+    clubName: team.clubName
+  }))
+  .filter(team => !!team.userClubId);
   }
 
-  return (draftCenter.draftOrder ?? [])
-    .filter(team => team.userId !== draftCenter.myUserId)
-    .map(team => {
-
-      const extendedTeam = team as DraftOrder & {
-        userClubId?: string;
-      };
-
-      return {
-        userClubId: extendedTeam.userClubId ?? '',
-        clubName: team.clubName
-      };
-
-    })
-    .filter(team => !!team.userClubId);
-
-}
+  get tradeClubOptions(): SelectOption[] {
+    return this.tradeTargetClubs.map(club => ({
+      value: club.userClubId,
+      label: club.clubName
+    }));
+  }
 
   get hasIncomingTrade(): boolean {
     return this.incomingTrade !== null;
@@ -120,18 +122,13 @@ export class DraftPickTrades implements OnChanges {
     return pick.draftPickAssetId;
   }
 
-  trackByClub(_: number, club: TradeTargetClub): string {
-    return club.userClubId;
-  }
-
   private resetTradeForm(): void {
     this.selectedPickIds = [];
-    this.selectedTradeClubId = '';
+    this.selectedTradeClubId = null;
     this.tradeMessage = '';
   }
 
   openTradeModal(): void {
-
     if (!this.seasonId) {
       this.toast.emit('Season was not found.');
       return;
@@ -143,29 +140,22 @@ export class DraftPickTrades implements OnChanges {
     }
 
     this.showTradeModal = true;
-
     this.resetTradeForm();
-
     this.loadTradablePicks(false);
-
     this.cdr.detectChanges();
   }
 
   closeTradeModal(): void {
-
     if (this.isSubmittingTrade) {
       return;
     }
 
     this.showTradeModal = false;
-
     this.resetTradeForm();
-
     this.cdr.detectChanges();
   }
 
   loadTradablePicks(silent = false): void {
-
     if (!this.seasonId) {
       return;
     }
@@ -179,7 +169,6 @@ export class DraftPickTrades implements OnChanges {
       .getTradablePicks(this.seasonId)
       .pipe(
         finalize(() => {
-
           if (!silent) {
             this.isLoadingTradablePicks = false;
           }
@@ -188,9 +177,7 @@ export class DraftPickTrades implements OnChanges {
         })
       )
       .subscribe({
-
         next: picks => {
-
           this.tradablePicks = picks ?? [];
 
           this.selectedPickIds =
@@ -200,13 +187,8 @@ export class DraftPickTrades implements OnChanges {
               )
             );
         },
-
         error: err => {
-
-          console.error(
-            'Error loading tradable picks:',
-            err
-          );
+          console.error('Error loading tradable picks:', err);
 
           if (!silent) {
             this.toast.emit(
@@ -217,15 +199,13 @@ export class DraftPickTrades implements OnChanges {
         }
       });
   }
-  
-    isPickSelected(draftPickAssetId: string): boolean {
+
+  isPickSelected(draftPickAssetId: string): boolean {
     return this.selectedPickIds.includes(draftPickAssetId);
   }
 
   togglePickSelection(draftPickAssetId: string): void {
-
     if (this.isPickSelected(draftPickAssetId)) {
-
       this.selectedPickIds =
         this.selectedPickIds.filter(id => id !== draftPickAssetId);
 
@@ -239,7 +219,6 @@ export class DraftPickTrades implements OnChanges {
   }
 
   sendTradeOffer(): void {
-
     if (!this.seasonId) {
       this.toast.emit('Season was not found.');
       return;
@@ -265,7 +244,7 @@ export class DraftPickTrades implements OnChanges {
     this.draftService
       .proposePickTrade(
         this.seasonId,
-        this.selectedTradeClubId,
+        String(this.selectedTradeClubId),
         this.selectedPickIds,
         this.tradeMessage.trim()
       )
@@ -276,26 +255,14 @@ export class DraftPickTrades implements OnChanges {
         })
       )
       .subscribe({
-
         next: trade => {
-
-          this.toast.emit(
-            `⚡ Trade offer sent to ${trade.toClubName}.`
-          );
-
+          this.toast.emit(`⚡ Trade offer sent to ${trade.toClubName}.`);
           this.closeTradeModal();
-
           this.loadTradablePicks(true);
-
           this.refreshRequested.emit();
         },
-
         error: err => {
-
-          console.error(
-            'Error sending trade offer:',
-            err
-          );
+          console.error('Error sending trade offer:', err);
 
           this.toast.emit(
             err?.error?.message ??
@@ -306,7 +273,6 @@ export class DraftPickTrades implements OnChanges {
   }
 
   acceptIncomingTrade(): void {
-
     if (!this.canRespondTrade) {
       return;
     }
@@ -325,26 +291,14 @@ export class DraftPickTrades implements OnChanges {
         })
       )
       .subscribe({
-
         next: trade => {
-
-          this.toast.emit(
-            `✅ Trade accepted with ${trade.fromClubName}.`
-          );
-
+          this.toast.emit(`✅ Trade accepted with ${trade.fromClubName}.`);
           this.incomingTradeCleared.emit();
-
           this.refreshRequested.emit();
-
           this.loadTradablePicks(true);
         },
-
         error: err => {
-
-          console.error(
-            'Error accepting trade:',
-            err
-          );
+          console.error('Error accepting trade:', err);
 
           this.toast.emit(
             err?.error?.message ??
@@ -355,7 +309,6 @@ export class DraftPickTrades implements OnChanges {
   }
 
   rejectIncomingTrade(): void {
-
     if (!this.canRespondTrade) {
       return;
     }
@@ -374,24 +327,14 @@ export class DraftPickTrades implements OnChanges {
         })
       )
       .subscribe({
-
         next: () => {
-
           this.toast.emit('❌ Trade rejected.');
-
           this.incomingTradeCleared.emit();
-
           this.refreshRequested.emit();
-
           this.loadTradablePicks(true);
         },
-
         error: err => {
-
-          console.error(
-            'Error rejecting trade:',
-            err
-          );
+          console.error('Error rejecting trade:', err);
 
           this.toast.emit(
             err?.error?.message ??
@@ -400,5 +343,4 @@ export class DraftPickTrades implements OnChanges {
         }
       });
   }
-
 }

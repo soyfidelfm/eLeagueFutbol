@@ -80,21 +80,11 @@
 
         Trade With
 
-        <select [(ngModel)]="selectedTradeClubId">
-
-          <option value="">
-            Select Club
-          </option>
-
-          <option
-            *ngFor="let club of tradeTargetClubs; trackBy: trackByClub"
-            [value]="club.userClubId">
-
-            {{ club.clubName }}
-
-          </option>
-
-        </select>
+        <app-custom-select
+          placeholder="Select Club"
+          [items]="tradeClubOptions"
+          [(value)]="selectedTradeClubId">
+        </app-custom-select>
 
       </label>
 
@@ -137,15 +127,8 @@
           (click)="togglePickSelection(pick.draftPickAssetId)">
 
           <div>
-
-            <strong>
-              Round {{ pick.roundNumber }}
-            </strong>
-
-            <small>
-              Pick {{ pick.pickNumber }}
-            </small>
-
+            <strong>Round {{ pick.roundNumber }}</strong>
+            <small>Pick {{ pick.pickNumber }}</small>
           </div>
 
           <i
