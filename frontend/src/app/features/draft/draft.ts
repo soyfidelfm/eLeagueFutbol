@@ -36,6 +36,11 @@ export class Draft implements OnInit, OnDestroy
   isLotteryRunning = false;
   isPoolDropdownOpen = false;
 
+allDraftPicks: DraftPick[] = [];
+isDraftPicksModalOpen = false;
+isLoadingDraftPicks = false;
+
+
   errorMessage = '';
 
   searchTerm = '';
@@ -517,8 +522,12 @@ startDraft(): void {
       )
       .subscribe({
         next: () => {
-          this.loadDraft();
-        },
+  this.loadDraft();
+
+  if (this.isDraftPicksModalOpen) {
+    this.loadDraftPicks();
+  }
+},
         error: err => {
           console.error('Error making draft pick:', err);
 
@@ -607,6 +616,44 @@ startDraft(): void {
   return `${minutes.toString().padStart(2, '0')}:${seconds
     .toString()
     .padStart(2, '0')}`;
+}
+
+openDraftPicksModal(): void {
+  if (!this.seasonId) {
+    return;
+  }
+
+  this.isDraftPicksModalOpen = true;
+  this.loadDraftPicks();
+}
+
+closeDraftPicksModal(): void {
+  this.isDraftPicksModalOpen = false;
+}
+
+loadDraftPicks(): void {
+  if (!this.seasonId) {
+    return;
+  }
+
+  this.isLoadingDraftPicks = true;
+
+  this.draftService.getPicks(this.seasonId)
+    .pipe(
+      finalize(() => {
+        this.isLoadingDraftPicks = false;
+        this.cdr.detectChanges();
+      })
+    )
+    .subscribe({
+      next: picks => {
+        this.allDraftPicks = picks ?? [];
+      },
+      error: err => {
+        console.error('Error loading draft picks:', err);
+        this.showToast('Could not load draft picks.');
+      }
+    });
 }
 
 

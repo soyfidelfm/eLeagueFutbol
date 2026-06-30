@@ -453,9 +453,15 @@
 
           </div>
 
-          <button type="button">
-            View all picks
-          </button>
+          <button
+  type="button"
+  class="ghost-btn"
+  (click)="openDraftPicksModal()">
+
+  <i class="fa-solid fa-list-check"></i>
+  View all picks
+
+</button>
         </div>
       </aside>
     </section>
@@ -500,4 +506,77 @@
 
 <div class="draft-toast" *ngIf="errorMessage">
   {{ errorMessage }}
+</div>
+
+<div
+  class="draft-modal-backdrop"
+  *ngIf="isDraftPicksModalOpen"
+  (click)="closeDraftPicksModal()">
+
+  <section
+    class="draft-picks-modal"
+    (click)="$event.stopPropagation()">
+
+    <header class="draft-picks-modal-header">
+
+      <div>
+        <h2>Draft Picks</h2>
+        <p>{{ allDraftPicks.length }} players selected</p>
+      </div>
+
+      <button
+        type="button"
+        class="modal-close-btn"
+        (click)="closeDraftPicksModal()">
+
+        <i class="fa-solid fa-xmark"></i>
+
+      </button>
+
+    </header>
+
+    <div class="draft-picks-loading" *ngIf="isLoadingDraftPicks">
+      Loading picks...
+    </div>
+
+    <div
+      class="draft-picks-empty"
+      *ngIf="!isLoadingDraftPicks && allDraftPicks.length === 0">
+
+      No players have been picked yet.
+
+    </div>
+
+    <div
+      class="draft-picks-list"
+      *ngIf="!isLoadingDraftPicks && allDraftPicks.length > 0">
+
+      <article
+        class="draft-pick-row"
+        *ngFor="let pick of allDraftPicks">
+
+        <div class="pick-number">
+          #{{ pick.pickNumber }}
+        </div>
+
+        <div class="pick-player">
+
+          <strong>{{ pick.playerName }}</strong>
+
+          <span>
+            {{ pick.position }} · Round {{ pick.roundNumber }}
+          </span>
+
+        </div>
+
+        <div class="pick-club">
+          {{ pick.clubName }}
+        </div>
+
+      </article>
+
+    </div>
+
+  </section>
+
 </div>
