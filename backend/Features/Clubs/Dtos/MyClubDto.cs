@@ -1,4 +1,4 @@
-﻿namespace backend.Features.Clubs.Dtos;
+namespace backend.Features.Clubs.Dtos;
 
 public class MyClubDto
 {
@@ -22,6 +22,8 @@ public class MyClubDto
 	public int GoalsAgainst { get; set; }
 	public int GoalDifference { get; set; }
 	public int Rating { get; set; }
+
+public int Chemistry {get; set;}
 
 	public List<MyClubPlayerDto> Players { get; set; } = [];
 	public List<MyClubActivityDto> Activities { get; set; } = [];
