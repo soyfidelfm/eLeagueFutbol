@@ -18,9 +18,7 @@
 
   <ng-container *ngIf="!isLoading">
 
-    <div
-      class="lottery-banner"
-      *ngIf="isLotteryRunning">
+    <div class="lottery-banner" *ngIf="isLotteryRunning">
 
       <i class="fa-solid fa-shuffle"></i>
 
@@ -48,7 +46,7 @@
         <div class="hero-meta">
           <span>
             <i class="fa-solid fa-shuffle"></i>
-              Snake Draft
+            Snake Draft
           </span>
 
           <span>
@@ -81,35 +79,25 @@
           <small>Current: {{ currentClubName }}</small>
         </div>
 
-        <button
-  *ngIf="!isDraftActive"
-  type="button"
-  class="draft-start-btn"
-  [disabled]="isStartingDraft || isLotteryRunning"
-  (click)="startDraft()">
+        <button *ngIf="!isDraftActive" type="button" class="draft-start-btn"
+          [disabled]="isStartingDraft || isLotteryRunning" (click)="startDraft()">
 
-  <i
-    class="fa-solid"
-    [class.fa-shuffle]="!isLotteryRunning && !draftCenter?.draftOrder?.length"
-    [class.fa-play]="!isLotteryRunning && draftCenter?.draftOrder?.length"
-    [class.fa-spinner]="isLotteryRunning"
-    [class.fa-spin]="isLotteryRunning">
-  </i>
+          <i class="fa-solid" [class.fa-shuffle]="!isLotteryRunning && !draftCenter?.draftOrder?.length"
+            [class.fa-play]="!isLotteryRunning && draftCenter?.draftOrder?.length" [class.fa-spinner]="isLotteryRunning"
+            [class.fa-spin]="isLotteryRunning">
+          </i>
 
-  {{
-    isLotteryRunning
-      ? 'Running Lottery...'
-      : draftCenter?.draftOrder?.length
-        ? 'Start Draft'
-        : 'Start Draft Lottery'
-  }}
+          {{
+          isLotteryRunning
+          ? 'Running Lottery...'
+          : draftCenter?.draftOrder?.length
+          ? 'Start Draft'
+          : 'Start Draft Lottery'
+          }}
 
-</button>
+        </button>
 
-        <button
-          *ngIf="isDraftActive"
-          type="button"
-          disabled>
+        <button *ngIf="isDraftActive" type="button" disabled>
 
           <i class="fa-solid fa-check"></i>
           Draft is active
@@ -125,79 +113,66 @@
     <section class="draft-layout">
       <aside class="panel draft-order-panel">
 
-  <div class="panel-header">
-    <div>
-      <h2>Current Round Order</h2>
-      <p>Round {{ currentRound }} of {{ playersPerTeam }}</p>
-    </div>
-  </div>
+        <div class="panel-header">
+          <div>
+            <h2>Current Round Order</h2>
+            <p>Round {{ currentRound }} of {{ playersPerTeam }}</p>
+          </div>
+        </div>
 
-  <div class="draft-order-list">
-    <div
-      class="draft-order-item"
-      *ngFor="let team of draftOrder"
-      [class.current]="team.isCurrentPick">
+        <div class="draft-order-list">
+          <div class="draft-order-item" *ngFor="let team of draftOrder" [class.current]="team.isCurrentPick">
 
-      <span class="pick-number">{{ team.pickOrder }}</span>
+            <span class="pick-number">{{ team.pickOrder }}</span>
 
-      <span class="team-logo">
-        <img
-          *ngIf="team.logoUrl; else teamLogoFallback"
-          [src]="team.logoUrl"
-          [alt]="team.clubName" />
+            <span class="team-logo">
+              <img *ngIf="team.logoUrl; else teamLogoFallback" [src]="team.logoUrl" [alt]="team.clubName" />
 
-        <ng-template #teamLogoFallback>
-          ⚽
-        </ng-template>
-      </span>
+              <ng-template #teamLogoFallback>
+                ⚽
+              </ng-template>
+            </span>
 
-      <span class="team-name">
-        {{ team.clubName }}
-      </span>
+            <span class="team-name">
+              {{ team.clubName }}
+            </span>
 
-      <span
-        class="current-badge"
-        *ngIf="team.isCurrentPick">
-        Current Pick
-      </span>
+            <span class="current-badge" *ngIf="team.isCurrentPick">
+              Current Pick
+            </span>
 
-    </div>
-  </div>
+          </div>
+        </div>
 
-  <div class="round-divider">
-    Next Round Order
-  </div>
+        <div class="round-divider">
+          Next Round Order
+        </div>
 
-  <div class="draft-order-list reverse">
+        <div class="draft-order-list reverse">
 
-    <div
-      class="draft-order-item"
-      *ngFor="let team of draftOrder.slice().reverse()">
+          <div class="draft-order-item" *ngFor="let team of draftOrder.slice().reverse()">
 
-      <span class="pick-number">
-        {{ team.pickOrder }}
-      </span>
+            <span class="pick-number">
+              {{ team.pickOrder }}
+            </span>
 
-      <span class="team-logo">
-        <img
-          *ngIf="team.logoUrl; else nextLogoFallback"
-          [src]="team.logoUrl"
-          [alt]="team.clubName" />
+            <span class="team-logo">
+              <img *ngIf="team.logoUrl; else nextLogoFallback" [src]="team.logoUrl" [alt]="team.clubName" />
 
-        <ng-template #nextLogoFallback>
-          ⚽
-        </ng-template>
-      </span>
+              <ng-template #nextLogoFallback>
+                ⚽
+              </ng-template>
+            </span>
 
-      <span class="team-name">
-        {{ team.clubName }}
-      </span>
+            <span class="team-name">
+              {{ team.clubName }}
+            </span>
 
-    </div>
+          </div>
 
-  </div>
+        </div>
 
-</aside>
+      </aside>
 
       <main class="panel players-panel">
         <div class="panel-header players-header">
@@ -206,10 +181,7 @@
             <p>{{ filteredPlayers.length }} players found</p>
           </div>
 
-          <button
-            class="ghost-icon"
-            type="button"
-            (click)="loadPlayers()">
+          <button class="ghost-icon" type="button" (click)="loadPlayers()">
             <i class="fa-solid fa-rotate-right"></i>
           </button>
         </div>
@@ -217,19 +189,79 @@
         <div class="search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
 
-          <input
-            type="text"
-            [(ngModel)]="searchTerm"
-            (keyup.enter)="loadPlayers()"
-            placeholder="Search player..." />
+          <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="loadPlayers()" placeholder="Search player..." />
         </div>
+        <div class="pool-dropdown" [class.open]="isPoolDropdownOpen">
+
+  <button
+    type="button"
+    class="pool-dropdown-trigger"
+    (click)="togglePoolDropdown()">
+
+    <span>{{ getPoolFilterLabel() }}</span>
+
+    <i
+      class="fa-solid"
+      [class.fa-chevron-down]="!isPoolDropdownOpen"
+      [class.fa-chevron-up]="isPoolDropdownOpen">
+    </i>
+
+  </button>
+
+  <div class="pool-dropdown-menu" *ngIf="isPoolDropdownOpen">
+
+    <button
+      type="button"
+      class="pool-option"
+      [class.active]="poolFilter === 'ClubOnly'"
+      (click)="setPoolFilter('ClubOnly')">
+
+      <i class="fa-solid fa-shield-halved"></i>
+
+      <span>
+        <strong>Club Players</strong>
+        <small>Players from clubs only</small>
+      </span>
+
+    </button>
+
+    <button
+      type="button"
+      class="pool-option"
+      [class.active]="poolFilter === 'IncludeFreeAgents'"
+      (click)="setPoolFilter('IncludeFreeAgents')">
+
+      <i class="fa-solid fa-users"></i>
+
+      <span>
+        <strong>Club + Free Agents</strong>
+        <small>Include club players and free agents</small>
+      </span>
+
+    </button>
+
+    <button
+      type="button"
+      class="pool-option"
+      [class.active]="poolFilter === 'FreeAgentsOnly'"
+      (click)="setPoolFilter('FreeAgentsOnly')">
+
+      <i class="fa-solid fa-user"></i>
+
+      <span>
+        <strong>Free Agents Only</strong>
+        <small>Free agents without a club</small>
+      </span>
+
+    </button>
+
+  </div>
+
+</div>
 
         <div class="filters-row">
           <div class="position-tabs">
-            <button
-              type="button"
-              *ngFor="let position of positions"
-              [class.active]="selectedPosition === position"
+            <button type="button" *ngFor="let position of positions" [class.active]="selectedPosition === position"
               (click)="setPosition(position)">
               {{ position }}
             </button>
@@ -242,16 +274,11 @@
           </div>
         </div>
 
-        <div
-          class="player-grid"
-          *ngIf="pagedPlayers.length > 0; else noPlayers">
+        <div class="player-grid" *ngIf="pagedPlayers.length > 0; else noPlayers">
 
-          <article
-            class="player-card"
-            *ngFor="let player of pagedPlayers">
+          <article class="player-card" *ngFor="let player of pagedPlayers">
 
-            <img
-              class="card-background"
+            <img class="card-background"
               src="https://res.cloudinary.com/dwgojz5cu/image/upload/v1781595337/cardRegular_ivakii.png"
               alt="Player Card" />
 
@@ -264,11 +291,7 @@
             </div>
 
             <div class="player-image">
-              <img
-                [src]="getPlayerImageUrl(player)"
-                [alt]="player.name"
-                referrerpolicy="no-referrer"
-                loading="lazy"
+              <img [src]="getPlayerImageUrl(player)" [alt]="player.name" referrerpolicy="no-referrer" loading="lazy"
                 (error)="onPlayerImageError($event)" />
             </div>
 
@@ -313,10 +336,7 @@
               €{{ player.value | number:'1.0-0' }}
             </div>
 
-            <button
-              class="draft-button"
-              type="button"
-              [disabled]="isPicking || !isDraftActive || isLotteryRunning"
+            <button class="draft-button" type="button" [disabled]="isPicking || !isDraftActive || isLotteryRunning"
               (click)="draftPlayer(player)">
 
               <i class="fa-solid fa-plus"></i>
@@ -334,10 +354,7 @@
         </ng-template>
 
         <div class="pagination" *ngIf="totalPages > 1">
-          <button
-            type="button"
-            (click)="previousPage()"
-            [disabled]="currentPage <= 1">
+          <button type="button" (click)="previousPage()" [disabled]="currentPage <= 1">
 
             <i class="fa-solid fa-chevron-left"></i>
 
@@ -347,9 +364,7 @@
           <span>of</span>
           <span>{{ totalPages }}</span>
 
-          <button
-            type="button"
-            (click)="nextPage()">
+          <button type="button" (click)="nextPage()">
 
             <i class="fa-solid fa-chevron-right"></i>
 
@@ -381,18 +396,13 @@
         </div>
 
         <div class="pitch">
-          <div
-            class="squad-slot"
-            *ngFor="let slot of squadSlots"
-            [class.filled]="slot.player">
+          <div class="squad-slot" *ngFor="let slot of squadSlots" [class.filled]="slot.player">
 
             <span *ngIf="!slot.player">
               {{ slot.position }}
             </span>
 
-            <div
-              class="mini-player"
-              *ngIf="slot.player">
+            <div class="mini-player" *ngIf="slot.player">
 
               <strong>{{ slot.player.overall }}</strong>
               <small>{{ slot.player.position }}</small>
@@ -434,9 +444,7 @@
           <h3>Last Picks</h3>
           <p>Round {{ currentRound }}</p>
 
-          <div
-            class="last-pick-item"
-            *ngFor="let pick of lastPicks">
+          <div class="last-pick-item" *ngFor="let pick of lastPicks">
 
             <span>Pick {{ pick.pickNumber }}</span>
             <strong>{{ pick.clubName }}</strong>
@@ -467,7 +475,7 @@
           <i class="fa-solid fa-list-ol"></i>
           <span>Format</span>
           <strong>Snake Draft</strong>
-<small>Order reverses every round</small>
+          <small>Order reverses every round</small>
         </div>
 
         <div class="info-card">

@@ -12,6 +12,7 @@ import {
   DraftOrder,
   DraftPick,
   DraftPlayer,
+  DraftPlayerPoolFilter,
   DraftSquadPlayer
 } from '../../core/models/draft.model';
 
@@ -33,6 +34,7 @@ export class Draft implements OnInit, OnDestroy
   isPicking = false;
   isStartingDraft = false;
   isLotteryRunning = false;
+  isPoolDropdownOpen = false;
 
   errorMessage = '';
 
@@ -51,6 +53,8 @@ export class Draft implements OnInit, OnDestroy
   draftOrder: DraftOrder[] = [];
   players: DraftPlayer[] = [];
   lastPicks: DraftPick[] = [];
+
+  poolFilter: DraftPlayerPoolFilter = 'ClubOnly';
 
   seasonId = '';
 
@@ -106,6 +110,31 @@ export class Draft implements OnInit, OnDestroy
       window.clearTimeout(this.lotteryTimeoutId);
     }
   }
+
+  togglePoolDropdown(): void {
+  this.isPoolDropdownOpen = !this.isPoolDropdownOpen;
+}
+
+getPoolFilterLabel(): string {
+  switch (this.poolFilter) {
+    case 'IncludeFreeAgents':
+      return 'Club + Free Agents';
+
+    case 'FreeAgentsOnly':
+      return 'Free Agents Only';
+
+    case 'ClubOnly':
+    default:
+      return 'Club Players';
+  }
+}
+
+setPoolFilter(poolFilter: DraftPlayerPoolFilter): void {
+  this.poolFilter = poolFilter;
+  this.isPoolDropdownOpen = false;
+  this.currentPage = 1;
+  this.loadPlayers();
+}
 
   get draftedCount(): number {
     return this.draftCenter?.mySquad.totalPlayers ?? 0;
@@ -235,7 +264,8 @@ export class Draft implements OnInit, OnDestroy
         this.searchTerm,
         this.selectedPosition === 'All' ? '' : this.selectedPosition,
         this.currentPage,
-        this.pageSize
+        this.pageSize,
+        this.poolFilter
       )
     })
       .pipe(
@@ -395,32 +425,33 @@ startDraft(): void {
 }
 
   loadPlayers(): void {
-    if (!this.seasonId) {
-      return;
-    }
-
-    this.draftService.getPlayers(
-      this.seasonId,
-      this.searchTerm,
-      this.selectedPosition === 'All' ? '' : this.selectedPosition,
-      this.currentPage,
-      this.pageSize
-    )
-      .pipe(
-        finalize(() => {
-          this.cdr.detectChanges();
-        })
-      )
-      .subscribe({
-        next: players => {
-          this.players = players ?? [];
-        },
-        error: err => {
-          console.error('Error loading players:', err);
-          this.errorMessage = err?.error?.message || 'Error loading players.';
-        }
-      });
+  if (!this.seasonId) {
+    return;
   }
+
+  this.draftService.getPlayers(
+    this.seasonId,
+    this.searchTerm,
+    this.selectedPosition === 'All' ? '' : this.selectedPosition,
+    this.currentPage,
+    this.pageSize,
+    this.poolFilter
+  )
+    .pipe(
+      finalize(() => {
+        this.cdr.detectChanges();
+      })
+    )
+    .subscribe({
+      next: players => {
+        this.players = players ?? [];
+      },
+      error: err => {
+        console.error('Error loading players:', err);
+        this.errorMessage = err?.error?.message || 'Error loading players.';
+      }
+    });
+}
 
   setPosition(position: string): void {
     this.selectedPosition = position;
@@ -577,4 +608,6 @@ startDraft(): void {
     .toString()
     .padStart(2, '0')}`;
 }
+
+
 }

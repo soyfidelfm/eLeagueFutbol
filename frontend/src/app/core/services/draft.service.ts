@@ -10,14 +10,12 @@ import {
   DraftPick,
   DraftPlayer,
   DraftOrder,
-  MakeDraftPick
+  MakeDraftPick,
+  DraftLotteryPreview,
+  DraftPlayerPoolFilter
 } from '../models/draft.model';
 
-export interface DraftLotteryPreview {
-  drawNumber: number;
-  isFinal: boolean;
-  draftOrder: DraftOrder[];
-}
+
 
 @Injectable({
   providedIn: 'root'
@@ -70,31 +68,33 @@ export class DraftService extends ApiService {
   }
 
   getPlayers(
-    seasonId: string,
-    search = '',
-    position = '',
-    page = 1,
-    pageSize = 30
-  ): Observable<DraftPlayer[]> {
+  seasonId: string,
+  search = '',
+  position = '',
+  page = 1,
+  pageSize = 30,
+  poolFilter: DraftPlayerPoolFilter = 'ClubOnly'
+): Observable<DraftPlayer[]> {
 
-    const params = new URLSearchParams();
+  const params = new URLSearchParams();
 
-    params.set('seasonId', seasonId);
-    params.set('page', page.toString());
-    params.set('pageSize', pageSize.toString());
+  params.set('seasonId', seasonId);
+  params.set('page', page.toString());
+  params.set('pageSize', pageSize.toString());
+  params.set('poolFilter', poolFilter);
 
-    if (search.trim()) {
-      params.set('search', search.trim());
-    }
-
-    if (position.trim()) {
-      params.set('position', position.trim());
-    }
-
-    return this.get<DraftPlayer[]>(
-      `${API_ENDPOINTS.draft}/players?${params.toString()}`
-    );
+  if (search.trim()) {
+    params.set('search', search.trim());
   }
+
+  if (position.trim()) {
+    params.set('position', position.trim());
+  }
+
+  return this.get<DraftPlayer[]>(
+    `${API_ENDPOINTS.draft}/players?${params.toString()}`
+  );
+}
 
   getPicks(seasonId: string): Observable<DraftPick[]> {
     return this.get<DraftPick[]>(

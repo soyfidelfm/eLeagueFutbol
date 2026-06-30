@@ -1,5 +1,6 @@
 ﻿namespace backend.Features.Draft.Services;
 
+using backend.Entities.Enums;
 using backend.Features.Draft.Dtos;
 
 public interface IDraftService
@@ -18,11 +19,12 @@ public interface IDraftService
 		string auth0Id);
 
 	Task<List<DraftPlayerDto>> GetAvailablePlayersAsync(
-		Guid seasonId,
-		string? search,
-		string? position,
-		int page,
-		int pageSize);
+	Guid seasonId,
+	string? search,
+	string? position,
+	int page,
+	int pageSize,
+	DraftPlayerPoolFilter poolFilter = DraftPlayerPoolFilter.ClubOnly);
 
 	Task<List<DraftPickDto>> GetPicksAsync(
 		Guid seasonId);

@@ -1,8 +1,9 @@
-﻿using System.Security.Claims;
+﻿using backend.Entities.Enums;
 using backend.Features.Draft.Dtos;
 using backend.Features.Draft.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace backend.Features.Draft.Controllers;
 
@@ -89,19 +90,21 @@ public class DraftController : ControllerBase
 	}
 
 	[HttpGet("players")]
-	public async Task<ActionResult<List<DraftPlayerDto>>> GetAvailablePlayers(
-		[FromQuery] Guid seasonId,
-		[FromQuery] string? search,
-		[FromQuery] string? position,
-		[FromQuery] int page = 1,
-		[FromQuery] int pageSize = 30)
+	public async Task<IActionResult> GetPlayers(
+	Guid seasonId,
+	string? search,
+	string? position,
+	int page = 1,
+	int pageSize = 30,
+	DraftPlayerPoolFilter poolFilter = DraftPlayerPoolFilter.ClubOnly)
 	{
 		var result = await _draftService.GetAvailablePlayersAsync(
 			seasonId,
 			search,
 			position,
 			page,
-			pageSize);
+			pageSize,
+			poolFilter);
 
 		return Ok(result);
 	}

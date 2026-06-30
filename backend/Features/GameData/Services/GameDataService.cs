@@ -172,6 +172,7 @@ public class GameDataService : IGameDataService
 
 		var imported = 0;
 		var updated = 0;
+		var assignedToFreeAgents = 0;
 		var skippedNoClub = 0;
 		var skippedNoClubTeamId = 0;
 
@@ -182,11 +183,16 @@ public class GameDataService : IGameDataService
 		var rows = csv.GetRecords<Fc26PlayerCsvRow>().ToList();
 
 		var clubsByExternalTeamId = await _context.GameClubs
-	.AsNoTracking()
-	.Where(x =>
-		!x.IsDeleted &&
-		x.IsActive)
-	.ToDictionaryAsync(x => x.ExternalTeamId); 
+			.AsNoTracking()
+			.Where(x => !x.IsDeleted && x.IsActive)
+			.ToDictionaryAsync(x => x.ExternalTeamId);
+
+		var freeAgentClub = await _context.GameClubs
+			.AsNoTracking()
+			.FirstAsync(x =>
+				x.ExternalTeamId == -1 &&
+				!x.IsDeleted &&
+				x.IsActive);
 
 		var existingPlayersBySofifaId = await _context.GamePlayers
 			.Where(x => !x.IsDeleted)
@@ -194,17 +200,28 @@ public class GameDataService : IGameDataService
 
 		foreach (var row in rows)
 		{
+			GameClub club;
+
 			if (!row.ClubTeamId.HasValue || row.ClubTeamId.Value <= 0)
 			{
 				skippedNoClubTeamId++;
-				continue;
+				assignedToFreeAgents++;
+				club = freeAgentClub;
 			}
-
-			if (!clubsByExternalTeamId.TryGetValue(row.ClubTeamId.Value, out var club))
+			else if (!clubsByExternalTeamId.TryGetValue(row.ClubTeamId.Value, out club!))
 			{
 				skippedNoClub++;
-				continue;
+				assignedToFreeAgents++;
+				club = freeAgentClub;
 			}
+
+			var clubTeamId = row.ClubTeamId.HasValue && row.ClubTeamId.Value > 0
+				? row.ClubTeamId
+				: -1;
+
+			var clubName = string.IsNullOrWhiteSpace(row.ClubName)
+				? "Free Agents"
+				: row.ClubName.Trim();
 
 			if (!existingPlayersBySofifaId.TryGetValue(row.SofifaPlayerId, out var existing))
 			{
@@ -229,14 +246,14 @@ public class GameDataService : IGameDataService
 
 					Age = row.Age,
 					DateOfBirth = row.DateOfBirth.HasValue
-	? DateTime.SpecifyKind(row.DateOfBirth.Value, DateTimeKind.Utc)
-	: null,
+						? DateTime.SpecifyKind(row.DateOfBirth.Value, DateTimeKind.Utc)
+						: null,
 
 					HeightCm = row.HeightCm,
 					WeightKg = row.WeightKg,
 
-					ClubTeamId = row.ClubTeamId,
-					ClubName = row.ClubName?.Trim(),
+					ClubTeamId = clubTeamId,
+					ClubName = clubName,
 					ClubJerseyNumber = row.ClubJerseyNumber,
 					ClubContractValidUntilYear = row.ClubContractValidUntilYear,
 
@@ -270,10 +287,8 @@ public class GameDataService : IGameDataService
 			{
 				existing.Name = row.Name.Trim();
 				existing.FullName = row.FullName.Trim();
-
 				existing.Overall = row.Overall;
 				existing.Potential = row.Potential;
-
 				existing.Position = row.Positions.Trim();
 
 				existing.ValueEur = row.ValueEur;
@@ -282,14 +297,14 @@ public class GameDataService : IGameDataService
 
 				existing.Age = row.Age;
 				existing.DateOfBirth = row.DateOfBirth.HasValue
-	? DateTime.SpecifyKind(row.DateOfBirth.Value, DateTimeKind.Utc)
-	: null;
+					? DateTime.SpecifyKind(row.DateOfBirth.Value, DateTimeKind.Utc)
+					: null;
 
 				existing.HeightCm = row.HeightCm;
 				existing.WeightKg = row.WeightKg;
 
-				existing.ClubTeamId = row.ClubTeamId;
-				existing.ClubName = row.ClubName?.Trim();
+				existing.ClubTeamId = clubTeamId;
+				existing.ClubName = clubName;
 				existing.ClubJerseyNumber = row.ClubJerseyNumber;
 				existing.ClubContractValidUntilYear = row.ClubContractValidUntilYear;
 
@@ -309,7 +324,6 @@ public class GameDataService : IGameDataService
 				existing.Physic = row.Physic;
 
 				existing.ImageUrl = row.ImageUrl;
-
 				existing.GameClubId = club.GameClubId;
 				existing.IsActive = true;
 
@@ -324,6 +338,7 @@ public class GameDataService : IGameDataService
 			TotalRows = rows.Count,
 			Imported = imported,
 			Updated = updated,
+			AssignedToFreeAgents = assignedToFreeAgents,
 			SkippedNoClubTeamId = skippedNoClubTeamId,
 			SkippedNoClubMatch = skippedNoClub
 		};

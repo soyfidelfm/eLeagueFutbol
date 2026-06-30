@@ -1,6 +1,7 @@
 ﻿using backend.Data;
 using backend.Entities.Clubs;
 using backend.Entities.Draft;
+using backend.Entities.Enums;
 using backend.Entities.Transfers;
 using backend.Features.Draft.Dtos;
 using backend.Features.Messages.Services;
@@ -13,7 +14,7 @@ public class DraftService : IDraftService
 	private readonly AppDbContext _context;
 	private readonly IMessageService _messageService;
 
-	private const int PickSeconds = 600; // 10 minutes
+	private const int PickSeconds = 300; // 5 minutes
 
 	public DraftService(AppDbContext context, IMessageService messageService)
 	{
@@ -126,7 +127,7 @@ public class DraftService : IDraftService
 					CurrentPickNumber = 0,
 					CurrentUserId = null,
 					CurrentClubName = "Draft not started",
-					//SecondsRemaining = 0,
+					SecondsRemaining = 0,
 					TotalTeams = 0,
 					PlayersPerTeam = 25
 				},
@@ -140,7 +141,7 @@ public class DraftService : IDraftService
 			};
 		}
 
-		//await ProcessDraftTimerAsync(session);
+		await ProcessDraftTimerAsync(session);
 
 		return await BuildDraftCenterAsync(seasonId, user.UserId, session);
 	}
@@ -280,17 +281,18 @@ public class DraftService : IDraftService
 	}
 
 	public async Task<List<DraftPlayerDto>> GetAvailablePlayersAsync(
-		Guid seasonId,
-		string? search,
-		string? position,
-		int page,
-		int pageSize)
+	Guid seasonId,
+	string? search,
+	string? position,
+	int page,
+	int pageSize,
+	DraftPlayerPoolFilter poolFilter = DraftPlayerPoolFilter.ClubOnly)
 	{
 		var session = await _context.DraftSessions
 			.FirstOrDefaultAsync(x => x.SeasonId == seasonId && x.IsActive);
 
 		if (session is not null)
-			//await ProcessDraftTimerAsync(session);
+			await ProcessDraftTimerAsync(session);
 
 		page = page <= 0 ? 1 : page;
 		pageSize = pageSize <= 0 ? 30 : pageSize;
@@ -301,6 +303,12 @@ public class DraftService : IDraftService
 			.Select(x => x.GamePlayerId)
 			.ToListAsync();
 
+		var freeAgentsClubId = await _context.GameClubs
+			.AsNoTracking()
+			.Where(x => x.Name == "Free Agents")
+			.Select(x => (Guid?)x.GameClubId)
+			.FirstOrDefaultAsync();
+
 		var query = _context.GamePlayers
 			.AsNoTracking()
 			.Include(x => x.GameClub)
@@ -308,6 +316,23 @@ public class DraftService : IDraftService
 				!draftedPlayerIds.Contains(x.GamePlayerId) &&
 				!x.IsDeleted &&
 				x.IsActive);
+
+		if (freeAgentsClubId.HasValue)
+		{
+			switch (poolFilter)
+			{
+				case DraftPlayerPoolFilter.ClubOnly:
+					query = query.Where(x => x.GameClubId != freeAgentsClubId.Value);
+					break;
+
+				case DraftPlayerPoolFilter.FreeAgentsOnly:
+					query = query.Where(x => x.GameClubId == freeAgentsClubId.Value);
+					break;
+
+				case DraftPlayerPoolFilter.IncludeFreeAgents:
+					break;
+			}
+		}
 
 		if (!string.IsNullOrWhiteSpace(search))
 		{
@@ -321,7 +346,9 @@ public class DraftService : IDraftService
 		if (!string.IsNullOrWhiteSpace(position) && position != "All")
 		{
 			var pos = position.Trim().ToLower();
-			query = query.Where(x => x.Position.ToLower().Contains(pos));
+
+			query = query.Where(x =>
+				x.Position.ToLower().Contains(pos));
 		}
 
 		return await query
@@ -346,7 +373,7 @@ public class DraftService : IDraftService
 				Nation = x.Nation,
 				Age = x.Age,
 				ImageUrl = x.ImageUrl,
-				GameClubName = x.GameClub.Name
+				GameClubName = x.GameClub!.Name
 			})
 			.ToListAsync();
 	}
@@ -418,7 +445,7 @@ public class DraftService : IDraftService
 		if (session is null)
 			throw new Exception("Draft is not active.");
 
-		//await ProcessDraftTimerAsync(session);
+		await ProcessDraftTimerAsync(session);
 
 		if (!session.IsActive)
 			throw new Exception("Draft is not active.");
@@ -619,8 +646,8 @@ public class DraftService : IDraftService
 				CurrentClubName = session.IsActive
 	? currentTeam?.ClubName ?? string.Empty
 	: "Draft order ready",
-				//SecondsRemaining = GetSecondsRemaining(session),
-				SecondsRemaining = -1,
+				SecondsRemaining = GetSecondsRemaining(session),
+				//SecondsRemaining = -1,
 				TotalTeams = totalTeams,
 				PlayersPerTeam = session.PlayersPerTeam
 			},
@@ -742,9 +769,36 @@ public class DraftService : IDraftService
 		if (!session.IsActive || session.CurrentPickStartedAtUTC is null)
 			return 0;
 
-		var elapsedSeconds = (int)(DateTime.UtcNow - session.CurrentPickStartedAtUTC.Value).TotalSeconds;
+		var activeElapsedSeconds = GetActiveDraftElapsedSecondsUtc(
+			session.CurrentPickStartedAtUTC.Value,
+			DateTime.UtcNow);
 
-		return Math.Max(0, PickSeconds - elapsedSeconds);
+		return Math.Max(0, PickSeconds - activeElapsedSeconds);
+	}
+
+	private static int GetActiveDraftElapsedSecondsUtc(DateTime startUtc, DateTime nowUtc)
+	{
+		if (nowUtc <= startUtc)
+			return 0;
+
+		startUtc = DateTime.SpecifyKind(startUtc, DateTimeKind.Utc);
+		nowUtc = DateTime.SpecifyKind(nowUtc, DateTimeKind.Utc);
+
+		var totalSeconds = 0d;
+
+		for (var day = startUtc.Date; day <= nowUtc.Date; day = day.AddDays(1))
+		{
+			var windowStartUtc = day.AddHours(3); // 03:00 UTC
+			var windowEndUtc = day.AddHours(6);   // 06:00 UTC
+
+			var rangeStart = startUtc > windowStartUtc ? startUtc : windowStartUtc;
+			var rangeEnd = nowUtc < windowEndUtc ? nowUtc : windowEndUtc;
+
+			if (rangeEnd > rangeStart)
+				totalSeconds += (rangeEnd - rangeStart).TotalSeconds;
+		}
+
+		return (int)totalSeconds;
 	}
 
 	private async Task SendSystemAsync(Guid userId, string title, string body)

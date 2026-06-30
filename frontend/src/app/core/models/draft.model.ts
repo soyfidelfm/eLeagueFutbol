@@ -82,3 +82,13 @@ export interface DraftPlayer {
 export interface MakeDraftPick {
   gamePlayerId: string;
 }
+
+export interface DraftLotteryPreview {
+  drawNumber: number;
+  isFinal: boolean;
+  draftOrder: DraftOrder[];
+}
+export type DraftPlayerPoolFilter =
+  | 'ClubOnly'
+  | 'IncludeFreeAgents'
+  | 'FreeAgentsOnly';
