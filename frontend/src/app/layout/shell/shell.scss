@@ -87,10 +87,12 @@ app-navbar {
 app-footer {
   flex-shrink: 0;
 }
-
 @media (max-width: 1200px), (orientation: portrait) {
   .app-shell {
     flex-direction: column;
+    height: 100dvh;
+    min-height: 100dvh;
+
     background-size: cover;
     background-attachment: scroll;
   }
@@ -127,11 +129,18 @@ app-footer {
   }
 
   .page-content {
-    height: auto;
-    margin-top: calc(92px + env(safe-area-inset-top));
-    margin-bottom: calc(76px + env(safe-area-inset-bottom));
+    flex: 1;
+    min-height: 0;
+
+    margin-top: 0;
+    margin-bottom: 0;
+
+    padding-top: calc(92px + env(safe-area-inset-top));
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
 
     overflow-y: auto;
     overflow-x: hidden;
+
+    -webkit-overflow-scrolling: touch;
   }
 }
