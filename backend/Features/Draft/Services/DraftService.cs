@@ -808,7 +808,7 @@ public class DraftService : IDraftService
 
 	private static decimal GetDraftPrice(int? valueEur, int overall)
 	{
-		if (valueEur.HasValue && valueEur.Value > 0)
+		if (valueEur.HasValue)
 			return valueEur.Value;
 
 		return overall switch
