@@ -132,11 +132,19 @@ app-footer {
     flex: 1;
     min-height: 0;
 
-    margin-top: 0;
+    height: calc(
+      100dvh
+      - 92px
+      - env(safe-area-inset-top)
+      - 76px
+      - env(safe-area-inset-bottom)
+    );
+
+    margin-top: calc(92px + env(safe-area-inset-top));
     margin-bottom: 0;
 
-    padding-top: calc(92px + env(safe-area-inset-top));
-    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    padding-top: 0;
+    padding-bottom: 0;
 
     overflow-y: auto;
     overflow-x: hidden;
