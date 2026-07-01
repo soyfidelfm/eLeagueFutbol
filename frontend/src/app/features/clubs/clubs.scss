@@ -931,8 +931,9 @@
   order: 2;
 }
   .clubs-page {
-    padding: 16px;
-  }
+  padding: 16px;
+  padding-bottom: calc(140px + env(safe-area-inset-bottom));
+}
 
   .club-hero {
     grid-template-columns: 1fr;

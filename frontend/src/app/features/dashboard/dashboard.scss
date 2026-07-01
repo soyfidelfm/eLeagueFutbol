@@ -4,7 +4,6 @@
   color: var(--text-main);
   position: relative;
 }
-
 .kpi-strip {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -926,6 +925,7 @@
 @media (max-width: 900px) {
   .dashboard-content {
     padding: 16px;
+    padding-bottom: calc(140px + env(safe-area-inset-bottom));
   }
 
   .kpi-strip {
