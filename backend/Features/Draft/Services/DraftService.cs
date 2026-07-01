@@ -1,4 +1,4 @@
-﻿using backend.Data;
+using backend.Data;
 using backend.Entities.Clubs;
 using backend.Entities.Draft;
 using backend.Entities.Enums;
@@ -804,29 +804,31 @@ public class DraftService : IDraftService
 	}
 
 	private static int GetActiveDraftElapsedSecondsUtc(DateTime startUtc, DateTime nowUtc)
-	{
-		if (nowUtc <= startUtc)
-			return 0;
+{
+	if (nowUtc <= startUtc)
+		return 0;
 
-		startUtc = DateTime.SpecifyKind(startUtc, DateTimeKind.Utc);
-		nowUtc = DateTime.SpecifyKind(nowUtc, DateTimeKind.Utc);
+	startUtc = DateTime.SpecifyKind(startUtc, DateTimeKind.Utc);
+	nowUtc = DateTime.SpecifyKind(nowUtc, DateTimeKind.Utc);
 
-		var totalSeconds = 0d;
+	// Hoy: 4:40 PM California PDT = 23:40 UTC
+	// Hoy: 11:00 PM California PDT = 06:00 UTC del siguiente día
+	var windowStartUtc = startUtc.Date.AddHours(23).AddMinutes(40);
+	var windowEndUtc = startUtc.Date.AddDays(1).AddHours(6);
 
-		for (var day = startUtc.Date; day <= nowUtc.Date; day = day.AddDays(1))
-		{
-			var windowStartUtc = day.AddHours(3); // 03:00 UTC
-			var windowEndUtc = day.AddHours(6);   // 06:00 UTC
+	var rangeStart = startUtc > windowStartUtc
+		? startUtc
+		: windowStartUtc;
 
-			var rangeStart = startUtc > windowStartUtc ? startUtc : windowStartUtc;
-			var rangeEnd = nowUtc < windowEndUtc ? nowUtc : windowEndUtc;
+	var rangeEnd = nowUtc < windowEndUtc
+		? nowUtc
+		: windowEndUtc;
 
-			if (rangeEnd > rangeStart)
-				totalSeconds += (rangeEnd - rangeStart).TotalSeconds;
-		}
+	if (rangeEnd <= rangeStart)
+		return 0;
 
-		return (int)totalSeconds;
-	}
+	return (int)(rangeEnd - rangeStart).TotalSeconds;
+}
 
 	private async Task SendSystemAsync(Guid userId, string title, string body)
 	{
