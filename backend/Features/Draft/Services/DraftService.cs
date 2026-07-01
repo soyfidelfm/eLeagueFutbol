@@ -351,9 +351,36 @@ public class DraftService : IDraftService
 				x.Position.ToLower().Contains(pos));
 		}
 
+		if (freeAgentsClubId.HasValue &&
+			poolFilter == DraftPlayerPoolFilter.IncludeFreeAgents)
+		{
+			query = query
+				.OrderBy(x => x.GameClubId == freeAgentsClubId.Value ? 1 : 0)
+				.ThenByDescending(x =>
+					x.GameClubId != freeAgentsClubId.Value
+						? (x.ValueEur ?? 0)
+						: 0)
+				.ThenBy(x =>
+					x.GameClubId == freeAgentsClubId.Value
+						? (x.ValueEur ?? 0)
+						: decimal.MaxValue)
+				.ThenBy(x => x.Name);
+		}
+		else if (freeAgentsClubId.HasValue &&
+				 poolFilter == DraftPlayerPoolFilter.FreeAgentsOnly)
+		{
+			query = query
+				.OrderBy(x => x.ValueEur ?? 0)
+				.ThenBy(x => x.Name);
+		}
+		else
+		{
+			query = query
+				.OrderByDescending(x => x.ValueEur ?? 0)
+				.ThenBy(x => x.Name);
+		}
+
 		return await query
-			.OrderByDescending(x => x.Overall)
-			.ThenBy(x => x.Name)
 			.Skip((page - 1) * pageSize)
 			.Take(pageSize)
 			.Select(x => new DraftPlayerDto
