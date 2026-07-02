@@ -8,11 +8,12 @@ import { SeasonService } from '../../core/services/season.service';
 
 import { ClubRankingDto } from '../../core/models/ranking.model';
 import { Season } from '../../core/models/season.model';
+import { AppLoading } from '../../shared/components/app-loading/app-loading';
 
 @Component({
   selector: 'app-rankings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppLoading],
   templateUrl: './rankings.html',
   styleUrl: './rankings.scss'
 })

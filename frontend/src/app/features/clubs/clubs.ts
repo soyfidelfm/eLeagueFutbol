@@ -6,6 +6,7 @@ import { ClubService } from '../../core/services/club.service';
 import { CloudinaryService } from '../../core/services/cloudinary.service';
 import { MyClubDto } from '../../core/models/my-club.model';
 import { SquadLineupModalComponent } from '../clubs/components/squad-lineup-modal/squad-lineup-modal';
+import { AppLoading } from '../../shared/components/app-loading/app-loading';
 
 import {
   FORMATIONS,
@@ -20,7 +21,8 @@ type ClubPlayer = NonNullable<MyClubDto['players']>[number];
   standalone: true,
   imports: [
     CommonModule,
-    SquadLineupModalComponent
+    SquadLineupModalComponent,
+    AppLoading
   ],
   templateUrl: './clubs.html',
   styleUrl: './clubs.scss'

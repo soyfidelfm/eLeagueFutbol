@@ -1,24 +1,12 @@
 <section class="clubs-page">
 
-  <div *ngIf="isLoading" class="dashboard-loading-overlay">
-
-  <div class="loading-card">
-
-    <div class="loading-ring"></div>
-
-    <h2>LOADING CLUB</h2>
-
-    <p>
-      Loading club information and squad data...
-    </p>
-
-    <div class="loading-bar">
-      <span></span>
-    </div>
-
-  </div>
-
-</div>
+  <app-loading
+  *ngIf="isLoading"
+  title="Loading Club"
+  message="Loading club information and squad data..."
+  [logo]="true"
+  [showBar]="true">
+</app-loading>
 
   <div *ngIf="!isLoading && errorMessage" class="error">
     <i class="fa-solid fa-triangle-exclamation"></i>

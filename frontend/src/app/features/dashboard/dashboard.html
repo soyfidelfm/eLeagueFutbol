@@ -1,17 +1,12 @@
 <section class="dashboard-content">
 
-  <div class="dashboard-loading-overlay" *ngIf="isLoading">
-    <div class="loading-card">
-      <div class="loading-ring"></div>
-
-      <h2>LOADING ARENA</h2>
-      <p>Syncing live matches, rankings and stats...</p>
-
-      <div class="loading-bar">
-        <span></span>
-      </div>
-    </div>
-  </div>
+  <app-loading
+  *ngIf="isLoading"
+  title="Loading Arena"
+  message="Syncing live matches, rankings and stats..."
+  [logo]="true"
+  [showBar]="true">
+</app-loading>
 
   <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
     {{ errorMessage }}

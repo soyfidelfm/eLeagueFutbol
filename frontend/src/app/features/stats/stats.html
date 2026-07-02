@@ -1,20 +1,12 @@
 <section class="stats-page">
 
-  <div class="dashboard-loading-overlay" *ngIf="isLoading">
-    <div class="loading-card">
-      <div class="loading-ring"></div>
-
-      <h2>LOADING STATS</h2>
-
-      <p>
-        Loading player analytics, performance trends and league statistics...
-      </p>
-
-      <div class="loading-bar">
-        <span></span>
-      </div>
-    </div>
-  </div>
+  <app-loading
+  *ngIf="isLoading"
+  title="Loading Stats"
+  message="Loading player analytics, performance trends and league statistics..."
+  [logo]="true"
+  [showBar]="true">
+</app-loading>
 
   <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
     <i class="fa-solid fa-triangle-exclamation"></i>

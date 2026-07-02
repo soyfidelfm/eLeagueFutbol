@@ -7,6 +7,8 @@ import { SeasonService } from '../../core/services/season.service';
 import { MatchStatsService } from '../../core/services/match-stats.service';
 import { MatchOcrPreview } from '../../core/models/match-player-stats-ocr.model';
 
+import { AppLoading } from '../../shared/components/app-loading/app-loading';
+
 import {
   MatchDto,
   MatchWeekDto,
@@ -25,7 +27,8 @@ import {
   standalone: true,
   imports: [
     CommonModule,
-    NeonDropdownComponent
+    NeonDropdownComponent,
+    AppLoading
   ],
   templateUrl: './matches.html',
   styleUrl: './matches.scss'

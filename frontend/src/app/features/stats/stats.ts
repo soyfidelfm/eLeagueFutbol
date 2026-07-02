@@ -4,11 +4,12 @@ import { finalize } from 'rxjs';
 
 import { StatsService } from '../../core/services/stats.service';
 import { StatsOverview } from '../../core/models/stats-overview.model';
+import { AppLoading } from '../../shared/components/app-loading/app-loading';
 
 @Component({
   selector: 'app-stats',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AppLoading],
   templateUrl: './stats.html',
   styleUrl: './stats.scss',
 })

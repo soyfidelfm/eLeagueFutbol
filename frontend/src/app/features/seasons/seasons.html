@@ -1,17 +1,12 @@
 <section class="seasons-page">
 
-  <div class="dashboard-loading-overlay" *ngIf="isLoading">
-    <div class="loading-card">
-      <div class="loading-ring"></div>
-
-      <h2>LOADING SEASONS</h2>
-      <p>Loading season information, schedules and league configuration...</p>
-
-      <div class="loading-bar">
-        <span></span>
-      </div>
-    </div>
-  </div>
+  <app-loading
+  *ngIf="isLoading"
+  title="Loading Seasons"
+  message="Loading season information, schedules and league configuration..."
+  [logo]="true"
+  [showBar]="true">
+</app-loading>
 
   <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
     {{ errorMessage }}

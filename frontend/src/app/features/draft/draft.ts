@@ -6,7 +6,7 @@ import { finalize, forkJoin, take } from 'rxjs';
 
 import { DraftService } from '../../core/services/draft.service';
 import { SeasonService } from '../../core/services/season.service';
-
+import { AppLoading } from '../../shared/components/app-loading/app-loading';
 import {
   DraftCenter,
   DraftOrder,
@@ -16,6 +16,7 @@ import {
   DraftSquadPlayer
 } from '../../core/models/draft.model';
 
+
 interface SquadSlot {
   position: string;
   player?: DraftSquadPlayer;
@@ -24,7 +25,7 @@ interface SquadSlot {
 @Component({
   selector: 'app-draft',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppLoading],
   templateUrl: './draft.html',
   styleUrl: './draft.scss'
 })

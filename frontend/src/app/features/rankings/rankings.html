@@ -1,20 +1,12 @@
 <section class="rankings-page">
 
-  <div class="dashboard-loading-overlay" *ngIf="isLoading">
-    <div class="loading-card">
-      <div class="loading-ring"></div>
-
-      <h2>LOADING RANKINGS</h2>
-
-      <p>
-        Loading season standings, club statistics and leaderboard data...
-      </p>
-
-      <div class="loading-bar">
-        <span></span>
-      </div>
-    </div>
-  </div>
+  <app-loading
+  *ngIf="isLoading"
+  title="Loading Rankings"
+  message="Loading season standings, club statistics and leaderboard data..."
+  [logo]="true"
+  [showBar]="true">
+</app-loading>
 
   <div *ngIf="!isLoading && errorMessage" class="error">
     <i class="fa-solid fa-triangle-exclamation"></i>

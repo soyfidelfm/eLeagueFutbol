@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { Subscription, take } from 'rxjs';
 
 import { MessageService } from '../../core/services/message.service';
+import { AppLoading } from '../../shared/components/app-loading/app-loading';
 
 @Component({
   selector: 'app-message-notifications',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AppLoading],
   templateUrl: './message-notifications.html',
   styleUrl: './message-notifications.scss'
 })

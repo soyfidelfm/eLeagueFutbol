@@ -1,20 +1,12 @@
 <div class="draft-page">
 
-  <div *ngIf="isLoading" class="dashboard-loading-overlay">
-    <div class="loading-card">
-      <div class="loading-ring"></div>
-
-      <h2>LOADING DRAFT</h2>
-
-      <p>
-        Loading draft order, available players and squad data...
-      </p>
-
-      <div class="loading-bar">
-        <span></span>
-      </div>
-    </div>
-  </div>
+  <app-loading
+  *ngIf="isLoading"
+  title="Loading Draft"
+  message="Loading draft order, available players and squad data..."
+  [logo]="true"
+  [showBar]="true">
+</app-loading>
 
   <ng-container *ngIf="!isLoading">
 

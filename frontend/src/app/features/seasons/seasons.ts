@@ -12,13 +12,15 @@ import {
 
 import { SeasonService } from '../../core/services/season.service';
 import { MatchService } from '../../core/services/match.service';
+import { AppLoading } from '../../shared/components/app-loading/app-loading';
 
 @Component({
   selector: 'app-season',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    AppLoading
   ],
   templateUrl: './seasons.html',
   styleUrl: './seasons.scss'
