@@ -96,7 +96,7 @@ public class GameDataService : IGameDataService
 				Code = x.Code,
 				League = x.League,
 				Country = x.Country,
-				LogoUrl = x.LogoUrl
+				LogoUrl = x.LogoUrl ?? ""
 			})
 			.ToListAsync();
 	}
@@ -160,7 +160,7 @@ public class GameDataService : IGameDataService
 				Code = x.Code,
 				League = x.League,
 				Country = x.Country,
-				LogoUrl = x.LogoUrl
+				LogoUrl = x.LogoUrl ?? ""
 			})
 			.ToListAsync();
 	}
@@ -456,7 +456,7 @@ public class GameDataService : IGameDataService
 				Code = x.Code,
 				League = x.League,
 				Country = x.Country,
-				LogoUrl = x.LogoUrl
+				LogoUrl = x.LogoUrl ?? ""
 			})
 			.FirstOrDefaultAsync();
 	}

@@ -23,9 +23,20 @@ public class MyClubDto
 	public int GoalDifference { get; set; }
 	public int Rating { get; set; }
 
-public int Chemistry {get; set;}
+	public int Chemistry { get; set; }
 
+	public string Formation { get; set; } = "4-3-3 Control";
+
+	/// <summary>
+	/// Toda la plantilla del club.
+	/// </summary>
 	public List<MyClubPlayerDto> Players { get; set; } = [];
+
+	/// <summary>
+	/// Solamente el XI inicial.
+	/// </summary>
+	public List<MyClubPlayerDto> StartingPlayers { get; set; } = [];
+
 	public List<MyClubActivityDto> Activities { get; set; } = [];
 }
 
@@ -38,6 +49,17 @@ public class MyClubPlayerDto
 	public int? Overall { get; set; }
 	public string? AvatarUrl { get; set; }
 
+	// Para reconstruir la alineación guardada
+	public int SlotIndex { get; set; }
+
+	// Para chemistry
+	public string? Nation { get; set; }
+	public string? League { get; set; }
+
+	// Chemistry individual (0-3)
+	public int Chemistry { get; set; }
+
+	// Coordenadas para dibujar la cancha
 	public int X { get; set; }
 	public int Y { get; set; }
 }

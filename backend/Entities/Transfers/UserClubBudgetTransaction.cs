@@ -24,8 +24,6 @@ public class UserClubBudgetTransaction : BaseEntity
 
 	public string Description { get; set; } = string.Empty;
 
-	public DateTime CreatedAtUTC { get; set; }
-
 	public UserClub UserClub { get; set; } = null!;
 
 	public Season Season { get; set; } = null!;

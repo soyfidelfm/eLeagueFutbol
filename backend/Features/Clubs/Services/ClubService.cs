@@ -104,12 +104,14 @@ public class ClubService : IClubService
 				: x.HomeScore);
 
 		var goalDifference = goalsFor - goalsAgainst;
-
 		var rating = wins * 3 + draws;
 
-		var players = await _context.UserClubPlayers
+		var formation = "4-3-3 Control";
+
+		var allPlayers = await _context.UserClubPlayers
 			.AsNoTracking()
 			.Include(x => x.GamePlayer)
+				.ThenInclude(x => x.GameClub)
 			.Where(x =>
 				x.UserClubId == userClub.UserClubId &&
 				!x.IsDeleted &&
@@ -125,12 +127,80 @@ public class ClubService : IClubService
 				Position = x.GamePlayer.Position,
 				Overall = x.GamePlayer.Overall,
 				AvatarUrl = x.GamePlayer.ImageUrl,
+				SlotIndex = 0,
+				Nation = x.GamePlayer.Nation,
+				League = x.GamePlayer.GameClub != null
+					? x.GamePlayer.GameClub.League
+					: null,
+				Chemistry = 0,
 				X = 50,
 				Y = 50
 			})
 			.ToListAsync();
 
-		SetFormationPositions(players);
+		var lineup = await _context.ClubLineups
+			.AsNoTracking()
+			.Include(x => x.Players)
+				.ThenInclude(x => x.UserClubPlayer)
+					.ThenInclude(x => x.GamePlayer)
+						.ThenInclude(x => x.GameClub)
+			.FirstOrDefaultAsync(x =>
+				x.UserClubId == userClub.UserClubId &&
+				!x.IsDeleted);
+
+		List<MyClubPlayerDto> startingPlayers;
+
+		if (lineup is not null && lineup.Players.Count == 11)
+		{
+			formation = lineup.Formation;
+
+			startingPlayers = lineup.Players
+				.OrderBy(x => x.SlotIndex)
+				.Select(x => new MyClubPlayerDto
+				{
+					PlayerId = x.UserClubPlayer.GamePlayerId,
+					Name = string.IsNullOrWhiteSpace(x.UserClubPlayer.GamePlayer.Name)
+						? x.UserClubPlayer.GamePlayer.FullName
+						: x.UserClubPlayer.GamePlayer.Name,
+					Position = x.Position,
+					Overall = x.UserClubPlayer.GamePlayer.Overall,
+					AvatarUrl = x.UserClubPlayer.GamePlayer.ImageUrl,
+					SlotIndex = x.SlotIndex,
+					Nation = x.UserClubPlayer.GamePlayer.Nation,
+					League = x.UserClubPlayer.GamePlayer.GameClub != null
+						? x.UserClubPlayer.GamePlayer.GameClub.League
+						: null,
+					Chemistry = 0,
+					X = 50,
+					Y = 50
+				})
+				.ToList();
+		}
+		else
+		{
+			startingPlayers = allPlayers
+				.Take(11)
+				.Select((x, index) => new MyClubPlayerDto
+				{
+					PlayerId = x.PlayerId,
+					Name = x.Name,
+					Position = x.Position,
+					Overall = x.Overall,
+					AvatarUrl = x.AvatarUrl,
+					SlotIndex = index,
+					Nation = x.Nation,
+					League = x.League,
+					Chemistry = 0,
+					X = 50,
+					Y = 50
+				})
+				.ToList();
+		}
+
+		SetFormationPositions(startingPlayers, formation);
+		CalculateChemistry(startingPlayers, formation);
+
+		var chemistry = startingPlayers.Sum(x => x.Chemistry);
 
 		var activities = await _context.ActivityFeeds
 			.AsNoTracking()
@@ -151,11 +221,12 @@ public class ClubService : IClubService
 		{
 			ClubId = userClub.UserClubId,
 			Name = userClub.Name,
+			Formation = formation,
 
 			Abbreviation = baseClub?.Code ?? string.Empty,
 			LogoUrl = string.IsNullOrWhiteSpace(userClub.LogoUrl)
-	? string.Empty
-	: userClub.LogoUrl,
+				? string.Empty
+				: userClub.LogoUrl,
 
 			Description = string.Empty,
 			Slogan = null,
@@ -173,11 +244,14 @@ public class ClubService : IClubService
 			GoalDifference = goalDifference,
 			Rating = rating > 0 ? rating : baseClub?.OverallRating ?? 0,
 
-			Players = players,
+			Chemistry = chemistry,
+
+			Players = allPlayers,
+			StartingPlayers = startingPlayers,
+
 			Activities = activities
 		};
 	}
-
 	public async Task<MyClubDto?> UpdateClubLogoAsync(string auth0Id, string logoUrl)
 	{
 		if (string.IsNullOrWhiteSpace(logoUrl))
@@ -274,6 +348,7 @@ public class ClubService : IClubService
 			return null;
 
 		var userClubPlayers = await _context.UserClubPlayers
+			.AsNoTracking()
 			.Where(x =>
 				x.UserClubId == userClub.UserClubId &&
 				distinctGamePlayerIds.Contains(x.GamePlayerId) &&
@@ -287,7 +362,6 @@ public class ClubService : IClubService
 			.ToDictionary(x => x.GamePlayerId, x => x.UserClubPlayerId);
 
 		var lineup = await _context.ClubLineups
-			.Include(x => x.Players)
 			.FirstOrDefaultAsync(x =>
 				x.UserClubId == userClub.UserClubId &&
 				!x.IsDeleted);
@@ -302,14 +376,21 @@ public class ClubService : IClubService
 			};
 
 			_context.ClubLineups.Add(lineup);
+
+			await _context.SaveChangesAsync();
 		}
 		else
 		{
 			lineup.Formation = dto.Formation;
-			_context.ClubLineupPlayers.RemoveRange(lineup.Players);
+
+			await _context.SaveChangesAsync();
+
+			await _context.ClubLineupPlayers
+				.Where(x => x.ClubLineupId == lineup.ClubLineupId)
+				.ExecuteDeleteAsync();
 		}
 
-		lineup.Players = dto.Players
+		var newPlayers = dto.Players
 			.OrderBy(x => x.SlotIndex)
 			.Select(x => new ClubLineupPlayer
 			{
@@ -320,6 +401,8 @@ public class ClubService : IClubService
 				Position = x.Position ?? string.Empty
 			})
 			.ToList();
+
+		_context.ClubLineupPlayers.AddRange(newPlayers);
 
 		await _context.SaveChangesAsync();
 
@@ -332,28 +415,175 @@ public class ClubService : IClubService
 		return await GetMyClubAsync(user.UserId);
 	}
 
-	private static void SetFormationPositions(List<MyClubPlayerDto> players)
+	private sealed class FormationPoint
 	{
-		var positions = new[]
+		public int X { get; set; }
+		public int Y { get; set; }
+	}
+
+	private static void SetFormationPositions(
+		List<MyClubPlayerDto> players,
+		string formation)
+	{
+		List<FormationPoint> positions = formation switch
 		{
-			new { X = 18, Y = 15 },
-			new { X = 47, Y = 8 },
-			new { X = 74, Y = 15 },
-			new { X = 28, Y = 42 },
-			new { X = 48, Y = 38 },
-			new { X = 68, Y = 42 },
-			new { X = 12, Y = 67 },
-			new { X = 34, Y = 70 },
-			new { X = 60, Y = 70 },
-			new { X = 82, Y = 67 },
-			new { X = 48, Y = 88 }
+			"4-4-2 Flat" => new List<FormationPoint>
+		{
+			new FormationPoint { X = 35, Y = 12 },
+			new FormationPoint { X = 65, Y = 12 },
+
+			new FormationPoint { X = 15, Y = 38 },
+			new FormationPoint { X = 38, Y = 40 },
+			new FormationPoint { X = 62, Y = 40 },
+			new FormationPoint { X = 85, Y = 38 },
+
+			new FormationPoint { X = 15, Y = 68 },
+			new FormationPoint { X = 38, Y = 72 },
+			new FormationPoint { X = 62, Y = 72 },
+			new FormationPoint { X = 85, Y = 68 },
+
+			new FormationPoint { X = 50, Y = 90 }
+		},
+
+			"4-1-2-1-2 Narrow" => new List<FormationPoint>
+		{
+			new FormationPoint { X = 35, Y = 12 },
+			new FormationPoint { X = 65, Y = 12 },
+
+			new FormationPoint { X = 50, Y = 30 },
+
+			new FormationPoint { X = 35, Y = 45 },
+			new FormationPoint { X = 65, Y = 45 },
+
+			new FormationPoint { X = 50, Y = 58 },
+
+			new FormationPoint { X = 15, Y = 72 },
+			new FormationPoint { X = 38, Y = 76 },
+			new FormationPoint { X = 62, Y = 76 },
+			new FormationPoint { X = 85, Y = 72 },
+
+			new FormationPoint { X = 50, Y = 92 }
+		},
+
+			_ => new List<FormationPoint>
+		{
+			new FormationPoint { X = 18, Y = 15 },
+			new FormationPoint { X = 47, Y = 8 },
+			new FormationPoint { X = 74, Y = 15 },
+
+			new FormationPoint { X = 28, Y = 42 },
+			new FormationPoint { X = 48, Y = 38 },
+			new FormationPoint { X = 68, Y = 42 },
+
+			new FormationPoint { X = 12, Y = 67 },
+			new FormationPoint { X = 34, Y = 70 },
+			new FormationPoint { X = 60, Y = 70 },
+			new FormationPoint { X = 82, Y = 67 },
+
+			new FormationPoint { X = 48, Y = 88 }
+		}
 		};
 
-		for (var i = 0; i < players.Count && i < positions.Length; i++)
+		for (var i = 0; i < players.Count && i < positions.Count; i++)
 		{
 			players[i].X = positions[i].X;
 			players[i].Y = positions[i].Y;
 		}
+	}
+
+	private static void CalculateChemistry(
+		List<MyClubPlayerDto> players,
+		string formation)
+	{
+		var slotPositions = GetFormationSlotPositions(formation);
+
+		foreach (var player in players)
+		{
+			var playerChemistry = 0;
+
+			if (slotPositions.TryGetValue(player.SlotIndex, out var expectedPosition) &&
+				IsCorrectPosition(player.Position, expectedPosition))
+			{
+				playerChemistry++;
+			}
+
+			if (!string.IsNullOrWhiteSpace(player.League) &&
+				players.Count(x => x.League == player.League) >= 2)
+			{
+				playerChemistry++;
+			}
+
+			if (!string.IsNullOrWhiteSpace(player.Nation) &&
+				players.Count(x => x.Nation == player.Nation) >= 2)
+			{
+				playerChemistry++;
+			}
+
+			player.Chemistry = Math.Min(playerChemistry, 3);
+		}
+	}
+
+	private static Dictionary<int, string> GetFormationSlotPositions(string formation)
+	{
+		return formation switch
+		{
+			"4-4-2 Flat" => new Dictionary<int, string>
+			{
+				{ 0, "ST" },
+				{ 1, "ST" },
+				{ 2, "LM" },
+				{ 3, "CM" },
+				{ 4, "CM" },
+				{ 5, "RM" },
+				{ 6, "LB" },
+				{ 7, "CB" },
+				{ 8, "CB" },
+				{ 9, "RB" },
+				{ 10, "GK" }
+			},
+
+			"4-1-2-1-2 Narrow" => new Dictionary<int, string>
+			{
+				{ 0, "ST" },
+				{ 1, "ST" },
+				{ 2, "CAM" },
+				{ 3, "CM" },
+				{ 4, "CM" },
+				{ 5, "CDM" },
+				{ 6, "LB" },
+				{ 7, "CB" },
+				{ 8, "CB" },
+				{ 9, "RB" },
+				{ 10, "GK" }
+			},
+
+			_ => new Dictionary<int, string>
+			{
+				{ 0, "LW" },
+				{ 1, "ST" },
+				{ 2, "RW" },
+				{ 3, "CM" },
+				{ 4, "CM" },
+				{ 5, "CM" },
+				{ 6, "LB" },
+				{ 7, "CB" },
+				{ 8, "CB" },
+				{ 9, "RB" },
+				{ 10, "GK" }
+			}
+		};
+	}
+
+	private static bool IsCorrectPosition(string? playerPositions, string expectedPosition)
+	{
+		if (string.IsNullOrWhiteSpace(playerPositions))
+			return false;
+
+		var positions = playerPositions
+			.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+		return positions.Any(x =>
+			string.Equals(x, expectedPosition, StringComparison.OrdinalIgnoreCase));
 	}
 
 	private static string GetActivityIcon(string type)

@@ -1,0 +1,104 @@
+<div class="lineup-modal-backdrop">
+  <div class="lineup-modal">
+
+    <div class="lineup-modal-header">
+      <div>
+        <span>Squad Management</span>
+        <h2>Edit Starting XI</h2>
+      </div>
+
+      <button type="button" class="close-btn" (click)="close.emit()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="formation-toolbar">
+      <button type="button" class="formation-arrow" (click)="previousFormation()">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+
+      <div class="formation-info">
+        <span>Formation</span>
+        <strong>{{ selectedFormation }}</strong>
+      </div>
+
+      <button type="button" class="formation-arrow" (click)="nextFormation()">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <div class="lineup-modal-body">
+
+      <div class="modal-field">
+        <div
+          class="player-card"
+          *ngFor="let player of startingPlayers; let i = index"
+          [class.selected]="selectedSlotIndex === i"
+          [style.left.%]="formationLayout[i]?.left"
+          [style.top.%]="formationLayout[i]?.top"
+          (click)="selectSlot(i)"
+        >
+          <div class="player-top">
+            <strong>{{ player.overall ?? '-' }}</strong>
+            <span>{{ formationLayout[i]?.position || player.position || 'N/A' }}</span>
+          </div>
+
+          <img
+            [src]="player.avatarUrl || '/images/avatar.png'"
+            alt=""
+            referrerpolicy="no-referrer"
+            (error)="onPlayerImageError($event)"
+          />
+
+          <small>{{ player.name }}</small>
+        </div>
+      </div>
+
+      <div class="available-list">
+  <h3>Available Players</h3>
+
+  <div class="available-scroll">
+    <button
+      type="button"
+      class="available-player"
+      *ngFor="let player of players"
+      (click)="replacePlayer(player)"
+    >
+      <img
+        [src]="player.avatarUrl || '/images/avatar.png'"
+        alt=""
+        referrerpolicy="no-referrer"
+        (error)="onPlayerImageError($event)"
+      />
+
+      <div class="player-info">
+        <strong>{{ player.name }}</strong>
+
+        <div class="player-meta">
+          <span>{{ player.position || 'N/A' }}</span>
+          <span>{{ player.overall ?? '-' }} OVR</span>
+        </div>
+      </div>
+    </button>
+  </div>
+</div>
+
+    </div>
+
+    <div class="lineup-modal-footer">
+      <button type="button" (click)="close.emit()">
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        class="save-btn"
+        [disabled]="!canSave"
+        (click)="saveLineup()"
+      >
+        Save Lineup
+      </button>
+    </div>
+
+  </div>
+</div>

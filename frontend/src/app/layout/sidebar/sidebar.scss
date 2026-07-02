@@ -436,11 +436,37 @@
    RESPONSIVE
 ========================================= */
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
+  .sidebar {
+    width: 230px;
+    min-width: 230px;
+
+    padding: 18px 14px;
+  }
+
+  .sidebar-logo img {
+    width: 180px;
+  }
+
+  .season-card,
+  .cup-card {
+    padding: 18px;
+  }
+
+  .countdown {
+    gap: 8px;
+  }
+
+  .countdown div {
+    width: 52px;
+    height: 56px;
+  }
+}
+
+@media (max-width: 1024px) {
   .sidebar {
     width: 100%;
     min-width: 100%;
-
     height: auto;
 
     position: relative;

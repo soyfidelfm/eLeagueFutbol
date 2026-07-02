@@ -5,6 +5,7 @@ import { finalize, switchMap } from 'rxjs';
 import { ClubService } from '../../core/services/club.service';
 import { CloudinaryService } from '../../core/services/cloudinary.service';
 import { MyClubDto } from '../../core/models/my-club.model';
+import { SquadLineupModalComponent } from '../clubs/components/squad-lineup-modal/squad-lineup-modal';
 
 import {
   FORMATIONS,
@@ -17,7 +18,10 @@ type ClubPlayer = NonNullable<MyClubDto['players']>[number];
 @Component({
   selector: 'app-clubs',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    SquadLineupModalComponent
+  ],
   templateUrl: './clubs.html',
   styleUrl: './clubs.scss'
 })
@@ -29,18 +33,13 @@ export class Clubs implements OnInit {
   formationLayouts = FORMATION_LAYOUTS;
 
   formationIndex = 0;
-  modalFormationIndex = 0;
 
   selectedFormationLayout: FormationPlayerPosition[] = [];
-  modalFormationLayout: FormationPlayerPosition[] = [];
 
-  chemistry = 92;
-
+  chemistry = 0;
   startingPlayers: ClubPlayer[] = [];
-  modalStartingPlayers: ClubPlayer[] = [];
 
   isSquadModalOpen = false;
-  selectedSlotIndex: number | null = null;
 
   isLoading = false;
   isUploadingLogo = false;
@@ -53,7 +52,6 @@ export class Clubs implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.updateFormation();
     this.loadMyClub();
   }
 
@@ -61,53 +59,50 @@ export class Clubs implements OnInit {
     return this.formations[this.formationIndex];
   }
 
-  get modalSelectedFormation(): string {
-    return this.formations[this.modalFormationIndex];
+  get players(): ClubPlayer[] {
+    return this.club?.players ?? [];
   }
 
-  nextFormation(): void {
-    this.formationIndex =
-      (this.formationIndex + 1) % this.formations.length;
-
-    this.updateFormation();
+  get activities() {
+    return this.club?.activities ?? [];
   }
 
-  previousFormation(): void {
-    this.formationIndex =
-      (this.formationIndex - 1 + this.formations.length) %
-      this.formations.length;
+  get stats() {
+    if (!this.club) {
+      return [];
+    }
 
-    this.updateFormation();
-  }
-
-  nextModalFormation(): void {
-    this.modalFormationIndex =
-      (this.modalFormationIndex + 1) % this.formations.length;
-
-    this.updateModalFormation();
-  }
-
-  previousModalFormation(): void {
-    this.modalFormationIndex =
-      (this.modalFormationIndex - 1 + this.formations.length) %
-      this.formations.length;
-
-    this.updateModalFormation();
-  }
-
-  private updateFormation(): void {
-    this.selectedFormationLayout = this.getFormationLayout(this.selectedFormation);
-    this.cdr.detectChanges();
-  }
-
-  private updateModalFormation(): void {
-    this.modalFormationLayout = this.getFormationLayout(this.modalSelectedFormation);
-    this.cdr.detectChanges();
-  }
-
-  private getFormationLayout(formation: string): FormationPlayerPosition[] {
     return [
-      ...(this.formationLayouts[formation] ?? [])
+      {
+        label: 'Matches Played',
+        value: this.club.matchesPlayed.toString(),
+        sub: 'Match History',
+        icon: 'fa-solid fa-shield-halved'
+      },
+      {
+        label: 'Wins',
+        value: this.club.wins.toString(),
+        sub: this.getWinPercentage(),
+        icon: 'fa-solid fa-trophy'
+      },
+      {
+        label: 'Goals Scored',
+        value: this.club.goalsFor.toString(),
+        sub: `${this.getAverage(this.club.goalsFor)} per match`,
+        icon: 'fa-solid fa-crosshairs'
+      },
+      {
+        label: 'Goals Conceded',
+        value: this.club.goalsAgainst.toString(),
+        sub: `${this.getAverage(this.club.goalsAgainst)} per match`,
+        icon: 'fa-solid fa-shield'
+      },
+      {
+        label: 'Club Rating',
+        value: this.club.rating.toString(),
+        sub: 'Current Rating',
+        icon: 'fa-regular fa-star'
+      }
     ];
   }
 
@@ -116,7 +111,7 @@ export class Clubs implements OnInit {
     this.errorMessage = '';
     this.club = null;
     this.startingPlayers = [];
-    this.modalStartingPlayers = [];
+
     this.cdr.detectChanges();
 
     this.clubService.getMyClub()
@@ -129,9 +124,19 @@ export class Clubs implements OnInit {
       .subscribe({
         next: (response: MyClubDto) => {
           this.club = response;
-          this.startingPlayers = [...(response.players ?? [])].slice(0, 11);
 
-          console.log('Club loaded:', response);
+          const savedFormation = response.formation || '4-3-3 Control';
+          const savedFormationIndex = this.formations.findIndex(x => x === savedFormation);
+
+          this.formationIndex = savedFormationIndex >= 0 ? savedFormationIndex : 0;
+          this.selectedFormationLayout = this.getFormationLayout(this.selectedFormation);
+
+          this.startingPlayers = [...(response.players ?? [])]
+            .sort((a, b) => (a.slotIndex ?? 0) - (b.slotIndex ?? 0))
+            .slice(0, 11);
+
+          this.chemistry = response.chemistry ?? 0;
+
           this.cdr.detectChanges();
         },
         error: err => {
@@ -144,64 +149,20 @@ export class Clubs implements OnInit {
 
   openSquadModal(): void {
     this.isSquadModalOpen = true;
-    this.selectedSlotIndex = null;
-
-    this.modalFormationIndex = this.formationIndex;
-    this.modalFormationLayout = this.getFormationLayout(this.selectedFormation);
-
-    this.modalStartingPlayers = [
-      ...this.startingPlayers
-    ];
-
     this.cdr.detectChanges();
   }
 
   closeSquadModal(): void {
     this.isSquadModalOpen = false;
-    this.selectedSlotIndex = null;
-
-    this.modalStartingPlayers = [];
-    this.modalFormationLayout = [];
-
     this.cdr.detectChanges();
   }
 
-  selectSlot(index: number): void {
-    this.selectedSlotIndex = index;
-    this.cdr.detectChanges();
-  }
-
-  replacePlayer(player: ClubPlayer): void {
-    if (this.selectedSlotIndex === null) {
-      return;
-    }
-
-    this.modalStartingPlayers[this.selectedSlotIndex] = player;
-    this.selectedSlotIndex = null;
-
-    this.cdr.detectChanges();
-  }
-
-  saveLineup(): void {
-  if (this.modalStartingPlayers.length !== 11) {
+ saveLineup(payload: { formation: string; players: { playerId: string; slotIndex: number; position: string }[] }): void {
+  if (payload.players.length !== 11) {
     this.errorMessage = 'Starting XI must have 11 players.';
     this.cdr.detectChanges();
     return;
   }
-
-  const formation = this.modalSelectedFormation;
-  const layout = this.getFormationLayout(formation);
-
-  const payload = {
-    formation,
-    players: this.modalStartingPlayers.map((player, index) => ({
-      playerId: player.playerId,
-      slotIndex: index,
-      position: layout[index]?.position ?? player.position
-    }))
-  };
-
-  console.log('Sending lineup payload:', payload);
 
   this.clubService.updateMyClubLineup(payload)
     .pipe(
@@ -213,14 +174,19 @@ export class Clubs implements OnInit {
       next: (updatedClub: MyClubDto) => {
         this.club = updatedClub;
 
-        this.formationIndex = this.modalFormationIndex;
-        this.selectedFormationLayout = layout;
+        const savedFormation = updatedClub.formation || payload.formation;
+        const savedFormationIndex = this.formations.findIndex(x => x === savedFormation);
 
-        this.startingPlayers = [...this.modalStartingPlayers];
+        this.formationIndex = savedFormationIndex >= 0 ? savedFormationIndex : 0;
+        this.selectedFormationLayout = this.getFormationLayout(this.selectedFormation);
+
+        this.startingPlayers = [...(updatedClub.players ?? [])]
+          .sort((a, b) => (a.slotIndex ?? 0) - (b.slotIndex ?? 0))
+          .slice(0, 11);
+
+        this.chemistry = updatedClub.chemistry ?? 0;
 
         this.closeSquadModal();
-
-        console.log('Lineup saved:', updatedClub);
       },
       error: err => {
         console.error('Error saving lineup', err);
@@ -282,53 +248,6 @@ export class Clubs implements OnInit {
       });
   }
 
-  get stats() {
-    if (!this.club) {
-      return [];
-    }
-
-    return [
-      {
-        label: 'Matches Played',
-        value: this.club.matchesPlayed.toString(),
-        sub: 'Match History',
-        icon: 'fa-solid fa-shield-halved'
-      },
-      {
-        label: 'Wins',
-        value: this.club.wins.toString(),
-        sub: this.getWinPercentage(),
-        icon: 'fa-solid fa-trophy'
-      },
-      {
-        label: 'Goals Scored',
-        value: this.club.goalsFor.toString(),
-        sub: `${this.getAverage(this.club.goalsFor)} per match`,
-        icon: 'fa-solid fa-crosshairs'
-      },
-      {
-        label: 'Goals Conceded',
-        value: this.club.goalsAgainst.toString(),
-        sub: `${this.getAverage(this.club.goalsAgainst)} per match`,
-        icon: 'fa-solid fa-shield'
-      },
-      {
-        label: 'Club Rating',
-        value: this.club.rating.toString(),
-        sub: 'Current Rating',
-        icon: 'fa-regular fa-star'
-      }
-    ];
-  }
-
-  get players() {
-    return this.club?.players ?? [];
-  }
-
-  get activities() {
-    return this.club?.activities ?? [];
-  }
-
   onImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
 
@@ -343,6 +262,12 @@ export class Clubs implements OnInit {
     if (!img.src.includes('/images/avatar.png')) {
       img.src = '/images/avatar.png';
     }
+  }
+
+  private getFormationLayout(formation: string): FormationPlayerPosition[] {
+    return [
+      ...(this.formationLayouts[formation] ?? [])
+    ];
   }
 
   private getWinPercentage(): string {

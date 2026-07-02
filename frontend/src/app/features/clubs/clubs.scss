@@ -608,31 +608,36 @@
 
 .squad-modal-backdrop {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 290px;
 
-  z-index: 9999;
+  z-index: 1000000;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  padding: 24px;
+  padding: 16px;
+  overflow-y: auto;
 
   background: rgba(0, 0, 0, 0.72);
-
   backdrop-filter: blur(14px);
 }
 
 .squad-modal {
-  width: min(1200px, 100%);
-  height: 92dvh;
-  max-height: 92dvh;
+  width: 100%;
+  max-width: calc(100% - 32px);
+
+  height: auto;
+  max-height: calc(100dvh - 32px);
+  min-height: 0;
 
   display: flex;
   flex-direction: column;
 
   border-radius: 24px;
-
   border: 1px solid var(--border-primary);
 
   background:
@@ -662,7 +667,6 @@
 
   span {
     color: var(--neon-primary);
-
     font-size: 12px;
     font-weight: 900;
     letter-spacing: 2px;
@@ -671,7 +675,6 @@
 
   h2 {
     margin: 6px 0 0;
-
     color: var(--text-main);
     font-size: 26px;
   }
@@ -717,27 +720,28 @@
   min-height: 0;
 
   display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
 
-  padding: 24px;
+  padding: 18px;
 
   overflow: hidden;
 }
 
 .modal-field {
   min-height: 0;
-  height: 100%;
-}
-
-.modal-card {
-  cursor: pointer;
+  height: min(560px, 55vh);
 }
 
 .squad-list {
+  min-width: 0;
   min-height: 0;
+  height: 100%;
+  max-height: 100%;
 
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 
   padding: 18px;
 
@@ -745,16 +749,32 @@
   border: 1px solid var(--border-secondary);
 
   background: var(--bg-card);
-
-  h3 {
-    margin: 0 0 16px;
-
-    color: var(--text-main);
-    font-size: 15px;
-    text-align: left;
-    text-transform: uppercase;
-  }
 }
+
+.squad-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.squad-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+
+.squad-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 136, 0.45);
+  border-radius: 999px;
+}
+
+.modal-field {
+  min-height: 0;
+  height: min(650px, 60vh);
+}
+
+.modal-card {
+  cursor: pointer;
+}
+
+
 
 .squad-player-row {
   width: 100%;
@@ -798,7 +818,6 @@
   div {
     flex: 1;
     min-width: 0;
-
     text-align: left;
   }
 
@@ -833,6 +852,10 @@
 .squad-modal-footer {
   flex-shrink: 0;
 
+  height: calc(100dvh - 32px);
+  max-height: calc(100dvh - 32px);
+  min-height: 0;
+
   display: flex;
   justify-content: flex-end;
   gap: 14px;
@@ -850,7 +873,6 @@
 
   button {
     height: 42px;
-
     padding: 0 20px;
 
     border-radius: 12px;
@@ -860,7 +882,6 @@
     color: var(--text-main);
 
     font-weight: 900;
-
     cursor: pointer;
 
     &:hover {
@@ -874,7 +895,6 @@
     pointer-events: auto;
 
     border-color: var(--neon-primary);
-
     background: var(--neon-primary);
     color: var(--text-inverse);
 
@@ -916,24 +936,35 @@
   color: var(--neon-primary);
   font-weight: 900;
 }
+@media (max-width: 1400px) {
+  .squad-modal-body {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 14px;
+  }
+
+  .modal-field {
+    height: min(520px, 52vh);
+  }
+}
 
 @media (max-width: 768px) {
   .content-grid {
-  grid-template-columns: 1fr;
-  gap: 18px;
-}
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
 
-.roster-panel {
-  order: 1;
-}
+  .roster-panel {
+    order: 1;
+  }
 
-.activity-panel {
-  order: 2;
-}
+  .activity-panel {
+    order: 2;
+  }
+
   .clubs-page {
-  padding: 16px;
-  padding-bottom: calc(140px + env(safe-area-inset-bottom));
-}
+    padding: 16px;
+    padding-bottom: calc(140px + env(safe-area-inset-bottom));
+  }
 
   .club-hero {
     grid-template-columns: 1fr;
@@ -989,18 +1020,14 @@
   }
 
   .squad-modal-backdrop {
-    position: fixed;
-    top: calc(104px + env(safe-area-inset-top));
-    bottom: calc(70px + env(safe-area-inset-bottom));
-    left: 0;
-    right: 0;
-    z-index: 99999;
+    inset: 0;
+    z-index: 1000000;
 
-    display: flex;
     align-items: stretch;
     justify-content: center;
 
-    padding: 0 8px;
+    padding: 0;
+
     overflow: hidden;
 
     background: rgba(0, 0, 0, 0.72);
@@ -1008,22 +1035,21 @@
   }
 
   .squad-modal {
-    width: 100%;
-    height: 100%;
-    max-height: 100%;
+  width: 100%;
+  max-width: calc(100% - 32px);
 
-    display: flex;
-    flex-direction: column;
+  height: auto;
+  max-height: calc(100dvh - 32px);
+  min-height: 700px;
 
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
-    border-radius: 18px;
-  }
+  overflow: hidden;
+}
 
   .squad-modal-header {
-    flex: 0 0 auto;
-
-    padding: 8px 12px;
+    padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
 
     h2 {
       margin-top: 3px;
@@ -1045,10 +1071,6 @@
   .modal-formation-toolbar {
     flex: 0 0 42px;
 
-    height: 42px;
-    min-height: 42px;
-    max-height: 42px;
-
     display: grid;
     grid-template-columns: 30px 1fr 30px;
     align-items: center;
@@ -1058,9 +1080,6 @@
     padding: 4px 8px;
 
     border-radius: 14px;
-    border: 1px solid var(--border-primary);
-
-    background: var(--neon-soft);
   }
 
   .formation-arrow {
@@ -1068,7 +1087,6 @@
     height: 30px;
     min-width: 30px;
     min-height: 30px;
-
     padding: 0;
   }
 
@@ -1083,16 +1101,13 @@
 
   .formation-info span {
     display: block;
-
     margin-bottom: 1px;
-
     font-size: 8px;
     line-height: 1;
   }
 
   .formation-info strong {
     display: block;
-
     font-size: 15px;
     line-height: 1;
 
@@ -1102,7 +1117,7 @@
   }
 
   .squad-modal-body {
-    flex: 1 1 auto;
+    flex: 1;
     min-height: 0;
 
     display: flex;
@@ -1115,12 +1130,12 @@
   }
 
   .modal-field {
-    display: block;
     position: relative;
-
     width: 100%;
-    height: 170px;
-    min-height: 170px;
+
+    height: 180px;
+    min-height: 180px;
+    max-height: 180px;
 
     overflow: hidden;
   }
@@ -1128,7 +1143,6 @@
   .modal-card {
     width: 42px;
     min-height: 56px;
-
     padding: 3px;
 
     transform: translate(-50%, -50%);
@@ -1137,7 +1151,6 @@
   .modal-card img {
     width: 20px;
     height: 20px;
-
     margin: 3px auto 2px;
   }
 
@@ -1164,19 +1177,19 @@
   }
 
   .squad-list {
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: none;
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 100%;
 
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 
-    padding: 8px;
-  }
+  padding: 8px;
+}
 
   .squad-list h3 {
     margin: 0 0 8px;
-
     font-size: 13px;
     line-height: 1;
   }
@@ -1201,7 +1214,6 @@
 
   .player-info strong {
     display: block;
-
     font-size: 12px;
 
     white-space: nowrap;
@@ -1231,72 +1243,25 @@
   }
 
   .squad-modal-footer {
-    flex: 0 0 46px;
-
-    height: 46px;
-    min-height: 46px;
-    max-height: 46px;
+    flex: 0 0 auto;
 
     display: flex;
     justify-content: flex-end;
     gap: 8px;
 
-    padding: 6px 10px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
 
     border-top: 1px solid var(--border-secondary);
 
-    background:
-      linear-gradient(
-        180deg,
-        rgba(2, 4, 3, 0.96),
-        rgba(2, 4, 3, 1)
-      );
-
     button {
-      flex: 0 0 auto;
-
       height: 32px;
-      min-height: 32px;
-      max-height: 32px;
-
       padding: 0 12px;
 
       border-radius: 9px;
-      border: 1px solid var(--border-secondary);
-
-      background: transparent;
-      color: var(--text-main);
 
       font-size: 11px;
       font-weight: 900;
       line-height: 1;
-
-      cursor: pointer;
-
-      &:hover {
-        border-color: var(--neon-primary);
-        color: var(--neon-primary);
-      }
-    }
-
-    .save-lineup-btn {
-      opacity: 1 !important;
-      pointer-events: auto;
-
-      border-color: var(--neon-primary);
-
-      background: var(--neon-primary);
-      color: var(--text-inverse);
-
-      &:hover {
-        background: var(--neon-secondary);
-        color: var(--text-inverse);
-      }
-
-      &:disabled {
-        opacity: 0.55 !important;
-        cursor: not-allowed;
-      }
     }
   }
 }
