@@ -811,23 +811,28 @@ public class DraftService : IDraftService
 	startUtc = DateTime.SpecifyKind(startUtc, DateTimeKind.Utc);
 	nowUtc = DateTime.SpecifyKind(nowUtc, DateTimeKind.Utc);
 
-	// Hoy: 4:40 PM California PDT = 23:40 UTC
-	// Hoy: 11:00 PM California PDT = 06:00 UTC del siguiente día
-	var windowStartUtc = startUtc.Date.AddHours(23).AddMinutes(40);
-	var windowEndUtc = startUtc.Date.AddDays(1).AddHours(6);
+	var totalSeconds = 0d;
 
-	var rangeStart = startUtc > windowStartUtc
-		? startUtc
-		: windowStartUtc;
+	for (var day = startUtc.Date; day <= nowUtc.Date; day = day.AddDays(1))
+	{
+		// 5:00 PM California PDT = 00:00 UTC
+		// 11:00 PM California PDT = 06:00 UTC
+		var windowStartUtc = day.AddHours(0); // 00:00 UTC
+		var windowEndUtc = day.AddHours(6);   // 06:00 UTC
 
-	var rangeEnd = nowUtc < windowEndUtc
-		? nowUtc
-		: windowEndUtc;
+		var rangeStart = startUtc > windowStartUtc
+			? startUtc
+			: windowStartUtc;
 
-	if (rangeEnd <= rangeStart)
-		return 0;
+		var rangeEnd = nowUtc < windowEndUtc
+			? nowUtc
+			: windowEndUtc;
 
-	return (int)(rangeEnd - rangeStart).TotalSeconds;
+		if (rangeEnd > rangeStart)
+			totalSeconds += (rangeEnd - rangeStart).TotalSeconds;
+	}
+
+	return (int)totalSeconds;
 }
 
 	private async Task SendSystemAsync(Guid userId, string title, string body)
