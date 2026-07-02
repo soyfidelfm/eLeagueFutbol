@@ -3,6 +3,7 @@ using backend.Entities.Common;
 using backend.Entities.Enums;
 using backend.Entities.GameData;
 using backend.Entities.Identity;
+using backend.Entities.MatchStats;
 using backend.Entities.MatchSummary;
 using backend.Entities.Stats;
 
@@ -57,4 +58,7 @@ public UserClub? AwayUserClub { get; set; }
 
 	public ICollection<MatchPlayerStats> PlayerStats { get; set; }
 		= new List<MatchPlayerStats>();
+
+	public ICollection<MatchStatsUpload> StatsUploads { get; set; }
+= new List<MatchStatsUpload>();
 }

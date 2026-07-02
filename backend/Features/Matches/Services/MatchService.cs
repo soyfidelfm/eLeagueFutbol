@@ -1,19 +1,29 @@
 ﻿using backend.Data;
 using backend.Entities.Clubs;
 using backend.Entities.Enums;
+using backend.Entities.MatchStats;
+using backend.Entities.MatchSummary;
+using backend.Entities.Stats;
 using backend.Entities.Tournaments;
 using backend.Features.Matches.Dtos;
+using backend.Features.Stats.Dtos;
+using backend.Features.Stats.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace backend.Features.Matches.Services;
 
 public class MatchService : IMatchService
 {
 	private readonly AppDbContext _context;
+	private readonly IMatchStatsOcrService _ocrService;
 
-	public MatchService(AppDbContext context)
+	public MatchService(
+		AppDbContext context,
+		IMatchStatsOcrService ocrService)
 	{
 		_context = context;
+		_ocrService = ocrService;
 	}
 
 	public async Task<List<MatchWeekDto>> GetWeeksAsync(Guid seasonId)
@@ -62,8 +72,16 @@ public class MatchService : IMatchService
 			.ThenBy(x => x.MatchDate)
 			.ToListAsync();
 
+		var userIds = matches
+			.SelectMany(x => new[] { x.HomeUserId, x.AwayUserId })
+			.Where(x => x != Guid.Empty)
+			.Distinct()
+			.ToList();
+
+		var streaks = await GetTeamStreaksAsync(seasonId, userIds);
+
 		return matches
-			.Select(x => MapToDto(x, timeZone, userClubs))
+			.Select(x => MapToDto(x, timeZone, userClubs, streaks))
 			.ToList();
 	}
 
@@ -91,7 +109,15 @@ public class MatchService : IMatchService
 
 		var userClubs = await GetUserClubMapAsync(match.Tournament.SeasonId);
 
-		return MapToDto(match, timeZone, userClubs);
+		var userIds = new List<Guid>
+		{
+			match.HomeUserId,
+			match.AwayUserId
+		};
+
+		var streaks = await GetTeamStreaksAsync(match.Tournament.SeasonId, userIds);
+
+		return MapToDto(match, timeZone, userClubs, streaks);
 	}
 
 	public async Task<MatchResultDto?> UploadResultAsync(
@@ -118,6 +144,99 @@ public class MatchService : IMatchService
 			HomeScore = match.HomeScore,
 			AwayScore = match.AwayScore,
 			Status = match.Status.ToString()
+		};
+	}
+
+	public async Task<MatchStatsUploadResultDto?> UploadStatsImageAsync(
+	Guid matchId,
+	UploadMatchStatsImageDto dto)
+	{
+		var match = await _context.Matches
+			.FirstOrDefaultAsync(x =>
+				!x.IsDeleted &&
+				x.MatchId == matchId);
+
+		if (match is null)
+			return null;
+
+		object rawPreview = dto.Type switch
+		{
+			MatchStatsUploadType.MatchSummary =>
+				await _ocrService.PreviewMatchSummaryAsync(dto.Image),
+
+			MatchStatsUploadType.HomeTeamPerformance or
+			MatchStatsUploadType.AwayTeamPerformance =>
+				await _ocrService.PreviewTeamPerformanceAsync(dto.Image),
+
+			_ => throw new ArgumentOutOfRangeException(nameof(dto.Type))
+		};
+
+		var rawJson = JsonSerializer.Serialize(rawPreview);
+
+		var existing = await _context.MatchStatsUploads
+			.FirstOrDefaultAsync(x =>
+				x.MatchId == matchId &&
+				x.Type == dto.Type);
+
+		if (existing is null)
+		{
+			existing = new MatchStatsUpload
+			{
+				MatchStatsUploadId = Guid.NewGuid(),
+				MatchId = matchId,
+				UploadedByUserId = Guid.Empty,
+				Type = dto.Type,
+				ImageUrl = string.Empty,
+				RawJson = rawJson,
+				IsProcessed = false,
+				CreatedAtUTC = DateTime.UtcNow
+			};
+
+			_context.MatchStatsUploads.Add(existing);
+		}
+		else
+		{
+			existing.RawJson = rawJson;
+			existing.ImageUrl = string.Empty;
+			existing.IsProcessed = false;
+			existing.CreatedAtUTC = DateTime.UtcNow;
+		}
+
+		await _context.SaveChangesAsync();
+
+		var uploads = await _context.MatchStatsUploads
+			.Where(x => x.MatchId == matchId)
+			.ToListAsync();
+
+		var hasSummary = uploads.Any(x =>
+			x.Type == MatchStatsUploadType.MatchSummary);
+
+		var hasHome = uploads.Any(x =>
+			x.Type == MatchStatsUploadType.HomeTeamPerformance);
+
+		var hasAway = uploads.Any(x =>
+			x.Type == MatchStatsUploadType.AwayTeamPerformance);
+
+		var isReady = hasSummary && hasHome && hasAway;
+
+		if (isReady)
+		{
+			await ProcessUploadedStatsAsync(matchId);
+
+			uploads = await _context.MatchStatsUploads
+				.AsNoTracking()
+				.Where(x => x.MatchId == matchId)
+				.ToListAsync();
+		}
+
+		return new MatchStatsUploadResultDto
+		{
+			MatchId = matchId,
+			HasMatchSummary = hasSummary,
+			HasHomeTeamPerformance = hasHome,
+			HasAwayTeamPerformance = hasAway,
+			IsReadyToProcess = isReady,
+			Status = isReady ? "Ready" : "Pending"
 		};
 	}
 
@@ -163,18 +282,22 @@ public class MatchService : IMatchService
 			await _context.SaveChangesAsync();
 		}
 
-		var teams = await _context.UserClubs
+		var teams = await _context.SeasonRegistrations
 			.AsNoTracking()
-			.Where(x =>
-				x.SeasonId == seasonId &&
-				!x.IsDeleted &&
-				x.BaseGameClubId.HasValue)
-			.Select(x => new ScheduleTeam
-			{
-				UserId = x.UserId,
-				UserClubId = x.UserClubId,
-				GameClubId = x.BaseGameClubId!.Value
-			})
+			.Where(x => x.SeasonId == seasonId)
+			.Join(
+				_context.UserClubs.AsNoTracking().Where(x =>
+					x.SeasonId == seasonId &&
+					!x.IsDeleted &&
+					x.BaseGameClubId.HasValue),
+				sr => new { sr.SeasonId, sr.UserId },
+				uc => new { uc.SeasonId, uc.UserId },
+				(sr, uc) => new ScheduleTeam
+				{
+					UserId = sr.UserId,
+					UserClubId = uc.UserClubId,
+					GameClubId = sr.GameClubId
+				})
 			.ToListAsync();
 
 		if (teams.Count < 2)
@@ -206,8 +329,8 @@ public class MatchService : IMatchService
 				AwayScore = 0,
 
 				MatchDate = matchDate
-		.AddDays((weekNumber - 1) * 7)
-		.AddHours(weekMatchCount),
+					.AddDays((weekNumber - 1) * 7)
+					.AddHours(weekMatchCount),
 
 				Status = MatchStatus.Scheduled,
 				WeekNumber = weekNumber,
@@ -235,10 +358,70 @@ public class MatchService : IMatchService
 			.ToDictionaryAsync(x => x.UserId);
 	}
 
+	private async Task<Dictionary<Guid, List<string>>> GetTeamStreaksAsync(
+		Guid seasonId,
+		List<Guid> userIds)
+	{
+		userIds = userIds
+			.Where(x => x != Guid.Empty)
+			.Distinct()
+			.ToList();
+
+		if (userIds.Count == 0)
+			return [];
+
+		var finishedMatches = await _context.Matches
+			.AsNoTracking()
+			.Include(x => x.Tournament)
+			.Where(x =>
+				!x.IsDeleted &&
+				x.Tournament.SeasonId == seasonId &&
+				x.Status == MatchStatus.Finished &&
+				(userIds.Contains(x.HomeUserId) ||
+				 userIds.Contains(x.AwayUserId)))
+			.OrderByDescending(x => x.MatchDate)
+			.ToListAsync();
+
+		var result = new Dictionary<Guid, List<string>>();
+
+		foreach (var userId in userIds)
+		{
+			var streak = finishedMatches
+				.Where(x => x.HomeUserId == userId || x.AwayUserId == userId)
+				.Take(5)
+				.Select(x =>
+				{
+					var isHome = x.HomeUserId == userId;
+
+					var goalsFor = isHome
+						? x.HomeScore
+						: x.AwayScore;
+
+					var goalsAgainst = isHome
+						? x.AwayScore
+						: x.HomeScore;
+
+					if (goalsFor > goalsAgainst)
+						return "W";
+
+					if (goalsFor < goalsAgainst)
+						return "L";
+
+					return "D";
+				})
+				.ToList();
+
+			result[userId] = streak;
+		}
+
+		return result;
+	}
+
 	private static MatchDto MapToDto(
 		Match match,
 		string? timeZone,
-		Dictionary<Guid, UserClub> userClubs)
+		Dictionary<Guid, UserClub> userClubs,
+		Dictionary<Guid, List<string>> streaks)
 	{
 		var localDate = ConvertToLocal(match.MatchDate, timeZone);
 
@@ -265,8 +448,8 @@ public class MatchService : IMatchService
 				: match.AwayGameClub.Name);
 
 		var homeLogo = !string.IsNullOrWhiteSpace(homeClub?.LogoUrl)
-	? homeClub.LogoUrl
-	: "";
+			? homeClub.LogoUrl
+			: "";
 
 		var awayLogo = !string.IsNullOrWhiteSpace(awayClub?.LogoUrl)
 			? awayClub.LogoUrl
@@ -304,7 +487,7 @@ public class MatchService : IMatchService
 				Name = homeName,
 				Club = match.HomeGameClub.Name,
 				LogoUrl = homeLogo,
-				Stats = BuildTeamStats(match, match.HomeUserId)
+				Stats = BuildTeamStats(match, match.HomeUserId, streaks)
 			},
 
 			Away = new MatchTeamDto
@@ -314,7 +497,7 @@ public class MatchService : IMatchService
 				Name = awayName,
 				Club = match.AwayGameClub.Name,
 				LogoUrl = awayLogo,
-				Stats = BuildTeamStats(match, match.AwayUserId)
+				Stats = BuildTeamStats(match, match.AwayUserId, streaks)
 			}
 		};
 	}
@@ -371,7 +554,8 @@ public class MatchService : IMatchService
 
 	private static MatchTeamStatsDto BuildTeamStats(
 		Match match,
-		Guid userId)
+		Guid userId,
+		Dictionary<Guid, List<string>> streaks)
 	{
 		var teamStats = match.PlayerStats
 			.Where(x => x.UserId == userId)
@@ -391,7 +575,9 @@ public class MatchService : IMatchService
 			Goals = topScorer?.Goals ?? 0,
 			TopAssist = topAssist?.User.DisplayName ?? "-",
 			Assists = topAssist?.Assists ?? 0,
-			Streak = ["W", "W", "L", "W"]
+			Streak = streaks.TryGetValue(userId, out var streak)
+				? streak
+				: []
 		};
 	}
 
@@ -419,18 +605,153 @@ public class MatchService : IMatchService
 	private sealed class ScheduleTeam
 	{
 		public Guid UserId { get; set; }
-
 		public Guid UserClubId { get; set; }
-
 		public Guid GameClubId { get; set; }
 	}
 
 	private sealed class SchedulePairing
 	{
 		public int WeekNumber { get; set; }
-
 		public ScheduleTeam Home { get; set; } = null!;
-
 		public ScheduleTeam Away { get; set; } = null!;
+	}
+
+	private async Task ProcessUploadedStatsAsync(Guid matchId)
+	{
+		var match = await _context.Matches
+	.Include(x => x.HomeUser)
+	.Include(x => x.AwayUser)
+	.Include(x => x.HomeGameClub)
+	.Include(x => x.AwayGameClub)
+	.Include(x => x.HomeUserClub)
+	.Include(x => x.AwayUserClub)
+	.FirstOrDefaultAsync(x =>
+		!x.IsDeleted &&
+		x.MatchId == matchId);
+
+		if (match is null)
+			return;
+
+		var homeTeamId = await _context.Teams
+	.Where(x => x.OwnerUserId == match.HomeUserId)
+	.Select(x => (Guid?)x.TeamId)
+	.FirstOrDefaultAsync();
+
+		var awayTeamId = await _context.Teams
+			.Where(x => x.OwnerUserId == match.AwayUserId)
+			.Select(x => (Guid?)x.TeamId)
+			.FirstOrDefaultAsync();
+
+		if (!homeTeamId.HasValue || !awayTeamId.HasValue)
+			throw new InvalidOperationException("Home or away real team was not found.");
+
+		var uploads = await _context.MatchStatsUploads
+			.Where(x => x.MatchId == matchId)
+			.ToListAsync();
+
+		var summaryUpload = uploads.FirstOrDefault(x => x.Type == MatchStatsUploadType.MatchSummary);
+		var homeUpload = uploads.FirstOrDefault(x => x.Type == MatchStatsUploadType.HomeTeamPerformance);
+		var awayUpload = uploads.FirstOrDefault(x => x.Type == MatchStatsUploadType.AwayTeamPerformance);
+
+		if (string.IsNullOrWhiteSpace(summaryUpload?.RawJson) ||
+			string.IsNullOrWhiteSpace(homeUpload?.RawJson) ||
+			string.IsNullOrWhiteSpace(awayUpload?.RawJson))
+			return;
+
+		var summary = JsonSerializer.Deserialize<Stats.Dtos.MatchSummaryStatsOcrDto>(summaryUpload.RawJson);
+		var homePerformance = JsonSerializer.Deserialize<TeamPerformanceOcrPreviewDto>(homeUpload.RawJson);
+		var awayPerformance = JsonSerializer.Deserialize<TeamPerformanceOcrPreviewDto>(awayUpload.RawJson);
+
+		if (summary is null || homePerformance is null || awayPerformance is null)
+			return;
+
+		var oldSummary = await _context.MatchSummaryStats
+			.Where(x => x.MatchId == matchId)
+			.ToListAsync();
+
+		var oldPlayerStats = await _context.MatchPlayerStats
+			.Where(x => x.MatchId == matchId)
+			.ToListAsync();
+
+		_context.MatchSummaryStats.RemoveRange(oldSummary);
+		_context.MatchPlayerStats.RemoveRange(oldPlayerStats);
+
+		_context.MatchSummaryStats.Add(new MatchSummaryStats
+		{
+			MatchSummaryStatsId = Guid.NewGuid(),
+			MatchId = matchId,
+
+			HomePossession = summary.HomePossession,
+			AwayPossession = summary.AwayPossession,
+			HomeShots = summary.HomeShots,
+			AwayShots = summary.AwayShots,
+			HomeExpectedGoals = summary.HomeExpectedGoals,
+			AwayExpectedGoals = summary.AwayExpectedGoals,
+			HomePasses = summary.HomePasses,
+			AwayPasses = summary.AwayPasses,
+			HomeTackles = summary.HomeTackles,
+			AwayTackles = summary.AwayTackles,
+			HomeTacklesWon = summary.HomeTacklesWon,
+			AwayTacklesWon = summary.AwayTacklesWon,
+			HomeInterceptions = summary.HomeInterceptions,
+			AwayInterceptions = summary.AwayInterceptions,
+			HomeSaves = summary.HomeSaves,
+			AwaySaves = summary.AwaySaves,
+			HomeFoulsCommitted = summary.HomeFoulsCommitted,
+			AwayFoulsCommitted = summary.AwayFoulsCommitted,
+			HomeOffsides = summary.HomeOffsides,
+			AwayOffsides = summary.AwayOffsides,
+			HomeCorners = summary.HomeCorners,
+			AwayCorners = summary.AwayCorners,
+			HomeFreeKicks = summary.HomeFreeKicks,
+			AwayFreeKicks = summary.AwayFreeKicks,
+			HomePenaltyKicks = summary.HomePenaltyKicks,
+			AwayPenaltyKicks = summary.AwayPenaltyKicks,
+			HomeYellowCards = summary.HomeYellowCards,
+			AwayYellowCards = summary.AwayYellowCards
+		});
+
+		foreach (var player in homePerformance.Players)
+		{
+			_context.MatchPlayerStats.Add(new MatchPlayerStats
+			{
+				MatchPlayerStatsId = Guid.NewGuid(),
+				MatchId = matchId,
+				UserId = match.HomeUserId,
+				TeamId = homeTeamId.Value,
+
+				Position = player.Position,
+				PlayerName = player.PlayerName,
+				Rating = player.Rating,
+				Goals = player.Goals,
+				Assists = player.Assists
+			});
+		}
+
+		foreach (var player in awayPerformance.Players)
+		{
+			_context.MatchPlayerStats.Add(new MatchPlayerStats
+			{
+				MatchPlayerStatsId = Guid.NewGuid(),
+				MatchId = matchId,
+				UserId = match.AwayUserId,
+				TeamId = awayTeamId.Value,
+
+				Position = player.Position,
+				PlayerName = player.PlayerName,
+				Rating = player.Rating,
+				Goals = player.Goals,
+				Assists = player.Assists
+			});
+		}
+
+		foreach (var upload in uploads)
+		{
+			upload.IsProcessed = true;
+		}
+
+		match.Status = MatchStatus.Finished;
+
+		await _context.SaveChangesAsync();
 	}
 }

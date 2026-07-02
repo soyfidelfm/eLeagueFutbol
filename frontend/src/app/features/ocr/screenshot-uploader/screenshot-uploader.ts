@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 
-import { MatchStatsService } from '../../../core/services/match-stats.service';
 import {
-  MatchPlayerStatsOcrPreview
-} from '../../../core/models/match-player-stats-ocr.model';
+  MatchStatsService,
+  MatchStatsUploadType,
+  MatchStatsUploadResult
+} from '../../../core/services/match-stats.service';
 
 @Component({
   selector: 'app-screenshot-uploader',
@@ -15,13 +16,17 @@ import {
 })
 export class ScreenshotUploader {
 
+  matchId = '';
+
   selectedFile: File | null = null;
   previewImageUrl: string | null = null;
+
+  uploadType: MatchStatsUploadType = 'MatchSummary';
 
   isLoading = false;
   errorMessage = '';
 
-  ocrPreview: MatchPlayerStatsOcrPreview | null = null;
+  uploadResult: MatchStatsUploadResult | null = null;
 
   constructor(
     private matchStatsService: MatchStatsService
@@ -35,13 +40,24 @@ export class ScreenshotUploader {
     }
 
     this.selectedFile = input.files[0];
-    this.ocrPreview = null;
+    this.uploadResult = null;
     this.errorMessage = '';
 
     this.previewImageUrl = URL.createObjectURL(this.selectedFile);
   }
 
+  onUploadTypeChange(type: MatchStatsUploadType): void {
+    this.uploadType = type;
+    this.uploadResult = null;
+    this.errorMessage = '';
+  }
+
   readScreenshot(): void {
+    if (!this.matchId) {
+      this.errorMessage = 'Missing match id.';
+      return;
+    }
+
     if (!this.selectedFile) {
       this.errorMessage = 'Please select a screenshot first.';
       return;
@@ -50,17 +66,18 @@ export class ScreenshotUploader {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.matchStatsService.previewPlayerStats(this.selectedFile).subscribe({
-      next: response => {
-        console.log('OCR preview:', response);
-        this.ocrPreview = response;
-        this.isLoading = false;
-      },
-      error: err => {
-        console.error('OCR error:', err);
-        this.errorMessage = 'Could not read screenshot.';
-        this.isLoading = false;
-      }
-    });
+    this.matchStatsService
+      .uploadStatsImage(this.matchId, this.uploadType, this.selectedFile)
+      .subscribe({
+        next: response => {
+          this.uploadResult = response;
+          this.isLoading = false;
+        },
+        error: err => {
+          console.error('OCR upload error:', err);
+          this.errorMessage = 'Could not read screenshot.';
+          this.isLoading = false;
+        }
+      });
   }
 }

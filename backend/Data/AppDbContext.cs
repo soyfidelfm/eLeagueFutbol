@@ -6,13 +6,14 @@ using backend.Entities.Dashboard;
 using backend.Entities.Draft;
 using backend.Entities.GameData;
 using backend.Entities.Identity;
+using backend.Entities.MatchStats;
+using backend.Entities.MatchSummary;
 using backend.Entities.Messaging;
 using backend.Entities.Notifications;
 using backend.Entities.Stats;
 using backend.Entities.Teams;
 using backend.Entities.Tournaments;
 using backend.Entities.Transfers;
-using backend.Entities.MatchSummary;
 using Microsoft.EntityFrameworkCore;
 
 public class AppDbContext : DbContext
@@ -60,6 +61,7 @@ public class AppDbContext : DbContext
 
 	public DbSet<MatchPlayerStats> MatchPlayerStats => Set<MatchPlayerStats>();
 	public DbSet<MatchSummaryStats> MatchSummaryStats => Set<MatchSummaryStats>();
+	public DbSet<MatchStatsUpload> MatchStatsUploads => Set<MatchStatsUpload>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{

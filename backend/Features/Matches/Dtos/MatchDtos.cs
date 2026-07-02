@@ -1,10 +1,32 @@
-﻿namespace backend.Features.Matches.Dtos;
+﻿using backend.Entities.Enums;
+
+namespace backend.Features.Matches.Dtos;
 
 public class MatchWeekDto
 {
 	public int Value { get; set; }
 
 	public string Label { get; set; } = string.Empty;
+}
+
+public class UploadMatchStatsImageDto
+{
+	public MatchStatsUploadType Type { get; set; }
+
+	public IFormFile Image { get; set; } = null!;
+}
+
+public class MatchStatsUploadResultDto
+{
+	public Guid MatchId { get; set; }
+
+	public bool HasMatchSummary { get; set; }
+	public bool HasHomeTeamPerformance { get; set; }
+	public bool HasAwayTeamPerformance { get; set; }
+
+	public bool IsReadyToProcess { get; set; }
+
+	public string Status { get; set; } = string.Empty;
 }
 
 public class MatchTeamStatsDto

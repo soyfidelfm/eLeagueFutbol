@@ -3,8 +3,32 @@
   <div class="ocr-header">
     <div>
       <span class="eyebrow">OFFICIAL MATCH OCR</span>
-      <h3>Upload Player Performance Screenshot</h3>
-      <p>Upload the FC26 player performance screen to extract official stats.</p>
+      <h3>Upload Match Screenshot</h3>
+      <p>Upload Summary, Home Performance, or Away Performance screenshot.</p>
+    </div>
+  </div>
+
+  <div class="stats-list">
+    <div>
+      <span>Match ID</span>
+      <input
+        type="text"
+        [value]="matchId"
+        (input)="matchId = $any($event.target).value"
+        placeholder="Paste match id"
+      />
+    </div>
+
+    <div>
+      <span>Screenshot Type</span>
+      <select
+        [value]="uploadType"
+        (change)="onUploadTypeChange($any($event.target).value)"
+      >
+        <option value="MatchSummary">Match Summary</option>
+        <option value="HomeTeamPerformance">Home Team Performance</option>
+        <option value="AwayTeamPerformance">Away Team Performance</option>
+      </select>
     </div>
   </div>
 
@@ -32,7 +56,7 @@
         (click)="readScreenshot()"
       >
         <i class="fa-solid fa-wand-magic-sparkles"></i>
-        {{ isLoading ? 'Reading...' : 'Read Screenshot' }}
+        {{ isLoading ? 'Reading...' : 'Upload Screenshot' }}
       </button>
     </div>
   </div>
@@ -42,27 +66,35 @@
     <span>{{ errorMessage }}</span>
   </div>
 
-  <div *ngIf="ocrPreview" class="ocr-result">
+  <div *ngIf="uploadResult" class="ocr-result">
 
-    <h4>Detected Player Stats</h4>
+    <h4>Upload Status</h4>
 
     <div class="stats-list">
-      <div><span>Position</span><strong>{{ ocrPreview.position }}</strong></div>
-      <div><span>Player</span><strong>{{ ocrPreview.playerName }}</strong></div>
-      <div><span>Rating</span><strong>{{ ocrPreview.rating }}</strong></div>
-      <div><span>Goals</span><strong>{{ ocrPreview.goals }}</strong></div>
-      <div><span>Assists</span><strong>{{ ocrPreview.assists }}</strong></div>
-      <div><span>Shots</span><strong>{{ ocrPreview.shots }}</strong></div>
-      <div><span>Shot Accuracy</span><strong>{{ ocrPreview.shotAccuracy }}%</strong></div>
-      <div><span>Passes</span><strong>{{ ocrPreview.passes }}</strong></div>
-      <div><span>Pass Accuracy</span><strong>{{ ocrPreview.passAccuracy }}%</strong></div>
-      <div><span>Dribbles</span><strong>{{ ocrPreview.dribbles }}</strong></div>
-      <div><span>Dribble Success</span><strong>{{ ocrPreview.dribbleSuccessRate }}%</strong></div>
-      <div><span>Tackles</span><strong>{{ ocrPreview.tackles }}</strong></div>
-      <div><span>Tackle Success</span><strong>{{ ocrPreview.tackleSuccessRate }}%</strong></div>
-      <div><span>Minutes</span><strong>{{ ocrPreview.minutesPlayed }}</strong></div>
-      <div><span>Distance Covered</span><strong>{{ ocrPreview.distanceCoveredKm }} km</strong></div>
-      <div><span>Distance Sprinted</span><strong>{{ ocrPreview.distanceSprintedKm }} km</strong></div>
+      <div>
+        <span>Match Summary</span>
+        <strong>{{ uploadResult.hasMatchSummary ? 'Uploaded' : 'Pending' }}</strong>
+      </div>
+
+      <div>
+        <span>Home Performance</span>
+        <strong>{{ uploadResult.hasHomeTeamPerformance ? 'Uploaded' : 'Pending' }}</strong>
+      </div>
+
+      <div>
+        <span>Away Performance</span>
+        <strong>{{ uploadResult.hasAwayTeamPerformance ? 'Uploaded' : 'Pending' }}</strong>
+      </div>
+
+      <div>
+        <span>Status</span>
+        <strong>{{ uploadResult.status }}</strong>
+      </div>
+
+      <div>
+        <span>Ready</span>
+        <strong>{{ uploadResult.isReadyToProcess ? 'Yes' : 'No' }}</strong>
+      </div>
     </div>
 
   </div>

@@ -10,9 +10,22 @@ export const API_ENDPOINTS = {
   gameData: `${environment.api.baseUrl}/api/game-data`,
   statsOverview: `${environment.api.baseUrl}/api/stats/overview`,
 
-  matchStatsOcrPreview: `${environment.api.baseUrl}/api/match-stats/ocr-preview`,
-  matchStatsOcrMatchPreview: `${environment.api.baseUrl}/api/match-stats/ocr-match-preview`,
-  matchStatsConfirmPlayer: `${environment.api.baseUrl}/api/match-stats/confirm-player`,
+  // MATCH STATS
+  matchStatsOcrSummaryPreview:
+    `${environment.api.baseUrl}/api/match-stats/ocr-summary-preview`,
+
+  matchStatsOcrTeamPerformancePreview:
+    `${environment.api.baseUrl}/api/match-stats/ocr-team-performance-preview`,
+
+  matchStatsConfirmSummary:
+    `${environment.api.baseUrl}/api/match-stats/confirm-summary`,
+
+  matchStatsConfirmTeamPerformance:
+    `${environment.api.baseUrl}/api/match-stats/confirm-team-performance`,
+
+  // NEW FLOW (3 screenshots)
+  matchStatsUpload: (matchId: string) =>
+    `${environment.api.baseUrl}/api/matches/${matchId}/stats-upload`,
 
   clubs: `${environment.api.baseUrl}/api/clubs`,
   cloudinary: `${environment.api.baseUrl}/api/cloudinary`,

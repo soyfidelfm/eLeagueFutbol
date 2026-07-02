@@ -9,17 +9,19 @@ public interface IMatchService
 	Task<List<MatchDto>> GetByWeekAsync(
 		Guid seasonId,
 		int weekNumber,
-		string? timeZone
-	);
+		string? timeZone);
 
 	Task<MatchDto?> GetByIdAsync(
 		Guid matchId,
-		string? timeZone
-	);
+		string? timeZone);
 
 	Task<MatchResultDto?> UploadResultAsync(
 		Guid matchId,
-		UploadMatchResultDto dto
-	);
+		UploadMatchResultDto dto);
+
+	Task<MatchStatsUploadResultDto?> UploadStatsImageAsync(
+		Guid matchId,
+		UploadMatchStatsImageDto dto);
+
 	Task<bool> GenerateScheduleAsync(Guid seasonId);
 }

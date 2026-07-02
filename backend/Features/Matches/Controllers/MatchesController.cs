@@ -16,12 +16,9 @@ public class MatchesController : ControllerBase
 	}
 
 	[HttpGet("weeks")]
-	public async Task<ActionResult<List<MatchWeekDto>>> GetWeeks(
-		[FromQuery] Guid seasonId
-	)
+	public async Task<ActionResult<List<MatchWeekDto>>> GetWeeks([FromQuery] Guid seasonId)
 	{
 		var weeks = await _matchService.GetWeeksAsync(seasonId);
-
 		return Ok(weeks);
 	}
 
@@ -29,28 +26,18 @@ public class MatchesController : ControllerBase
 	public async Task<ActionResult<List<MatchDto>>> GetByWeek(
 		int weekNumber,
 		[FromQuery] Guid seasonId,
-		[FromQuery] string? timeZone
-	)
+		[FromQuery] string? timeZone)
 	{
-		var matches = await _matchService.GetByWeekAsync(
-			seasonId,
-			weekNumber,
-			timeZone
-		);
-
+		var matches = await _matchService.GetByWeekAsync(seasonId, weekNumber, timeZone);
 		return Ok(matches);
 	}
 
 	[HttpGet("{matchId:guid}")]
 	public async Task<ActionResult<MatchDto>> GetById(
 		Guid matchId,
-		[FromQuery] string? timeZone
-	)
+		[FromQuery] string? timeZone)
 	{
-		var match = await _matchService.GetByIdAsync(
-			matchId,
-			timeZone
-		);
+		var match = await _matchService.GetByIdAsync(matchId, timeZone);
 
 		if (match is null)
 			return NotFound();
@@ -61,13 +48,23 @@ public class MatchesController : ControllerBase
 	[HttpPost("{matchId:guid}/result")]
 	public async Task<ActionResult<MatchResultDto>> UploadResult(
 		Guid matchId,
-		[FromBody] UploadMatchResultDto dto
-	)
+		[FromBody] UploadMatchResultDto dto)
 	{
-		var result = await _matchService.UploadResultAsync(
-			matchId,
-			dto
-		);
+		var result = await _matchService.UploadResultAsync(matchId, dto);
+
+		if (result is null)
+			return NotFound();
+
+		return Ok(result);
+	}
+
+	[HttpPost("{matchId:guid}/stats-upload")]
+	[Consumes("multipart/form-data")]
+	public async Task<ActionResult<MatchStatsUploadResultDto>> UploadStatsImage(
+		Guid matchId,
+		[FromForm] UploadMatchStatsImageDto dto)
+	{
+		var result = await _matchService.UploadStatsImageAsync(matchId, dto);
 
 		if (result is null)
 			return NotFound();

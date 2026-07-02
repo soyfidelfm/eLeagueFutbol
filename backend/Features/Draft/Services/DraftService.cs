@@ -487,8 +487,8 @@ public class DraftService : IDraftService
 		if (currentTurn is null)
 			throw new Exception("Current draft turn not found.");
 
-		if (currentTurn.UserId != user.UserId)
-			throw new Exception("It is not your turn.");
+		//if (currentTurn.UserId != user.UserId)
+		//	throw new Exception("It is not your turn.");
 
 		var currentSquadCount = await _context.UserClubPlayers
 			.CountAsync(x =>
@@ -576,7 +576,7 @@ public class DraftService : IDraftService
 			"Pick seleccionado",
 			$"Seleccionaste a {player.Name} en el Draft.");
 
-		await AdvanceDraftTurnAsync(session, order);
+		//await AdvanceDraftTurnAsync(session, order);
 
 		await _context.SaveChangesAsync();
 		await transaction.CommitAsync();
@@ -722,7 +722,7 @@ public class DraftService : IDraftService
 				"Tu turno terminó",
 				"Se acabó tu tiempo para seleccionar. Tu turno fue saltado.");
 
-			await AdvanceDraftTurnAsync(session, order);
+			//await AdvanceDraftTurnAsync(session, order);
 		}
 
 		await _context.SaveChangesAsync();

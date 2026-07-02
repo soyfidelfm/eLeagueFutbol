@@ -428,7 +428,7 @@ namespace backend.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime>("UpdatedAtUTC")
+                    b.Property<DateTime?>("UpdatedAtUTC")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedByUserId")
@@ -763,6 +763,53 @@ namespace backend.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("backend.Entities.MatchStats.MatchStatsUpload", b =>
+                {
+                    b.Property<Guid>("MatchStatsUploadId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsProcessed")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RawJson")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("MatchStatsUploadId");
+
+                    b.HasIndex("MatchId");
+
+                    b.ToTable("MatchStatsUploads");
                 });
 
             modelBuilder.Entity("backend.Entities.MatchSummary.MatchSummaryStats", b =>
@@ -1706,6 +1753,17 @@ namespace backend.Migrations
                     b.Navigation("GameClub");
                 });
 
+            modelBuilder.Entity("backend.Entities.MatchStats.MatchStatsUpload", b =>
+                {
+                    b.HasOne("backend.Entities.Tournaments.Match", "Match")
+                        .WithMany("StatsUploads")
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Match");
+                });
+
             modelBuilder.Entity("backend.Entities.MatchSummary.MatchSummaryStats", b =>
                 {
                     b.HasOne("backend.Entities.Tournaments.Match", "Match")
@@ -2008,6 +2066,8 @@ namespace backend.Migrations
                     b.Navigation("MatchSummaryStats");
 
                     b.Navigation("PlayerStats");
+
+                    b.Navigation("StatsUploads");
                 });
 
             modelBuilder.Entity("backend.Entities.Tournaments.Season", b =>

@@ -256,72 +256,99 @@
 
         <div class="upload-card">
 
-          <div class="upload-icon">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-          </div>
+  <div class="upload-icon">
+    <i class="fa-solid fa-cloud-arrow-up"></i>
+  </div>
 
-          <div>
-            <h3>UPLOAD RESULT</h3>
-            <p>Upload Summary and Events screenshots.</p>
-          </div>
+  <div>
+    <h3>UPLOAD MATCH STATS</h3>
+    <p>Upload exactly 3 screenshots: Summary, Home Performance and Away Performance.</p>
+  </div>
 
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            hidden
-            #resultFilesInput
-            (change)="onResultFilesSelected($event)"
-          />
+  <div class="upload-group">
 
-          <button type="button" (click)="resultFilesInput.click()">
-            Select Screenshots
-          </button>
+  <label>Match Summary</label>
+  <input
+    type="file"
+    accept="image/*"
+    (change)="onSummarySelected($event)"
+  />
 
-          <button
-            type="button"
-            [disabled]="selectedResultFiles.length === 0 || isUploadingResult"
-            (click)="previewUploadedResult()"
-          >
-            {{ isUploadingResult ? 'Reading...' : 'Preview Result' }}
-          </button>
+  <label>Home Team Performance</label>
+  <input
+    type="file"
+    accept="image/*"
+    (change)="onHomePerformanceSelected($event)"
+  />
 
-          <button
-            type="button"
-            *ngIf="ocrPreview"
-            [disabled]="isUploadingResult"
-            (click)="confirmUploadedResult()"
-          >
-            {{ isUploadingResult ? 'Saving...' : 'Confirm Result' }}
-          </button>
+  <label>Away Team Performance</label>
+  <input
+    type="file"
+    accept="image/*"
+    (change)="onAwayPerformanceSelected($event)"
+  />
 
-          <small *ngIf="selectedResultFiles.length > 0">
-            <i class="fa-solid fa-image"></i>
-            {{ selectedResultFiles.length }} screenshot(s) selected.
-          </small>
+</div>
 
-          <div class="ocr-preview" *ngIf="ocrPreview">
-            <h4>OCR PREVIEW</h4>
+  <button
+  type="button"
+  [disabled]="
+    !summaryFile ||
+    !homePerformanceFile ||
+    !awayPerformanceFile ||
+    isUploadingResult
+  "
+  (click)="previewUploadedResult()"
+>
+  {{ isUploadingResult ? 'Uploading...' : 'Upload Stats' }}
+</button>
 
-            <strong>
-              {{ ocrPreview.homeTeamName || selectedMatch.home.name }}
-              {{ ocrPreview.homeScore ?? '-' }}
-              -
-              {{ ocrPreview.awayScore ?? '-' }}
-              {{ ocrPreview.awayTeamName || selectedMatch.away.name }}
-            </strong>
+  <div class="upload-status">
+  <small *ngIf="summaryFile">
+    <i class="fa-solid fa-check"></i>
+    Match Summary selected
+  </small>
 
-            <p *ngIf="ocrPreview.warnings.length > 0">
-              {{ ocrPreview.warnings[0] }}
-            </p>
-          </div>
+  <small *ngIf="homePerformanceFile">
+    <i class="fa-solid fa-check"></i>
+    Home Team Performance selected
+  </small>
 
-          <small>
-            <i class="fa-regular fa-circle-question"></i>
-            Only team captains can upload results.
-          </small>
+  <small *ngIf="awayPerformanceFile">
+    <i class="fa-solid fa-check"></i>
+    Away Team Performance selected
+  </small>
+</div>
 
-        </div>
+  <div class="ocr-preview" *ngIf="statsUploadResult">
+    <h4>UPLOAD STATUS</h4>
+
+    <p>
+      Summary:
+      <strong>{{ statsUploadResult.hasMatchSummary ? 'Uploaded' : 'Pending' }}</strong>
+    </p>
+
+    <p>
+      Home Performance:
+      <strong>{{ statsUploadResult.hasHomeTeamPerformance ? 'Uploaded' : 'Pending' }}</strong>
+    </p>
+
+    <p>
+      Away Performance:
+      <strong>{{ statsUploadResult.hasAwayTeamPerformance ? 'Uploaded' : 'Pending' }}</strong>
+    </p>
+
+    <strong>
+      Status: {{ statsUploadResult.status }}
+    </strong>
+  </div>
+
+  <small>
+    <i class="fa-regular fa-circle-question"></i>
+    Select in this order: Match Summary, Home Team Performance, Away Team Performance.
+  </small>
+
+</div>
 
       </aside>
 

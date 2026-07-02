@@ -1,55 +1,44 @@
-// core/services/match-stats.service.ts
-
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { ApiService } from '../services/api.service.ts';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
-import {
-  ConfirmMatchPlayerStats,
-  MatchOcrPreview,
-  MatchPlayerStatsOcrPreview
-} from '../models/match-player-stats-ocr.model';
+
+export type MatchStatsUploadType =
+  | 'MatchSummary'
+  | 'HomeTeamPerformance'
+  | 'AwayTeamPerformance';
+
+export interface MatchStatsUploadResult {
+  matchId: string;
+  hasMatchSummary: boolean;
+  hasHomeTeamPerformance: boolean;
+  hasAwayTeamPerformance: boolean;
+  isReadyToProcess: boolean;
+  status: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
-export class MatchStatsService extends ApiService {
-
+export class MatchStatsService {
   constructor(
-    protected override http: HttpClient
-  ) {
-    super(http);
-  }
+    private http: HttpClient
+  ) {}
 
-  previewPlayerStats(image: File): Observable<MatchPlayerStatsOcrPreview> {
+  uploadStatsImage(
+    matchId: string,
+    type: MatchStatsUploadType,
+    image: File
+  ): Observable<MatchStatsUploadResult> {
     const formData = new FormData();
+
+    formData.append('type', type);
     formData.append('image', image);
 
-    return this.http.post<MatchPlayerStatsOcrPreview>(
-      API_ENDPOINTS.matchStatsOcrPreview,
+    return this.http.post<MatchStatsUploadResult>(
+      API_ENDPOINTS.matchStatsUpload(matchId),
       formData
-    );
-  }
-
-  previewMatchScreenshots(images: File[]): Observable<MatchOcrPreview> {
-    const formData = new FormData();
-
-    images.forEach(image => {
-      formData.append('images', image);
-    });
-
-    return this.http.post<MatchOcrPreview>(
-      API_ENDPOINTS.matchStatsOcrMatchPreview,
-      formData
-    );
-  }
-
-  confirmPlayerStats(dto: ConfirmMatchPlayerStats): Observable<string> {
-    return this.post<string>(
-      API_ENDPOINTS.matchStatsConfirmPlayer,
-      dto
     );
   }
 }
