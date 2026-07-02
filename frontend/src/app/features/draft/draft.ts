@@ -478,94 +478,69 @@ export class Draft implements OnInit, OnDestroy {
     this.loadPlayers();
   }
 
-  // draftPlayer(player: DraftPlayer): void {
-  //   if (!this.isMyTurn) {
-  //     this.showToast(
-  //       `⏳ You're on deck. ${this.currentClubName} is currently on the clock.`
-  //     );
-  //     return;
-  //   }
-
-  //   if (!this.seasonId) {
-  //     this.showToast('Season was not found.');
-  //     return;
-  //   }
-
-  //   if (!this.isDraftActive) {
-  //     this.showToast('The draft is not active right now.');
-  //     return;
-  //   }
-
-  //   if (this.isPicking) {
-  //     return;
-  //   }
-
-  //   const playerValue = player.value ?? 0;
-
-  //   if (playerValue > this.currentBudget) {
-  //     this.showToast(
-  //       `❌ Not enough budget. ${player.name} costs €${playerValue.toLocaleString()} and your budget is €${this.currentBudget.toLocaleString()}.`
-  //     );
-  //     return;
-  //   }
-
-  //   this.isPicking = true;
-  //   this.errorMessage = '';
-  //   this.cdr.detectChanges();
-
-  //   this.draftService.makePick(this.seasonId, player.gamePlayerId)
-  //     .pipe(
-  //       finalize(() => {
-  //         this.isPicking = false;
-  //         this.cdr.detectChanges();
-  //       })
-  //     )
-  //     .subscribe({
-  //       next: () => {
-  //         this.loadDraft();
-
-  //         if (this.isDraftPicksModalOpen) {
-  //           this.loadDraftPicks();
-  //         }
-  //       },
-  //       error: err => {
-  //         console.error('Error making draft pick:', err);
-
-  //         this.errorMessage =
-  //           err?.error?.message ||
-  //           `Could not draft ${player.name}. Please try again.`;
-
-  //         this.cdr.detectChanges();
-  //       }
-  //     });
-  // }
-
   draftPlayer(player: DraftPlayer): void {
-  if (!this.seasonId) {
-    this.showToast('Season was not found.');
-    return;
+    // if (!this.isMyTurn) {
+    //   this.showToast(
+    //     `⏳ You're on deck. ${this.currentClubName} is currently on the clock.`
+    //   );
+    //   return;
+    // }
+
+    if (!this.seasonId) {
+      this.showToast('Season was not found.');
+      return;
+    }
+
+    if (!this.isDraftActive) {
+      this.showToast('The draft is not active right now.');
+      return;
+    }
+
+    if (this.isPicking) {
+      return;
+    }
+
+    const playerValue = player.value ?? 0;
+
+    if (playerValue > this.currentBudget) {
+      this.showToast(
+        `❌ Not enough budget. ${player.name} costs €${playerValue.toLocaleString()} and your budget is €${this.currentBudget.toLocaleString()}.`
+      );
+      return;
+    }
+
+    this.isPicking = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.draftService.makePick(this.seasonId, player.gamePlayerId)
+      .pipe(
+        finalize(() => {
+          this.isPicking = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.loadDraft();
+
+          if (this.isDraftPicksModalOpen) {
+            this.loadDraftPicks();
+          }
+        },
+        error: err => {
+          console.error('Error making draft pick:', err);
+
+          this.errorMessage =
+            err?.error?.message ||
+            `Could not draft ${player.name}. Please try again.`;
+
+          this.cdr.detectChanges();
+        }
+      });
   }
 
-  if (!this.isDraftActive) {
-    this.showToast('The draft is not active right now.');
-    return;
-  }
-
-  if (this.isPicking) {
-    return;
-  }
-
-  const playerValue = player.value ?? 0;
-
-  if (playerValue > this.currentBudget) {
-    this.showToast(
-      `❌ Not enough budget. ${player.name} costs €${playerValue.toLocaleString()}`
-    );
-    return;
-  }
-
-  // resto del método...
-}
+  
 
   getPrimaryPosition(position: string): string {
     if (!position) {
