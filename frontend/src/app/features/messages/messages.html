@@ -2,30 +2,13 @@
 
   <section class="messages-shell">
 
-    <div
-      class="dashboard-loading-overlay"
-      *ngIf="isLoading">
-
-      <div class="loading-card">
-
-        <div class="loading-ring"></div>
-
-        <img
-          src="/images/logo-clear.png"
-          alt="eLeagueFutbol"
-          class="loading-logo">
-
-        <h3>Loading Messages</h3>
-
-        <p>Syncing conversations and notifications...</p>
-
-        <div class="loading-bar">
-          <span></span>
-        </div>
-
-      </div>
-
-    </div>
+    <app-loading
+  *ngIf="isLoading"
+  title="Loading Messages"
+  message="Syncing conversations and notifications..."
+  [logo]="true"
+  [showBar]="true">
+</app-loading>
 
     <aside class="inbox-card" [class.hidden-mobile]="selectedUserId">
 
@@ -122,21 +105,14 @@
 
       <div class="chat-body">
 
-        <div
-          class="dashboard-loading-overlay conversation-loading"
-          *ngIf="isLoadingConversation">
-
-          <div class="loading-card small">
-
-            <div class="loading-ring"></div>
-
-            <h3>Loading Conversation</h3>
-
-            <p>Retrieving messages...</p>
-
-          </div>
-
-        </div>
+        <app-loading
+  *ngIf="isLoadingConversation"
+  title="Loading Conversation"
+  message="Retrieving messages..."
+  [small]="true"
+  [logo]="false"
+  [showBar]="false">
+</app-loading>
 
         <ng-container *ngIf="!isLoadingConversation">
 
@@ -253,21 +229,14 @@
 
       <div class="user-results">
 
-        <div
-          class="dashboard-loading-overlay modal-loading"
-          *ngIf="isSearchingUsers">
-
-          <div class="loading-card small">
-
-            <div class="loading-ring"></div>
-
-            <h3>Searching Players</h3>
-
-            <p>Finding league users...</p>
-
-          </div>
-
-        </div>
+        <app-loading
+  *ngIf="isSearchingUsers"
+  title="Searching Players"
+  message="Finding league users..."
+  [small]="true"
+  [logo]="false"
+  [showBar]="false">
+</app-loading>
 
         <ng-container *ngIf="!isSearchingUsers">
 

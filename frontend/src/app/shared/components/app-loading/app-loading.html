@@ -1,0 +1,23 @@
+<div class="app-loading-overlay" [ngClass]="extraClass">
+
+  <div class="loading-card" [class.small]="small">
+
+    <div class="loading-ring"></div>
+
+    <img
+      *ngIf="logo"
+      src="/images/logo-clear.png"
+      alt="eLeagueFutbol"
+      class="loading-logo">
+
+    <h3>{{ title }}</h3>
+
+    <p>{{ message }}</p>
+
+    <div class="loading-bar" *ngIf="showBar">
+      <span></span>
+    </div>
+
+  </div>
+
+</div>

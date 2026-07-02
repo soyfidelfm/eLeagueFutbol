@@ -5,6 +5,7 @@ import { finalize, forkJoin, Subscription } from 'rxjs';
 
 import { MessageService } from '../../core/services/message.service';
 import { UserService } from '../../core/services/user.service';
+import { AppLoading } from '../../shared/components/app-loading/app-loading';
 
 import {
   ConversationDto,
@@ -21,7 +22,7 @@ interface MessageUserResult {
 @Component({
   selector: 'app-messages',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppLoading],
   templateUrl: './messages.html',
   styleUrl: './messages.scss'
 })
