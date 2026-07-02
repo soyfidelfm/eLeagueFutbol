@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 import { MatchService } from '../../core/services/match.service';
@@ -16,10 +15,18 @@ import {
 
 import { MatchView } from '../../core/models/match-view.model';
 
+import {
+  NeonDropdownComponent,
+  NeonDropdownOption
+} from '../../shared/components/neon-dropdown/neon-dropdown';
+
 @Component({
   selector: 'app-matches',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    NeonDropdownComponent
+  ],
   templateUrl: './matches.html',
   styleUrl: './matches.scss'
 })
@@ -33,6 +40,8 @@ export class Matches implements OnInit {
   selectedWeek = 1;
 
   weeks: MatchWeekDto[] = [];
+  weekOptions: NeonDropdownOption[] = [];
+
   matches: MatchView[] = [];
 
   selectedMatch: MatchView | null = null;
@@ -88,6 +97,11 @@ export class Matches implements OnInit {
         next: weeks => {
           this.weeks = weeks;
 
+          this.weekOptions = this.weeks.map(week => ({
+            label: week.label,
+            value: week.value.toString()
+          }));
+
           if (this.weeks.length === 0) {
             this.matches = [];
             this.selectedMatch = null;
@@ -137,8 +151,8 @@ export class Matches implements OnInit {
       });
   }
 
-  onWeekChange(): void {
-    this.selectedWeek = Number(this.selectedWeek);
+  onWeekDropdownChange(value: string): void {
+    this.selectedWeek = Number(value);
     this.loadMatches();
   }
 
@@ -198,38 +212,42 @@ export class Matches implements OnInit {
   }
 
   confirmUploadedResult(): void {
-  if (!this.selectedMatch || !this.ocrPreview) {
-    return;
+    if (!this.selectedMatch || !this.ocrPreview) {
+      return;
+    }
+
+    const dto: UploadMatchResultDto = {
+      homeScore: this.ocrPreview.homeScore ?? 0,
+      awayScore: this.ocrPreview.awayScore ?? 0
+    };
+
+    this.isUploadingResult = true;
+
+    this.matchService.uploadResult(
+      this.selectedMatch.id,
+      dto
+    )
+    .pipe(
+      finalize(() => {
+        this.isUploadingResult = false;
+        this.cdr.detectChanges();
+      })
+    )
+    .subscribe({
+      next: () => {
+        this.selectedResultFiles = [];
+        this.ocrPreview = null;
+        this.loadMatches();
+      },
+      error: () => {
+        this.errorMessage = 'Could not save match result.';
+      }
+    });
   }
 
-  const dto: UploadMatchResultDto = {
-    homeScore: this.ocrPreview.homeScore ?? 0,
-    awayScore: this.ocrPreview.awayScore ?? 0
-  };
-
-  this.isUploadingResult = true;
-
-  this.matchService.uploadResult(
-    this.selectedMatch.id,
-    dto
-  )
-  .pipe(
-    finalize(() => {
-      this.isUploadingResult = false;
-      this.cdr.detectChanges();
-    })
-  )
-  .subscribe({
-    next: () => {
-      this.selectedResultFiles = [];
-      this.ocrPreview = null;
-      this.loadMatches();
-    },
-    error: () => {
-      this.errorMessage = 'Could not save match result.';
-    }
-  });
-}
+  get selectedWeekValue(): string {
+    return this.selectedWeek.toString();
+  }
 
   get filteredMatches(): MatchView[] {
     return this.matches;

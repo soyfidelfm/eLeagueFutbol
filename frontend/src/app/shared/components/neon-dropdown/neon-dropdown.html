@@ -1,0 +1,25 @@
+<div class="neon-dropdown">
+  <label *ngIf="label" class="dropdown-label">
+    {{ label }}
+  </label>
+
+  <button type="button" class="dropdown-trigger" (click)="toggle()">
+    <span>
+      {{ selectedOption?.label || placeholder }}
+    </span>
+
+    <span class="chevron" [class.open]="isOpen">⌄</span>
+  </button>
+
+  <div class="dropdown-menu" *ngIf="isOpen">
+    <button
+      type="button"
+      class="dropdown-option"
+      *ngFor="let option of options"
+      [class.active]="option.value === selectedValue"
+      (click)="select(option)"
+    >
+      {{ option.label }}
+    </button>
+  </div>
+</div>

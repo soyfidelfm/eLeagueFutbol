@@ -8,9 +8,10 @@ export interface SidebarSeason {
   name: string;
   totalClubs: number;
   totalMatches: number;
+  startsAtUtc: string | null;
 }
 
 export interface SidebarCup {
   name: string;
-  startsAtUtc: string;
+  startsAtUtc: string | null;
 }

@@ -88,37 +88,46 @@ export class Sidebar implements OnInit, OnDestroy {
   }
 
   private updateCountdown(): void {
-    const startsAtUtc = this.sidebarData?.cup?.startsAtUtc;
+  const startsAtUtc =
+  this.sidebarData?.cup?.startsAtUtc ??
+  this.sidebarData?.season?.startsAtUtc;
 
-    if (!startsAtUtc) {
-      this.days = '00';
-      this.hours = '00';
-      this.minutes = '00';
-      return;
-    }
-
-    const startTime = new Date(startsAtUtc).getTime();
-    const now = new Date().getTime();
-
-    const difference = startTime - now;
-
-    if (difference <= 0) {
-      this.days = '00';
-      this.hours = '00';
-      this.minutes = '00';
-      return;
-    }
-
-    const totalMinutes = Math.floor(difference / 1000 / 60);
-
-    const days = Math.floor(totalMinutes / 1440);
-    const hours = Math.floor((totalMinutes % 1440) / 60);
-    const minutes = totalMinutes % 60;
-
-    this.days = days.toString().padStart(2, '0');
-    this.hours = hours.toString().padStart(2, '0');
-    this.minutes = minutes.toString().padStart(2, '0');
+  if (!startsAtUtc) {
+    this.days = '00';
+    this.hours = '00';
+    this.minutes = '00';
+    return;
   }
+
+  const startTime = new Date(startsAtUtc).getTime();
+
+  if (Number.isNaN(startTime)) {
+    this.days = '00';
+    this.hours = '00';
+    this.minutes = '00';
+    return;
+  }
+
+  const now = Date.now();
+  const difference = startTime - now;
+
+  if (difference <= 0) {
+    this.days = '00';
+    this.hours = '00';
+    this.minutes = '00';
+    return;
+  }
+
+  const totalMinutes = Math.floor(difference / 1000 / 60);
+
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+
+  this.days = days.toString().padStart(2, '0');
+  this.hours = hours.toString().padStart(2, '0');
+  this.minutes = minutes.toString().padStart(2, '0');
+}
 
   private setCurrentSection(url: string): void {
     const cleanUrl = url.split('?')[0];

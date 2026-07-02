@@ -12,10 +12,12 @@ public class SidebarSeasonDto
 	public string Name { get; set; } = string.Empty;
 	public int TotalClubs { get; set; }
 	public int TotalMatches { get; set; }
+
+	public DateTime? StartsAtUtc { get; set; }
 }
 
 public class SidebarCupDto
 {
 	public string Name { get; set; } = string.Empty;
-	public DateTime StartsAtUtc { get; set; }
+	public DateTime? StartsAtUtc { get; set; }
 }

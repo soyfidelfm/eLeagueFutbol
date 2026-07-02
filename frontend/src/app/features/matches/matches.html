@@ -40,23 +40,14 @@
       <div class="page-header-actions">
 
         <div class="week-filter">
-          <label for="weekSelect">
-            Week
-          </label>
-
-          <select
-            id="weekSelect"
-            [(ngModel)]="selectedWeek"
-            (ngModelChange)="onWeekChange()"
-          >
-            <option
-              *ngFor="let week of weeks"
-              [ngValue]="week.value"
-            >
-              {{ week.label }}
-            </option>
-          </select>
-        </div>
+  <app-neon-dropdown
+    label="Week"
+    placeholder="Select week"
+    [options]="weekOptions"
+    [selectedValue]="selectedWeekValue"
+    (selectedValueChange)="onWeekDropdownChange($event)">
+  </app-neon-dropdown>
+</div>
 
       </div>
 

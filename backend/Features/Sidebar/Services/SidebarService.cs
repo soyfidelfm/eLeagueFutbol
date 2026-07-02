@@ -32,17 +32,18 @@ public class SidebarService : ISidebarService
 		{
 			var totalClubs = await _context.SeasonRegistrations
 				.AsNoTracking()
-				.CountAsync(x =>					
+				.CountAsync(x =>
 					x.SeasonId == currentSeason.SeasonId);
 
-			var totalMatches =	totalClubs * (totalClubs - 1);
+			var totalMatches = totalClubs * (totalClubs - 1);
 
 			seasonDto = new SidebarSeasonDto
 			{
 				Label = "CURRENT SEASON",
 				Name = currentSeason.Name,
 				TotalClubs = totalClubs,
-				TotalMatches = totalMatches
+				TotalMatches = totalMatches,
+				StartsAtUtc = currentSeason.StartDate
 			};
 		}
 
