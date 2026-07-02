@@ -23,6 +23,8 @@ export interface MyClubDto {
   formation: string;
 
   players: MyClubPlayerDto[];
+  startingPlayers: MyClubPlayerDto[];
+
   activities: MyClubActivityDto[];
 }
 
@@ -33,13 +35,11 @@ export interface MyClubPlayerDto {
   overall: number | null;
   avatarUrl: string | null;
 
-  // NUEVO
   slotIndex: number;
   nation: string | null;
   league: string | null;
   chemistry: number;
 
-  // Para pintar la cancha
   x: number;
   y: number;
 }

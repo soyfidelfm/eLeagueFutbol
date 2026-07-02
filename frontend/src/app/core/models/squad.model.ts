@@ -1,10 +1,12 @@
-
 export interface SquadModalPlayer {
   playerId: string;
   name: string;
   position: string | null;
   overall: number | null;
   avatarUrl: string | null;
+
+  slotIndex?: number;
+
   x?: number;
   y?: number;
 }

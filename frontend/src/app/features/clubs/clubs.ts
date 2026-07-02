@@ -33,7 +33,6 @@ export class Clubs implements OnInit {
   formationLayouts = FORMATION_LAYOUTS;
 
   formationIndex = 0;
-
   selectedFormationLayout: FormationPlayerPosition[] = [];
 
   chemistry = 0;
@@ -124,19 +123,7 @@ export class Clubs implements OnInit {
       .subscribe({
         next: (response: MyClubDto) => {
           this.club = response;
-
-          const savedFormation = response.formation || '4-3-3 Control';
-          const savedFormationIndex = this.formations.findIndex(x => x === savedFormation);
-
-          this.formationIndex = savedFormationIndex >= 0 ? savedFormationIndex : 0;
-          this.selectedFormationLayout = this.getFormationLayout(this.selectedFormation);
-
-          this.startingPlayers = [...(response.players ?? [])]
-            .sort((a, b) => (a.slotIndex ?? 0) - (b.slotIndex ?? 0))
-            .slice(0, 11);
-
-          this.chemistry = response.chemistry ?? 0;
-
+          this.applyClubLineup(response);
           this.cdr.detectChanges();
         },
         error: err => {
@@ -157,44 +144,39 @@ export class Clubs implements OnInit {
     this.cdr.detectChanges();
   }
 
- saveLineup(payload: { formation: string; players: { playerId: string; slotIndex: number; position: string }[] }): void {
-  if (payload.players.length !== 11) {
-    this.errorMessage = 'Starting XI must have 11 players.';
-    this.cdr.detectChanges();
-    return;
+  saveLineup(payload: {
+    formation: string;
+    players: {
+      playerId: string;
+      slotIndex: number;
+      position: string;
+    }[];
+  }): void {
+    if (payload.players.length !== 11) {
+      this.errorMessage = 'Starting XI must have 11 players.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.clubService.updateMyClubLineup(payload)
+      .pipe(
+        finalize(() => {
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (updatedClub: MyClubDto) => {
+          this.club = updatedClub;
+          this.applyClubLineup(updatedClub, payload.formation);
+          this.closeSquadModal();
+        },
+        error: err => {
+          console.error('Error saving lineup', err);
+          this.errorMessage = 'Unable to save lineup.';
+          this.cdr.detectChanges();
+        }
+      });
   }
-
-  this.clubService.updateMyClubLineup(payload)
-    .pipe(
-      finalize(() => {
-        this.cdr.detectChanges();
-      })
-    )
-    .subscribe({
-      next: (updatedClub: MyClubDto) => {
-        this.club = updatedClub;
-
-        const savedFormation = updatedClub.formation || payload.formation;
-        const savedFormationIndex = this.formations.findIndex(x => x === savedFormation);
-
-        this.formationIndex = savedFormationIndex >= 0 ? savedFormationIndex : 0;
-        this.selectedFormationLayout = this.getFormationLayout(this.selectedFormation);
-
-        this.startingPlayers = [...(updatedClub.players ?? [])]
-          .sort((a, b) => (a.slotIndex ?? 0) - (b.slotIndex ?? 0))
-          .slice(0, 11);
-
-        this.chemistry = updatedClub.chemistry ?? 0;
-
-        this.closeSquadModal();
-      },
-      error: err => {
-        console.error('Error saving lineup', err);
-        this.errorMessage = 'Unable to save lineup.';
-        this.cdr.detectChanges();
-      }
-    });
-}
 
   onLogoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -238,6 +220,7 @@ export class Clubs implements OnInit {
       .subscribe({
         next: (updatedClub: MyClubDto) => {
           this.club = updatedClub;
+          this.applyClubLineup(updatedClub);
           this.cdr.detectChanges();
         },
         error: err => {
@@ -262,6 +245,23 @@ export class Clubs implements OnInit {
     if (!img.src.includes('/images/avatar.png')) {
       img.src = '/images/avatar.png';
     }
+  }
+
+  private applyClubLineup(club: MyClubDto, fallbackFormation?: string): void {
+    const savedFormation = club.formation || fallbackFormation || '4-3-3 Control';
+    const savedFormationIndex = this.formations.findIndex(x => x === savedFormation);
+
+    this.formationIndex = savedFormationIndex >= 0 ? savedFormationIndex : 0;
+    this.selectedFormationLayout = this.getFormationLayout(this.selectedFormation);
+
+    this.setStartingPlayers(club.startingPlayers ?? []);
+
+    this.chemistry = club.chemistry ?? 0;
+  }
+
+  private setStartingPlayers(players: ClubPlayer[]): void {
+    this.startingPlayers = [...players]
+      .sort((a, b) => a.slotIndex - b.slotIndex);
   }
 
   private getFormationLayout(formation: string): FormationPlayerPosition[] {

@@ -48,6 +48,9 @@ export class SquadLineupModalComponent implements OnInit {
 
     this.formationIndex = index >= 0 ? index : 0;
 
+    this.startingPlayers = [...this.startingPlayers]
+  .sort((a, b) => (a.slotIndex ?? 0) - (b.slotIndex ?? 0));
+
     this.updateFormation();
   }
 
@@ -68,8 +71,7 @@ export class SquadLineupModalComponent implements OnInit {
   }
 
   private updateFormation(): void {
-    this.selectedFormation =
-      this.formations[this.formationIndex];
+    this.selectedFormation = this.formations[this.formationIndex];
 
     this.formationLayout = [
       ...(this.formationLayouts[this.selectedFormation] ?? [])
@@ -85,22 +87,37 @@ export class SquadLineupModalComponent implements OnInit {
       return;
     }
 
+    const slotIndex = this.selectedSlotIndex;
+
     this.startingPlayers = [...this.startingPlayers];
-    this.startingPlayers[this.selectedSlotIndex] = player;
+
+    this.startingPlayers[slotIndex] = {
+      ...player,
+      slotIndex,
+      position:
+        this.formationLayout[slotIndex]?.position ||
+        player.position ||
+        'N/A'
+    };
+
     this.selectedSlotIndex = null;
   }
 
   saveLineup(): void {
     const payload: SaveLineupPayload = {
       formation: this.selectedFormation,
-      players: this.startingPlayers.map((player, index) => ({
-        playerId: player.playerId,
-        slotIndex: index,
-        position:
-          this.formationLayout[index]?.position ||
-          player.position ||
-          'N/A'
-      }))
+      players: this.startingPlayers.map((player, index) => {
+        const slotIndex = player.slotIndex ?? index;
+
+        return {
+          playerId: player.playerId,
+          slotIndex,
+          position:
+            this.formationLayout[slotIndex]?.position ||
+            player.position ||
+            'N/A'
+        };
+      })
     };
 
     this.save.emit(payload);

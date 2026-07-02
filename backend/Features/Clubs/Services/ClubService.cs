@@ -127,7 +127,7 @@ public class ClubService : IClubService
 				Position = x.GamePlayer.Position,
 				Overall = x.GamePlayer.Overall,
 				AvatarUrl = x.GamePlayer.ImageUrl,
-				SlotIndex = 0,
+				SlotIndex = -1,
 				Nation = x.GamePlayer.Nation,
 				League = x.GamePlayer.GameClub != null
 					? x.GamePlayer.GameClub.League
@@ -422,75 +422,15 @@ public class ClubService : IClubService
 	}
 
 	private static void SetFormationPositions(
-		List<MyClubPlayerDto> players,
-		string formation)
+	List<MyClubPlayerDto> players,
+	string formation)
 	{
-		List<FormationPoint> positions = formation switch
+		foreach (var player in players)
 		{
-			"4-4-2 Flat" => new List<FormationPoint>
-		{
-			new FormationPoint { X = 35, Y = 12 },
-			new FormationPoint { X = 65, Y = 12 },
-
-			new FormationPoint { X = 15, Y = 38 },
-			new FormationPoint { X = 38, Y = 40 },
-			new FormationPoint { X = 62, Y = 40 },
-			new FormationPoint { X = 85, Y = 38 },
-
-			new FormationPoint { X = 15, Y = 68 },
-			new FormationPoint { X = 38, Y = 72 },
-			new FormationPoint { X = 62, Y = 72 },
-			new FormationPoint { X = 85, Y = 68 },
-
-			new FormationPoint { X = 50, Y = 90 }
-		},
-
-			"4-1-2-1-2 Narrow" => new List<FormationPoint>
-		{
-			new FormationPoint { X = 35, Y = 12 },
-			new FormationPoint { X = 65, Y = 12 },
-
-			new FormationPoint { X = 50, Y = 30 },
-
-			new FormationPoint { X = 35, Y = 45 },
-			new FormationPoint { X = 65, Y = 45 },
-
-			new FormationPoint { X = 50, Y = 58 },
-
-			new FormationPoint { X = 15, Y = 72 },
-			new FormationPoint { X = 38, Y = 76 },
-			new FormationPoint { X = 62, Y = 76 },
-			new FormationPoint { X = 85, Y = 72 },
-
-			new FormationPoint { X = 50, Y = 92 }
-		},
-
-			_ => new List<FormationPoint>
-		{
-			new FormationPoint { X = 18, Y = 15 },
-			new FormationPoint { X = 47, Y = 8 },
-			new FormationPoint { X = 74, Y = 15 },
-
-			new FormationPoint { X = 28, Y = 42 },
-			new FormationPoint { X = 48, Y = 38 },
-			new FormationPoint { X = 68, Y = 42 },
-
-			new FormationPoint { X = 12, Y = 67 },
-			new FormationPoint { X = 34, Y = 70 },
-			new FormationPoint { X = 60, Y = 70 },
-			new FormationPoint { X = 82, Y = 67 },
-
-			new FormationPoint { X = 48, Y = 88 }
-		}
-		};
-
-		for (var i = 0; i < players.Count && i < positions.Count; i++)
-		{
-			players[i].X = positions[i].X;
-			players[i].Y = positions[i].Y;
+			player.X = 50;
+			player.Y = 50;
 		}
 	}
-
 	private static void CalculateChemistry(
 		List<MyClubPlayerDto> players,
 		string formation)
@@ -527,53 +467,127 @@ public class ClubService : IClubService
 	{
 		return formation switch
 		{
+			"4-3-3 Control" => new Dictionary<int, string>
+		{
+			{ 0, "GK" },
+			{ 1, "LB" },
+			{ 2, "CB" },
+			{ 3, "CB" },
+			{ 4, "RB" },
+			{ 5, "CM" },
+			{ 6, "CM" },
+			{ 7, "CM" },
+			{ 8, "LW" },
+			{ 9, "ST" },
+			{ 10, "RW" }
+		},
+
+			"4-2-3-1 Wide" => new Dictionary<int, string>
+		{
+			{ 0, "GK" },
+			{ 1, "LB" },
+			{ 2, "CB" },
+			{ 3, "CB" },
+			{ 4, "RB" },
+			{ 5, "CDM" },
+			{ 6, "CDM" },
+			{ 7, "LM" },
+			{ 8, "CAM" },
+			{ 9, "RM" },
+			{ 10, "ST" }
+		},
+
 			"4-4-2 Flat" => new Dictionary<int, string>
-			{
-				{ 0, "ST" },
-				{ 1, "ST" },
-				{ 2, "LM" },
-				{ 3, "CM" },
-				{ 4, "CM" },
-				{ 5, "RM" },
-				{ 6, "LB" },
-				{ 7, "CB" },
-				{ 8, "CB" },
-				{ 9, "RB" },
-				{ 10, "GK" }
-			},
+		{
+			{ 0, "GK" },
+			{ 1, "LB" },
+			{ 2, "CB" },
+			{ 3, "CB" },
+			{ 4, "RB" },
+			{ 5, "LM" },
+			{ 6, "CM" },
+			{ 7, "CM" },
+			{ 8, "RM" },
+			{ 9, "ST" },
+			{ 10, "ST" }
+		},
 
 			"4-1-2-1-2 Narrow" => new Dictionary<int, string>
-			{
-				{ 0, "ST" },
-				{ 1, "ST" },
-				{ 2, "CAM" },
-				{ 3, "CM" },
-				{ 4, "CM" },
-				{ 5, "CDM" },
-				{ 6, "LB" },
-				{ 7, "CB" },
-				{ 8, "CB" },
-				{ 9, "RB" },
-				{ 10, "GK" }
-			},
+		{
+			{ 0, "GK" },
+			{ 1, "LB" },
+			{ 2, "CB" },
+			{ 3, "CB" },
+			{ 4, "RB" },
+			{ 5, "CDM" },
+			{ 6, "CM" },
+			{ 7, "CM" },
+			{ 8, "CAM" },
+			{ 9, "ST" },
+			{ 10, "ST" }
+		},
+
+			"3-5-2" => new Dictionary<int, string>
+		{
+			{ 0, "GK" },
+			{ 1, "CB" },
+			{ 2, "CB" },
+			{ 3, "CB" },
+			{ 4, "LM" },
+			{ 5, "CM" },
+			{ 6, "CDM" },
+			{ 7, "CM" },
+			{ 8, "RM" },
+			{ 9, "ST" },
+			{ 10, "ST" }
+		},
+
+			"5-3-2" => new Dictionary<int, string>
+		{
+			{ 0, "GK" },
+			{ 1, "LWB" },
+			{ 2, "CB" },
+			{ 3, "CB" },
+			{ 4, "CB" },
+			{ 5, "RWB" },
+			{ 6, "CM" },
+			{ 7, "CM" },
+			{ 8, "CM" },
+			{ 9, "ST" },
+			{ 10, "ST" }
+		},
+
+			"4-5-1" => new Dictionary<int, string>
+		{
+			{ 0, "GK" },
+			{ 1, "LB" },
+			{ 2, "CB" },
+			{ 3, "CB" },
+			{ 4, "RB" },
+			{ 5, "LM" },
+			{ 6, "CM" },
+			{ 7, "CM" },
+			{ 8, "CM" },
+			{ 9, "RM" },
+			{ 10, "ST" }
+		},
 
 			_ => new Dictionary<int, string>
-			{
-				{ 0, "LW" },
-				{ 1, "ST" },
-				{ 2, "RW" },
-				{ 3, "CM" },
-				{ 4, "CM" },
-				{ 5, "CM" },
-				{ 6, "LB" },
-				{ 7, "CB" },
-				{ 8, "CB" },
-				{ 9, "RB" },
-				{ 10, "GK" }
-			}
+		{
+			{ 0, "GK" },
+			{ 1, "LB" },
+			{ 2, "CB" },
+			{ 3, "CB" },
+			{ 4, "RB" },
+			{ 5, "CM" },
+			{ 6, "CM" },
+			{ 7, "CM" },
+			{ 8, "LW" },
+			{ 9, "ST" },
+			{ 10, "RW" }
+		}
 		};
 	}
-
 	private static bool IsCorrectPosition(string? playerPositions, string expectedPosition)
 	{
 		if (string.IsNullOrWhiteSpace(playerPositions))
