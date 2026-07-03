@@ -6,6 +6,8 @@ using backend.Entities.MatchSummary;
 using backend.Entities.Stats;
 using backend.Entities.Tournaments;
 using backend.Features.Matches.Dtos;
+using backend.Features.Messages.Services;
+using backend.Features.Notifications.Services;
 using backend.Features.Stats.Dtos;
 using backend.Features.Stats.Services;
 using Microsoft.EntityFrameworkCore;
@@ -18,13 +20,19 @@ public class MatchService : IMatchService
 {
 	private readonly AppDbContext _context;
 	private readonly IMatchStatsOcrService _ocrService;
+	private readonly IMessageService _messageService;
+	private readonly INotificationService _notificationService;
 
 	public MatchService(
 		AppDbContext context,
-		IMatchStatsOcrService ocrService)
+		IMatchStatsOcrService ocrService,
+		IMessageService messageService,
+		INotificationService notificationService)
 	{
 		_context = context;
 		_ocrService = ocrService;
+		_messageService = messageService;
+		_notificationService = notificationService;
 	}
 
 	public async Task<List<MatchWeekDto>> GetWeeksAsync(Guid seasonId)
@@ -122,10 +130,12 @@ public class MatchService : IMatchService
 	}
 
 	public async Task<MatchResultDto?> UploadResultAsync(
-		Guid matchId,
-		UploadMatchResultDto dto)
+	Guid matchId,
+	UploadMatchResultDto dto)
 	{
 		var match = await _context.Matches
+			.Include(x => x.HomeUserClub)
+			.Include(x => x.AwayUserClub)
 			.FirstOrDefaultAsync(x =>
 				!x.IsDeleted &&
 				x.MatchId == matchId);
@@ -138,6 +148,30 @@ public class MatchService : IMatchService
 		match.Status = MatchStatus.Finished;
 
 		await _context.SaveChangesAsync();
+
+		var homeClubName = match.HomeUserClub?.Name ?? "Home";
+		var awayClubName = match.AwayUserClub?.Name ?? "Away";
+
+		var resultText = $"{homeClubName} {match.HomeScore} - {match.AwayScore} {awayClubName}";
+
+		var userIds = new List<Guid>();
+
+		userIds = userIds
+			.Distinct()
+			.ToList();
+
+		foreach (var userId in userIds)
+		{
+			await _messageService.SendSystemMessageAsync(
+	userId,
+	"Match Result Submitted",
+	$"The match has been completed. Final score: {resultText}");
+
+			await _notificationService.SendToUserAsync(
+				userId,
+				"Match Result Submitted",
+				$"Final score: {resultText}");
+		}
 
 		return new MatchResultDto
 		{
@@ -558,9 +592,9 @@ public class MatchService : IMatchService
 	}
 
 	private static MatchTeamStatsDto BuildTeamStats(
-		Match match,
-		Guid userId,
-		Dictionary<Guid, List<string>> streaks)
+	Match match,
+	Guid userId,
+	Dictionary<Guid, List<string>> streaks)
 	{
 		var teamStats = match.PlayerStats
 			.Where(x => x.UserId == userId)
@@ -568,18 +602,22 @@ public class MatchService : IMatchService
 
 		var topScorer = teamStats
 			.OrderByDescending(x => x.Goals)
+			.ThenByDescending(x => x.Rating)
 			.FirstOrDefault();
 
 		var topAssist = teamStats
 			.OrderByDescending(x => x.Assists)
+			.ThenByDescending(x => x.Rating)
 			.FirstOrDefault();
 
 		return new MatchTeamStatsDto
 		{
-			TopScorer = topScorer?.User.DisplayName ?? "-",
+			TopScorer = topScorer?.PlayerName ?? "-",
 			Goals = topScorer?.Goals ?? 0,
-			TopAssist = topAssist?.User.DisplayName ?? "-",
+
+			TopAssist = topAssist?.PlayerName ?? "-",
 			Assists = topAssist?.Assists ?? 0,
+
 			Streak = streaks.TryGetValue(userId, out var streak)
 				? streak
 				: []
