@@ -75,6 +75,9 @@ public class MatchStatsOcrService : IMatchStatsOcrService
 			.Where(x => !string.IsNullOrWhiteSpace(x))
 			.ToList();
 
+		// MARCADOR DEL PARTIDO
+		(dto.HomeGoals, dto.AwayGoals) = ExtractScore(normalizedLines);
+
 		dto.HomePossession = GetLeftInt(normalizedLines, "Possession %");
 		dto.AwayPossession = GetRightInt(normalizedLines, "Possession %");
 
@@ -121,7 +124,82 @@ public class MatchStatsOcrService : IMatchStatsOcrService
 		AddWarningIfMissing(dto, dto.HomeShots, dto.AwayShots, "Shots");
 		AddWarningIfMissing(dto, dto.HomePasses, dto.AwayPasses, "Passes");
 
+		if (dto.HomeGoals == 0 && dto.AwayGoals == 0)
+			dto.Warnings.Add("Could not detect match score.");
+
 		return dto;
+	}
+
+	private static (int homeGoals, int awayGoals) ExtractScore(List<string> lines)
+	{
+		var normalized = lines
+			.Select(NormalizeLine)
+			.Where(x => !string.IsNullOrWhiteSpace(x))
+			.ToList();
+
+		for (var i = 0; i < normalized.Count - 1; i++)
+		{
+			var current = normalized[i];
+			var next = normalized[i + 1];
+
+			if (!Regex.IsMatch(current, @"^\d{1,2}$") ||
+				!Regex.IsMatch(next, @"^\d{1,2}$"))
+				continue;
+
+			var home = ToInt(current);
+			var away = ToInt(next);
+
+			if (home > 15 || away > 15)
+				continue;
+
+			var hasTeamBefore = normalized
+				.Take(i)
+				.Any(IsPossibleTeamName);
+
+			var hasTeamAfter = normalized
+				.Skip(i + 2)
+				.Take(5)
+				.Any(IsPossibleTeamName);
+
+			if (hasTeamBefore && hasTeamAfter)
+				return (home, away);
+		}
+
+		return (0, 0);
+	}
+
+	private static bool IsPossibleTeamName(string value)
+	{
+		if (string.IsNullOrWhiteSpace(value))
+			return false;
+
+		if (Regex.IsMatch(value, @"^\d"))
+			return false;
+
+		var ignored = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+	{
+		"UT",
+		"Summary",
+		"Possession",
+		"Shooting",
+		"Passing",
+		"Defending",
+		"Events",
+		"L1",
+		"R1",
+		"Back",
+		"Toggle Left",
+		"Toggle Right",
+		"Scroll"
+	};
+
+		if (ignored.Contains(value))
+			return false;
+
+		if (value.Contains("Zillow", StringComparison.OrdinalIgnoreCase))
+			return false;
+
+		return Regex.IsMatch(value, @"[A-Za-z]");
 	}
 
 	private static int GetLeftInt(List<string> lines, string label)
@@ -434,20 +512,14 @@ public class MatchStatsOcrService : IMatchStatsOcrService
 		"CAM", "LAM", "RAM",
 		"CM", "LCM", "RCM", "CDM",
 		"CB", "LCB", "RCB", "LB", "RB", "LWB", "RWB",
-		"GK", "SUB"
+		"GK"
 	};
 
-		for (var i = 0; i < normalizedLines.Count; i++)
+		for (var i = 0; i < normalizedLines.Count - 2; i++)
 		{
 			var position = normalizedLines[i];
 
 			if (!positions.Contains(position))
-				continue;
-
-			if (position.Equals("SUB", StringComparison.OrdinalIgnoreCase))
-				continue;
-
-			if (i + 2 >= normalizedLines.Count)
 				continue;
 
 			var playerName = normalizedLines[i + 1];
@@ -456,8 +528,7 @@ public class MatchStatsOcrService : IMatchStatsOcrService
 			if (!decimal.TryParse(ratingText, NumberStyles.Any, CultureInfo.InvariantCulture, out var rating))
 				continue;
 
-			var nextPositionIndex = normalizedLines
-				.FindIndex(i + 3, x => positions.Contains(x));
+			var nextPositionIndex = normalizedLines.FindIndex(i + 3, x => positions.Contains(x));
 
 			if (nextPositionIndex == -1)
 				nextPositionIndex = normalizedLines.Count;
@@ -487,44 +558,32 @@ public class MatchStatsOcrService : IMatchStatsOcrService
 
 	private static (int goals, int assists) ExtractGoalsAssistsFromPlayerBlock(List<string> block)
 	{
-		var values = new List<int>();
-		var passedNoiseLabel = false;
+		var numbers = new List<int>();
 
 		foreach (var line in block)
 		{
 			var normalized = NormalizeLine(line);
 
 			if (IsTeamPerformanceNoiseLabel(normalized))
-			{
-				passedNoiseLabel = true;
-				continue;
-			}
+				break;
 
-			if (normalized.Contains(' '))
+			if (!Regex.IsMatch(normalized, @"^\d{1,2}$"))
 				continue;
 
-			var numbers = ExtractNumbers(normalized);
+			var number = ToInt(normalized);
 
-			if (numbers.Count != 1)
+			if (number < 0 || number > 15)
 				continue;
 
-			var number = ToInt(numbers[0]);
+			numbers.Add(number);
 
-			if (number < 0 || number > 20)
-				continue;
-
-			if (passedNoiseLabel && number > 1)
-				continue;
-
-			values.Add(number);
-
-			if (values.Count == 2)
+			if (numbers.Count == 2)
 				break;
 		}
 
 		return (
-			values.Count > 0 ? values[0] : 0,
-			values.Count > 1 ? values[1] : 0
+			numbers.Count > 0 ? numbers[0] : 0,
+			numbers.Count > 1 ? numbers[1] : 0
 		);
 	}
 

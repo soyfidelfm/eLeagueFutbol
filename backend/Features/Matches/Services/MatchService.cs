@@ -9,6 +9,7 @@ using backend.Features.Matches.Dtos;
 using backend.Features.Stats.Dtos;
 using backend.Features.Stats.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace backend.Features.Matches.Services;
@@ -283,25 +284,29 @@ public class MatchService : IMatchService
 		}
 
 		var teams = await _context.SeasonRegistrations
-			.AsNoTracking()
-			.Where(x => x.SeasonId == seasonId)
-			.Join(
-				_context.UserClubs.AsNoTracking().Where(x =>
-					x.SeasonId == seasonId &&
-					!x.IsDeleted &&
-					x.BaseGameClubId.HasValue),
-				sr => new { sr.SeasonId, sr.UserId },
-				uc => new { uc.SeasonId, uc.UserId },
-				(sr, uc) => new ScheduleTeam
-				{
-					UserId = sr.UserId,
-					UserClubId = uc.UserClubId,
-					GameClubId = sr.GameClubId
-				})
-			.ToListAsync();
+	.AsNoTracking()
+	.Where(x => x.SeasonId == seasonId)
+	.Join(
+		_context.UserClubs.AsNoTracking().Where(x =>
+			x.SeasonId == seasonId &&
+			!x.IsDeleted &&
+			x.BaseGameClubId.HasValue),
+		sr => new { sr.SeasonId, sr.UserId },
+		uc => new { uc.SeasonId, uc.UserId },
+		(sr, uc) => new ScheduleTeam
+		{
+			UserId = sr.UserId,
+			UserClubId = uc.UserClubId,
+			GameClubId = sr.GameClubId
+		})
+	.ToListAsync();
 
 		if (teams.Count < 2)
 			return false;
+
+		teams = teams
+			.OrderBy(_ => Guid.NewGuid())
+			.ToList();
 
 		var totalWeeks = season.TotalWeeks <= 0 ? 1 : season.TotalWeeks;
 		var pairings = GenerateSchedulePairings(teams, totalWeeks);
@@ -619,48 +624,71 @@ public class MatchService : IMatchService
 	private async Task ProcessUploadedStatsAsync(Guid matchId)
 	{
 		var match = await _context.Matches
-	.Include(x => x.HomeUser)
-	.Include(x => x.AwayUser)
-	.Include(x => x.HomeGameClub)
-	.Include(x => x.AwayGameClub)
-	.Include(x => x.HomeUserClub)
-	.Include(x => x.AwayUserClub)
-	.FirstOrDefaultAsync(x =>
-		!x.IsDeleted &&
-		x.MatchId == matchId);
+			.Include(x => x.Tournament)
+			.Include(x => x.HomeUserClub)
+			.Include(x => x.AwayUserClub)
+			.FirstOrDefaultAsync(x =>
+				!x.IsDeleted &&
+				x.MatchId == matchId);
 
 		if (match is null)
 			return;
 
-		var homeTeamId = await _context.Teams
-	.Where(x => x.OwnerUserId == match.HomeUserId)
-	.Select(x => (Guid?)x.TeamId)
-	.FirstOrDefaultAsync();
+		var homeUserClubId = match.HomeUserClub?.UserClubId;
 
-		var awayTeamId = await _context.Teams
-			.Where(x => x.OwnerUserId == match.AwayUserId)
-			.Select(x => (Guid?)x.TeamId)
-			.FirstOrDefaultAsync();
+		if (!homeUserClubId.HasValue)
+		{
+			homeUserClubId = await _context.UserClubs
+				.Where(x =>
+					!x.IsDeleted &&
+					x.SeasonId == match.Tournament.SeasonId &&
+					x.UserId == match.HomeUserId)
+				.Select(x => (Guid?)x.UserClubId)
+				.FirstOrDefaultAsync();
+		}
 
-		if (!homeTeamId.HasValue || !awayTeamId.HasValue)
-			throw new InvalidOperationException("Home or away real team was not found.");
+		var awayUserClubId = match.AwayUserClub?.UserClubId;
+
+		if (!awayUserClubId.HasValue)
+		{
+			awayUserClubId = await _context.UserClubs
+				.Where(x =>
+					!x.IsDeleted &&
+					x.SeasonId == match.Tournament.SeasonId &&
+					x.UserId == match.AwayUserId)
+				.Select(x => (Guid?)x.UserClubId)
+				.FirstOrDefaultAsync();
+		}
+
+		if (!homeUserClubId.HasValue || !awayUserClubId.HasValue)
+			throw new InvalidOperationException("Home or away UserClub was not found.");
 
 		var uploads = await _context.MatchStatsUploads
 			.Where(x => x.MatchId == matchId)
 			.ToListAsync();
 
-		var summaryUpload = uploads.FirstOrDefault(x => x.Type == MatchStatsUploadType.MatchSummary);
-		var homeUpload = uploads.FirstOrDefault(x => x.Type == MatchStatsUploadType.HomeTeamPerformance);
-		var awayUpload = uploads.FirstOrDefault(x => x.Type == MatchStatsUploadType.AwayTeamPerformance);
+		var summaryUpload = uploads.FirstOrDefault(x =>
+			x.Type == MatchStatsUploadType.MatchSummary);
+
+		var homeUpload = uploads.FirstOrDefault(x =>
+			x.Type == MatchStatsUploadType.HomeTeamPerformance);
+
+		var awayUpload = uploads.FirstOrDefault(x =>
+			x.Type == MatchStatsUploadType.AwayTeamPerformance);
 
 		if (string.IsNullOrWhiteSpace(summaryUpload?.RawJson) ||
 			string.IsNullOrWhiteSpace(homeUpload?.RawJson) ||
 			string.IsNullOrWhiteSpace(awayUpload?.RawJson))
 			return;
 
-		var summary = JsonSerializer.Deserialize<Stats.Dtos.MatchSummaryStatsOcrDto>(summaryUpload.RawJson);
-		var homePerformance = JsonSerializer.Deserialize<TeamPerformanceOcrPreviewDto>(homeUpload.RawJson);
-		var awayPerformance = JsonSerializer.Deserialize<TeamPerformanceOcrPreviewDto>(awayUpload.RawJson);
+		var summary = JsonSerializer.Deserialize<Stats.Dtos.MatchSummaryStatsOcrDto>(
+			summaryUpload.RawJson);
+
+		var homePerformance = JsonSerializer.Deserialize<TeamPerformanceOcrPreviewDto>(
+			homeUpload.RawJson);
+
+		var awayPerformance = JsonSerializer.Deserialize<TeamPerformanceOcrPreviewDto>(
+			awayUpload.RawJson);
 
 		if (summary is null || homePerformance is null || awayPerformance is null)
 			return;
@@ -718,7 +746,7 @@ public class MatchService : IMatchService
 				MatchPlayerStatsId = Guid.NewGuid(),
 				MatchId = matchId,
 				UserId = match.HomeUserId,
-				TeamId = homeTeamId.Value,
+				UserClubId = homeUserClubId.Value,
 
 				Position = player.Position,
 				PlayerName = player.PlayerName,
@@ -735,7 +763,7 @@ public class MatchService : IMatchService
 				MatchPlayerStatsId = Guid.NewGuid(),
 				MatchId = matchId,
 				UserId = match.AwayUserId,
-				TeamId = awayTeamId.Value,
+				UserClubId = awayUserClubId.Value,
 
 				Position = player.Position,
 				PlayerName = player.PlayerName,
@@ -750,8 +778,18 @@ public class MatchService : IMatchService
 			upload.IsProcessed = true;
 		}
 
+		match.HomeScore = summary.HomeGoals;
+		match.AwayScore = summary.AwayGoals;
 		match.Status = MatchStatus.Finished;
 
+		Debug.WriteLine("===== SUMMARY OCR RAW LINES =====");
+
+		foreach (var line in summary.RawLines)
+		{
+			Debug.WriteLine($"OCR: [{line}]");
+		}
+
+		Debug.WriteLine($"Detected Score: {summary.HomeGoals}-{summary.AwayGoals}");
 		await _context.SaveChangesAsync();
 	}
 }

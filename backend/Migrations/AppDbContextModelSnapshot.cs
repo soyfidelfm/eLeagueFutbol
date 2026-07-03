@@ -1168,13 +1168,13 @@ namespace backend.Migrations
                     b.Property<int>("Tackles")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("TeamId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime?>("UpdatedAtUTC")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserClubId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("UserId")
@@ -1187,7 +1187,7 @@ namespace backend.Migrations
 
                     b.HasIndex("MatchId");
 
-                    b.HasIndex("TeamId");
+                    b.HasIndex("UserClubId");
 
                     b.HasIndex("UserId");
 
@@ -1828,9 +1828,9 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("backend.Entities.Teams.Team", "Team")
+                    b.HasOne("backend.Entities.Clubs.UserClub", "UserClub")
                         .WithMany()
-                        .HasForeignKey("TeamId")
+                        .HasForeignKey("UserClubId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1842,9 +1842,9 @@ namespace backend.Migrations
 
                     b.Navigation("Match");
 
-                    b.Navigation("Team");
-
                     b.Navigation("User");
+
+                    b.Navigation("UserClub");
                 });
 
             modelBuilder.Entity("backend.Entities.Teams.Team", b =>

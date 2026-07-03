@@ -216,9 +216,10 @@ awayPerformanceFile: File | null = null;
     )
     .subscribe({
       next: results => {
-        this.statsUploadResult = results[2];
-        this.cdr.detectChanges();
-      },
+  this.statsUploadResult = results[0]; // MatchSummary
+  this.loadMatches(); // refresca marcador desde BD
+  this.cdr.detectChanges();
+},
       error: err => {
         console.error(err);
         this.errorMessage = 'Could not upload match stats.';

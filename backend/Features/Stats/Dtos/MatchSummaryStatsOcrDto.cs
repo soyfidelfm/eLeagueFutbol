@@ -2,6 +2,9 @@
 
 public class MatchSummaryStatsOcrDto
 {
+	public int HomeGoals { get; set; }
+	public int AwayGoals { get; set; }
+
 	public int HomePossession { get; set; }
 	public int AwayPossession { get; set; }
 

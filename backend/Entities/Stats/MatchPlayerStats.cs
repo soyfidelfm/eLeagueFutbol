@@ -1,8 +1,8 @@
 ﻿namespace backend.Entities.Stats;
 
+using backend.Entities.Clubs;
 using backend.Entities.Common;
 using backend.Entities.Identity;
-using backend.Entities.Teams;
 using backend.Entities.Tournaments;
 
 public class MatchPlayerStats : BaseEntity
@@ -11,7 +11,7 @@ public class MatchPlayerStats : BaseEntity
 
 	public Guid MatchId { get; set; }
 	public Guid UserId { get; set; }
-	public Guid TeamId { get; set; }
+	public Guid UserClubId { get; set; }
 
 	public string Position { get; set; } = string.Empty;
 	public string PlayerName { get; set; } = string.Empty;
@@ -51,5 +51,5 @@ public class MatchPlayerStats : BaseEntity
 
 	public Match Match { get; set; } = null!;
 	public User User { get; set; } = null!;
-	public Team Team { get; set; } = null!;
+	public UserClub UserClub { get; set; } = null!;
 }

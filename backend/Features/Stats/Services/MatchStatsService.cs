@@ -51,7 +51,7 @@ public class MatchStatsService : IMatchStatsService
 	}
 
 	public async Task SaveTeamPerformanceAsync(
-		ConfirmTeamPerformanceDto dto)
+	ConfirmTeamPerformanceDto dto)
 	{
 		foreach (var player in dto.Players)
 		{
@@ -62,7 +62,7 @@ public class MatchStatsService : IMatchStatsService
 				MatchId = dto.MatchId,
 
 				UserId = player.UserId,
-				TeamId = player.TeamId,
+				UserClubId = player.UserClubId,
 
 				Position = player.Position,
 				PlayerName = player.PlayerName,
