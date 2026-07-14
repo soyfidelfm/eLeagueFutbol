@@ -830,4 +830,168 @@ public class MatchService : IMatchService
 		Debug.WriteLine($"Detected Score: {summary.HomeGoals}-{summary.AwayGoals}");
 		await _context.SaveChangesAsync();
 	}
+	public async Task<bool> SaveManualStatsAsync(
+	Guid matchId,
+	SaveManualMatchStatsDto dto)
+	{
+		var match = await _context.Matches
+			.Include(x => x.Tournament)
+			.Include(x => x.HomeUserClub)
+			.Include(x => x.AwayUserClub)
+			.FirstOrDefaultAsync(x =>
+				!x.IsDeleted &&
+				x.MatchId == matchId);
+
+		if (match is null)
+			return false;
+
+		var homeUserClubId = match.HomeUserClub?.UserClubId;
+
+		if (!homeUserClubId.HasValue)
+		{
+			homeUserClubId = await _context.UserClubs
+				.Where(x =>
+					!x.IsDeleted &&
+					x.SeasonId == match.Tournament.SeasonId &&
+					x.UserId == match.HomeUserId)
+				.Select(x => (Guid?)x.UserClubId)
+				.FirstOrDefaultAsync();
+		}
+
+		var awayUserClubId = match.AwayUserClub?.UserClubId;
+
+		if (!awayUserClubId.HasValue)
+		{
+			awayUserClubId = await _context.UserClubs
+				.Where(x =>
+					!x.IsDeleted &&
+					x.SeasonId == match.Tournament.SeasonId &&
+					x.UserId == match.AwayUserId)
+				.Select(x => (Guid?)x.UserClubId)
+				.FirstOrDefaultAsync();
+		}
+
+		if (!homeUserClubId.HasValue || !awayUserClubId.HasValue)
+		{
+			throw new InvalidOperationException(
+				"Home or away UserClub was not found.");
+		}
+
+		await using var transaction =
+			await _context.Database.BeginTransactionAsync();
+
+		try
+		{
+			var oldSummary = await _context.MatchSummaryStats
+				.Where(x => x.MatchId == matchId)
+				.ToListAsync();
+
+			var oldPlayerStats = await _context.MatchPlayerStats
+				.Where(x => x.MatchId == matchId)
+				.ToListAsync();
+
+			_context.MatchSummaryStats.RemoveRange(oldSummary);
+			_context.MatchPlayerStats.RemoveRange(oldPlayerStats);
+
+			var summary = new MatchSummaryStats
+			{
+				MatchSummaryStatsId = Guid.NewGuid(),
+				MatchId = matchId,
+
+				HomePossession = dto.HomePossession,
+				AwayPossession = dto.AwayPossession,
+
+				HomeShots = dto.HomeShots,
+				AwayShots = dto.AwayShots,
+
+				HomeExpectedGoals = dto.HomeExpectedGoals,
+				AwayExpectedGoals = dto.AwayExpectedGoals,
+
+				HomePasses = dto.HomePasses,
+				AwayPasses = dto.AwayPasses,
+
+				HomeTackles = dto.HomeTackles,
+				AwayTackles = dto.AwayTackles,
+
+				HomeTacklesWon = dto.HomeTacklesWon,
+				AwayTacklesWon = dto.AwayTacklesWon,
+
+				HomeInterceptions = dto.HomeInterceptions,
+				AwayInterceptions = dto.AwayInterceptions,
+
+				HomeSaves = dto.HomeSaves,
+				AwaySaves = dto.AwaySaves,
+
+				HomeFoulsCommitted = dto.HomeFoulsCommitted,
+				AwayFoulsCommitted = dto.AwayFoulsCommitted,
+
+				HomeOffsides = dto.HomeOffsides,
+				AwayOffsides = dto.AwayOffsides,
+
+				HomeCorners = dto.HomeCorners,
+				AwayCorners = dto.AwayCorners,
+
+				HomeFreeKicks = dto.HomeFreeKicks,
+				AwayFreeKicks = dto.AwayFreeKicks,
+
+				HomePenaltyKicks = dto.HomePenaltyKicks,
+				AwayPenaltyKicks = dto.AwayPenaltyKicks,
+
+				HomeYellowCards = dto.HomeYellowCards,
+				AwayYellowCards = dto.AwayYellowCards
+			};
+
+			_context.MatchSummaryStats.Add(summary);
+
+			foreach (var player in dto.HomePlayers)
+			{
+				_context.MatchPlayerStats.Add(new MatchPlayerStats
+				{
+					MatchPlayerStatsId = Guid.NewGuid(),
+					MatchId = matchId,
+
+					UserId = match.HomeUserId,
+					UserClubId = homeUserClubId.Value,
+
+					Position = player.Position.Trim(),
+					PlayerName = player.PlayerName.Trim(),
+					Rating = player.Rating,
+					Goals = player.Goals,
+					Assists = player.Assists
+				});
+			}
+
+			foreach (var player in dto.AwayPlayers)
+			{
+				_context.MatchPlayerStats.Add(new MatchPlayerStats
+				{
+					MatchPlayerStatsId = Guid.NewGuid(),
+					MatchId = matchId,
+
+					UserId = match.AwayUserId,
+					UserClubId = awayUserClubId.Value,
+
+					Position = player.Position.Trim(),
+					PlayerName = player.PlayerName.Trim(),
+					Rating = player.Rating,
+					Goals = player.Goals,
+					Assists = player.Assists
+				});
+			}
+
+			match.HomeScore = dto.HomeGoals;
+			match.AwayScore = dto.AwayGoals;
+			match.Status = MatchStatus.Finished;
+
+			await _context.SaveChangesAsync();
+			await transaction.CommitAsync();
+
+			return true;
+		}
+		catch
+		{
+			await transaction.RollbackAsync();
+			throw;
+		}
+	}
 }

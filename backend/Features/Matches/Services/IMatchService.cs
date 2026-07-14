@@ -24,4 +24,7 @@ public interface IMatchService
 		UploadMatchStatsImageDto dto);
 
 	Task<bool> GenerateScheduleAsync(Guid seasonId);
+	Task<bool> SaveManualStatsAsync(
+	Guid matchId,
+	SaveManualMatchStatsDto dto);
 }
