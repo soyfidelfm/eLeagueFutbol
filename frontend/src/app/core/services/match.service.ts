@@ -9,7 +9,8 @@ import {
   MatchDto,
   MatchWeekDto,
   UploadMatchResultDto,
-  MatchResultDto
+  MatchResultDto,
+  SaveManualMatchStatsRequest
 } from '../models/match.model';
 
 @Injectable({
@@ -68,4 +69,14 @@ export class MatchService extends ApiService {
       {}
     );
   }
+
+  saveManualStats(
+  matchId: string,
+  dto: SaveManualMatchStatsRequest
+): Observable<void> {
+  return super.post<void>(
+    `${API_ENDPOINTS.matches}/${matchId}/manual-stats`,
+    dto
+  );
+}
 }

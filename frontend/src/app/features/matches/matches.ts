@@ -1,9 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnInit
+} from '@angular/core';
 import { finalize, forkJoin } from 'rxjs';
 
 import { MatchService } from '../../core/services/match.service';
 import { SeasonService } from '../../core/services/season.service';
+
 import {
   MatchStatsService,
   MatchStatsUploadResult
@@ -23,13 +28,18 @@ import {
   NeonDropdownOption
 } from '../../shared/components/neon-dropdown/neon-dropdown';
 
+import {
+  ManualMatchStatsModal
+} from './components/manual-match-stats-modal/manual-match-stats-modal';
+
 @Component({
   selector: 'app-matches',
   standalone: true,
   imports: [
     CommonModule,
     NeonDropdownComponent,
-    AppLoading
+    AppLoading,
+    ManualMatchStatsModal
   ],
   templateUrl: './matches.html',
   styleUrl: './matches.scss'
@@ -37,8 +47,10 @@ import {
 export class Matches implements OnInit {
 
   summaryFile: File | null = null;
-homePerformanceFile: File | null = null;
-awayPerformanceFile: File | null = null;
+  homePerformanceFile: File | null = null;
+  awayPerformanceFile: File | null = null;
+
+  manualStatsMatch: MatchView | null = null;
 
   isLoading = false;
   isUploadingResult = false;
@@ -57,10 +69,10 @@ awayPerformanceFile: File | null = null;
   statsUploadResult: MatchStatsUploadResult | null = null;
 
   constructor(
-    private matchService: MatchService,
-    private seasonService: SeasonService,
-    private matchStatsService: MatchStatsService,
-    private cdr: ChangeDetectorRef
+    private readonly matchService: MatchService,
+    private readonly seasonService: SeasonService,
+    private readonly matchStatsService: MatchStatsService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -77,7 +89,9 @@ awayPerformanceFile: File | null = null;
 
     this.seasonService.getAll().subscribe({
       next: seasons => {
-        const currentSeason = seasons.find(x => x.isCurrent) ?? seasons[0];
+        const currentSeason =
+          seasons.find(x => x.isCurrent) ??
+          seasons[0];
 
         if (!currentSeason) {
           this.errorMessage = 'No season found.';
@@ -98,32 +112,34 @@ awayPerformanceFile: File | null = null;
   }
 
   loadWeeks(): void {
-    this.matchService.getWeeks(this.selectedSeasonId).subscribe({
-      next: weeks => {
-        this.weeks = weeks;
+    this.matchService
+      .getWeeks(this.selectedSeasonId)
+      .subscribe({
+        next: weeks => {
+          this.weeks = weeks;
 
-        this.weekOptions = this.weeks.map(week => ({
-          label: week.label,
-          value: week.value.toString()
-        }));
+          this.weekOptions = weeks.map(week => ({
+            label: week.label,
+            value: week.value.toString()
+          }));
 
-        if (this.weeks.length === 0) {
-          this.matches = [];
-          this.selectedMatch = null;
+          if (weeks.length === 0) {
+            this.matches = [];
+            this.selectedMatch = null;
+            this.isLoading = false;
+            this.cdr.detectChanges();
+            return;
+          }
+
+          this.selectedWeek = Number(weeks[0].value);
+          this.loadMatches();
+        },
+        error: () => {
+          this.errorMessage = 'Could not load match weeks.';
           this.isLoading = false;
           this.cdr.detectChanges();
-          return;
         }
-
-        this.selectedWeek = Number(this.weeks[0].value);
-        this.loadMatches();
-      },
-      error: () => {
-        this.errorMessage = 'Could not load match weeks.';
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      }
-    });
+      });
   }
 
   loadMatches(): void {
@@ -134,15 +150,28 @@ awayPerformanceFile: File | null = null;
     this.clearUploadState();
     this.cdr.detectChanges();
 
-    this.matchService.getByWeek(this.selectedSeasonId, Number(this.selectedWeek))
-      .pipe(finalize(() => {
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      }))
+    this.matchService
+      .getByWeek(
+        this.selectedSeasonId,
+        Number(this.selectedWeek)
+      )
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
       .subscribe({
         next: matches => {
-          this.matches = matches.map(match => this.mapMatch(match));
-          this.selectedMatch = this.matchOfTheWeek ?? this.matches[0] ?? null;
+          this.matches = matches.map(match =>
+            this.mapMatch(match)
+          );
+
+          this.selectedMatch =
+            this.matchOfTheWeek ??
+            this.matches[0] ??
+            null;
+
           this.cdr.detectChanges();
         },
         error: () => {
@@ -164,73 +193,105 @@ awayPerformanceFile: File | null = null;
     this.clearUploadState();
   }
 
-  onResultFilesSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-
-    if (!input.files || input.files.length === 0) {
+  previewUploadedResult(): void {
+    if (!this.selectedMatch) {
+      this.errorMessage = 'Please select a match.';
       return;
     }
 
-    this.selectedResultFiles = Array.from(input.files);
-    this.statsUploadResult = null;
+    if (
+      !this.summaryFile ||
+      !this.homePerformanceFile ||
+      !this.awayPerformanceFile
+    ) {
+      this.errorMessage =
+        'Please select Summary, Home Team Performance and Away Team Performance.';
+      return;
+    }
+
+    this.isUploadingResult = true;
     this.errorMessage = '';
+
+    forkJoin([
+      this.matchStatsService.uploadStatsImage(
+        this.selectedMatch.id,
+        'MatchSummary',
+        this.summaryFile
+      ),
+      this.matchStatsService.uploadStatsImage(
+        this.selectedMatch.id,
+        'HomeTeamPerformance',
+        this.homePerformanceFile
+      ),
+      this.matchStatsService.uploadStatsImage(
+        this.selectedMatch.id,
+        'AwayTeamPerformance',
+        this.awayPerformanceFile
+      )
+    ])
+      .pipe(
+        finalize(() => {
+          this.isUploadingResult = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: results => {
+          this.statsUploadResult = results[0];
+          this.loadMatches();
+        },
+        error: err => {
+          console.error(err);
+
+          this.errorMessage =
+            'Could not upload match stats.';
+
+          this.statsUploadResult = null;
+          this.cdr.detectChanges();
+        }
+      });
   }
-
-  previewUploadedResult(): void {
-  if (!this.selectedMatch) {
-    this.errorMessage = 'Please select a match.';
-    return;
-  }
-
-  if (!this.summaryFile || !this.homePerformanceFile || !this.awayPerformanceFile) {
-    this.errorMessage =
-      'Please select Summary, Home Team Performance and Away Team Performance.';
-    return;
-  }
-
-  this.isUploadingResult = true;
-  this.errorMessage = '';
-
-  forkJoin([
-    this.matchStatsService.uploadStatsImage(
-      this.selectedMatch.id,
-      'MatchSummary',
-      this.summaryFile
-    ),
-    this.matchStatsService.uploadStatsImage(
-      this.selectedMatch.id,
-      'HomeTeamPerformance',
-      this.homePerformanceFile
-    ),
-    this.matchStatsService.uploadStatsImage(
-      this.selectedMatch.id,
-      'AwayTeamPerformance',
-      this.awayPerformanceFile
-    )
-  ])
-    .pipe(
-      finalize(() => {
-        this.isUploadingResult = false;
-        this.cdr.detectChanges();
-      })
-    )
-    .subscribe({
-      next: results => {
-  this.statsUploadResult = results[0]; // MatchSummary
-  this.loadMatches(); // refresca marcador desde BD
-  this.cdr.detectChanges();
-},
-      error: err => {
-        console.error(err);
-        this.errorMessage = 'Could not upload match stats.';
-        this.statsUploadResult = null;
-        this.cdr.detectChanges();
-      }
-    });
-}
 
   confirmUploadedResult(): void {
     this.previewUploadedResult();
+  }
+
+  onSummarySelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.summaryFile = input.files?.[0] ?? null;
+  }
+
+  onHomePerformanceSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.homePerformanceFile =
+      input.files?.[0] ?? null;
+  }
+
+  onAwayPerformanceSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.awayPerformanceFile =
+      input.files?.[0] ?? null;
+  }
+
+  openManualStats(): void {
+    if (!this.selectedMatch) {
+      this.errorMessage = 'Please select a match.';
+      return;
+    }
+
+    this.errorMessage = '';
+    this.manualStatsMatch = this.selectedMatch;
+    this.cdr.detectChanges();
+  }
+
+  closeManualStats(): void {
+    this.manualStatsMatch = null;
+    this.cdr.detectChanges();
+  }
+
+  onManualStatsSaved(): void {
+    this.manualStatsMatch = null;
+    this.loadMatches();
   }
 
   get selectedWeekValue(): string {
@@ -242,7 +303,11 @@ awayPerformanceFile: File | null = null;
   }
 
   get matchOfTheWeek(): MatchView | null {
-    return this.matches.find(x => x.isMatchOfTheWeek) ?? this.matches[0] ?? null;
+    return (
+      this.matches.find(x => x.isMatchOfTheWeek) ??
+      this.matches[0] ??
+      null
+    );
   }
 
   get regularMatches(): MatchView[] {
@@ -252,10 +317,16 @@ awayPerformanceFile: File | null = null;
       return this.matches;
     }
 
-    return this.matches.filter(x => x.id !== matchOfTheWeek.id);
+    return this.matches.filter(
+      x => x.id !== matchOfTheWeek.id
+    );
   }
 
   private clearUploadState(): void {
+    this.summaryFile = null;
+    this.homePerformanceFile = null;
+    this.awayPerformanceFile = null;
+
     this.selectedResultFiles = [];
     this.statsUploadResult = null;
   }
@@ -289,19 +360,4 @@ awayPerformanceFile: File | null = null;
       }
     };
   }
-
-  onSummarySelected(event: Event): void {
-  const input = event.target as HTMLInputElement;
-  this.summaryFile = input.files?.[0] ?? null;
-}
-
-onHomePerformanceSelected(event: Event): void {
-  const input = event.target as HTMLInputElement;
-  this.homePerformanceFile = input.files?.[0] ?? null;
-}
-
-onAwayPerformanceSelected(event: Event): void {
-  const input = event.target as HTMLInputElement;
-  this.awayPerformanceFile = input.files?.[0] ?? null;
-}
 }

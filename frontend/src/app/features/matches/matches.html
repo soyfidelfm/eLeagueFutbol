@@ -1,14 +1,16 @@
 <section class="matches-page">
 
   <app-loading
-  *ngIf="isLoading"
-  title="Loading Matches"
-  message="Loading match schedule, standings and weekly fixtures..."
-  [logo]="true"
-  [showBar]="true">
-</app-loading>
+    *ngIf="isLoading"
+    title="Loading Matches"
+    message="Loading match schedule, standings and weekly fixtures..."
+    [logo]="true"
+    [showBar]="true">
+  </app-loading>
 
-  <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
+  <div
+    class="dashboard-state error"
+    *ngIf="!isLoading && errorMessage">
     <i class="fa-solid fa-triangle-exclamation"></i>
     <span>{{ errorMessage }}</span>
   </div>
@@ -30,17 +32,17 @@
       </div>
 
       <div class="page-header-actions">
-
         <div class="week-filter">
-  <app-neon-dropdown
-    label="Week"
-    placeholder="Select week"
-    [options]="weekOptions"
-    [selectedValue]="selectedWeekValue"
-    (selectedValueChange)="onWeekDropdownChange($event)">
-  </app-neon-dropdown>
-</div>
 
+          <app-neon-dropdown
+            label="Week"
+            placeholder="Select week"
+            [options]="weekOptions"
+            [selectedValue]="selectedWeekValue"
+            (selectedValueChange)="onWeekDropdownChange($event)">
+          </app-neon-dropdown>
+
+        </div>
       </div>
 
     </div>
@@ -53,8 +55,8 @@
           class="match-card match-of-week"
           *ngIf="matchOfTheWeek as match"
           [class.selected]="selectedMatch?.id === match.id"
-          (click)="selectMatch(match)"
-        >
+          (click)="selectMatch(match)">
+
           <div class="match-week-badge">
             <i class="fa-solid fa-star"></i>
             Match of the Week
@@ -66,18 +68,28 @@
               <span>{{ match.home.club }}</span>
             </div>
 
-            <img [src]="match.home.logo" alt="Home logo" />
+            <img
+              [src]="match.home.logo"
+              alt="Home logo">
           </div>
 
           <div class="match-center">
             <span>{{ match.arena }}</span>
             <small>{{ match.mode }}</small>
 
-            <strong *ngIf="match.homeScore === undefined || match.homeScore === null">
+            <strong
+              *ngIf="
+                match.homeScore === undefined ||
+                match.homeScore === null
+              ">
               {{ match.time }}
             </strong>
 
-            <strong *ngIf="match.homeScore !== undefined && match.homeScore !== null">
+            <strong
+              *ngIf="
+                match.homeScore !== undefined &&
+                match.homeScore !== null
+              ">
               {{ match.homeScore }} - {{ match.awayScore }}
             </strong>
 
@@ -85,7 +97,9 @@
           </div>
 
           <div class="team away">
-            <img [src]="match.away.logo" alt="Away logo" />
+            <img
+              [src]="match.away.logo"
+              alt="Away logo">
 
             <div>
               <h3>{{ match.away.name }}</h3>
@@ -94,32 +108,43 @@
           </div>
 
           <i class="fa-solid fa-chevron-right"></i>
+
         </article>
 
         <article
           class="match-card"
           *ngFor="let match of regularMatches"
           [class.selected]="selectedMatch?.id === match.id"
-          (click)="selectMatch(match)"
-        >
+          (click)="selectMatch(match)">
+
           <div class="team">
             <div>
               <h3>{{ match.home.name }}</h3>
               <span>{{ match.home.club }}</span>
             </div>
 
-            <img [src]="match.home.logo" alt="Home logo" />
+            <img
+              [src]="match.home.logo"
+              alt="Home logo">
           </div>
 
           <div class="match-center">
             <span>{{ match.arena }}</span>
             <small>{{ match.mode }}</small>
 
-            <strong *ngIf="match.homeScore === undefined || match.homeScore === null">
+            <strong
+              *ngIf="
+                match.homeScore === undefined ||
+                match.homeScore === null
+              ">
               {{ match.time }}
             </strong>
 
-            <strong *ngIf="match.homeScore !== undefined && match.homeScore !== null">
+            <strong
+              *ngIf="
+                match.homeScore !== undefined &&
+                match.homeScore !== null
+              ">
               {{ match.homeScore }} - {{ match.awayScore }}
             </strong>
 
@@ -127,7 +152,9 @@
           </div>
 
           <div class="team away">
-            <img [src]="match.away.logo" alt="Away logo" />
+            <img
+              [src]="match.away.logo"
+              alt="Away logo">
 
             <div>
               <h3>{{ match.away.name }}</h3>
@@ -136,45 +163,78 @@
           </div>
 
           <i class="fa-solid fa-chevron-right"></i>
+
         </article>
 
-        <div class="empty-state" *ngIf="filteredMatches.length === 0">
+        <div
+          class="empty-state"
+          *ngIf="filteredMatches.length === 0">
+
           <i class="fa-regular fa-calendar-xmark"></i>
+
           <h3>No matches found</h3>
-          <p>There are no matches scheduled for this week.</p>
+
+          <p>
+            There are no matches scheduled for this week.
+          </p>
+
         </div>
 
       </div>
 
-      <aside class="match-details" *ngIf="selectedMatch">
+      <aside
+        class="match-details"
+        *ngIf="selectedMatch">
 
         <div class="details-head">
           <div>
             <h2>MATCH DETAILS</h2>
-            <p>{{ selectedMatch.arena }} - {{ selectedMatch.mode }}</p>
+
+            <p>
+              {{ selectedMatch.arena }}
+              -
+              {{ selectedMatch.mode }}
+            </p>
           </div>
         </div>
 
         <div class="versus">
 
           <div class="versus-team">
-            <img [src]="selectedMatch.home.logo" alt="Home logo" />
+            <img
+              [src]="selectedMatch.home.logo"
+              alt="Home logo">
+
             <h3>{{ selectedMatch.home.name }}</h3>
             <span>{{ selectedMatch.home.club }}</span>
           </div>
 
           <div class="vs">
-            <ng-container *ngIf="selectedMatch.homeScore !== undefined && selectedMatch.homeScore !== null; else vsText">
-              {{ selectedMatch.homeScore }} - {{ selectedMatch.awayScore }}
+
+            <ng-container
+              *ngIf="
+                selectedMatch.homeScore !== undefined &&
+                selectedMatch.homeScore !== null;
+                else vsText
+              ">
+
+              {{ selectedMatch.homeScore }}
+              -
+              {{ selectedMatch.awayScore }}
+
             </ng-container>
 
             <ng-template #vsText>
               VS
             </ng-template>
+
           </div>
 
           <div class="versus-team">
-            <img [src]="selectedMatch.away.logo" alt="Away logo" />
+            <img
+              [src]="selectedMatch.away.logo"
+              alt="Away logo">
+
             <h3>{{ selectedMatch.away.name }}</h3>
             <span>{{ selectedMatch.away.club }}</span>
           </div>
@@ -189,13 +249,25 @@
 
           <div class="stat-row">
             <div>
-              <strong>{{ selectedMatch.home.stats.topScorer }}</strong>
-              <span>{{ selectedMatch.home.stats.goals }} Goals</span>
+              <strong>
+                {{ selectedMatch.home.stats.topScorer }}
+              </strong>
+
+              <span>
+                {{ selectedMatch.home.stats.goals }}
+                Goals
+              </span>
             </div>
 
             <div>
-              <strong>{{ selectedMatch.away.stats.topScorer }}</strong>
-              <span>{{ selectedMatch.away.stats.goals }} Goals</span>
+              <strong>
+                {{ selectedMatch.away.stats.topScorer }}
+              </strong>
+
+              <span>
+                {{ selectedMatch.away.stats.goals }}
+                Goals
+              </span>
             </div>
           </div>
         </div>
@@ -208,13 +280,25 @@
 
           <div class="stat-row">
             <div>
-              <strong>{{ selectedMatch.home.stats.topAssist }}</strong>
-              <span>{{ selectedMatch.home.stats.assists }} Assists</span>
+              <strong>
+                {{ selectedMatch.home.stats.topAssist }}
+              </strong>
+
+              <span>
+                {{ selectedMatch.home.stats.assists }}
+                Assists
+              </span>
             </div>
 
             <div>
-              <strong>{{ selectedMatch.away.stats.topAssist }}</strong>
-              <span>{{ selectedMatch.away.stats.assists }} Assists</span>
+              <strong>
+                {{ selectedMatch.away.stats.topAssist }}
+              </strong>
+
+              <span>
+                {{ selectedMatch.away.stats.assists }}
+                Assists
+              </span>
             </div>
           </div>
         </div>
@@ -226,129 +310,193 @@
           </h4>
 
           <div class="streak-row">
+
             <div>
               <div class="streak">
                 <span
-                  *ngFor="let item of selectedMatch.home.stats.streak"
-                  [class.loss]="item === 'L'"
-                >
+                  *ngFor="
+                    let item of selectedMatch.home.stats.streak
+                  "
+                  [class.loss]="item === 'L'">
+
                   {{ item }}
+
                 </span>
               </div>
 
-              <strong>{{ selectedMatch.home.stats.streak.length }} Games</strong>
+              <strong>
+                {{ selectedMatch.home.stats.streak.length }}
+                Games
+              </strong>
             </div>
 
             <div>
               <div class="streak">
                 <span
-                  *ngFor="let item of selectedMatch.away.stats.streak"
-                  [class.loss]="item === 'L'"
-                >
+                  *ngFor="
+                    let item of selectedMatch.away.stats.streak
+                  "
+                  [class.loss]="item === 'L'">
+
                   {{ item }}
+
                 </span>
               </div>
 
-              <strong>{{ selectedMatch.away.stats.streak.length }} Games</strong>
+              <strong>
+                {{ selectedMatch.away.stats.streak.length }}
+                Games
+              </strong>
             </div>
+
           </div>
         </div>
 
         <div class="upload-card">
 
-  <div class="upload-icon">
-    <i class="fa-solid fa-cloud-arrow-up"></i>
-  </div>
+          <div class="upload-icon">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
 
-  <div>
-    <h3>UPLOAD MATCH STATS</h3>
-    <p>Upload exactly 3 screenshots: Summary, Home Performance and Away Performance.</p>
-  </div>
+          <div>
+            <h3>UPLOAD MATCH STATS</h3>
 
-  <div class="upload-group">
+            <p>
+              Upload exactly 3 screenshots:
+              Summary, Home Performance and Away Performance.
+            </p>
+          </div>
 
-  <label>Match Summary</label>
-  <input
-    type="file"
-    accept="image/*"
-    (change)="onSummarySelected($event)"
-  />
+          <div class="upload-group">
 
-  <label>Home Team Performance</label>
-  <input
-    type="file"
-    accept="image/*"
-    (change)="onHomePerformanceSelected($event)"
-  />
+            <label>Match Summary</label>
 
-  <label>Away Team Performance</label>
-  <input
-    type="file"
-    accept="image/*"
-    (change)="onAwayPerformanceSelected($event)"
-  />
+            <input
+              type="file"
+              accept="image/*"
+              (change)="onSummarySelected($event)">
 
-</div>
+            <label>Home Team Performance</label>
 
-  <button
-  type="button"
-  [disabled]="
-    !summaryFile ||
-    !homePerformanceFile ||
-    !awayPerformanceFile ||
-    isUploadingResult
-  "
-  (click)="previewUploadedResult()"
->
-  {{ isUploadingResult ? 'Uploading...' : 'Upload Stats' }}
-</button>
+            <input
+              type="file"
+              accept="image/*"
+              (change)="onHomePerformanceSelected($event)">
 
-  <div class="upload-status">
-  <small *ngIf="summaryFile">
-    <i class="fa-solid fa-check"></i>
-    Match Summary selected
-  </small>
+            <label>Away Team Performance</label>
 
-  <small *ngIf="homePerformanceFile">
-    <i class="fa-solid fa-check"></i>
-    Home Team Performance selected
-  </small>
+            <input
+              type="file"
+              accept="image/*"
+              (change)="onAwayPerformanceSelected($event)">
 
-  <small *ngIf="awayPerformanceFile">
-    <i class="fa-solid fa-check"></i>
-    Away Team Performance selected
-  </small>
-</div>
+          </div>
 
-  <div class="ocr-preview" *ngIf="statsUploadResult">
-    <h4>UPLOAD STATUS</h4>
+          <button
+            type="button"
+            [disabled]="
+              !summaryFile ||
+              !homePerformanceFile ||
+              !awayPerformanceFile ||
+              isUploadingResult
+            "
+            (click)="previewUploadedResult()">
 
-    <p>
-      Summary:
-      <strong>{{ statsUploadResult.hasMatchSummary ? 'Uploaded' : 'Pending' }}</strong>
-    </p>
+            {{
+              isUploadingResult
+                ? 'Uploading...'
+                : 'Upload Stats'
+            }}
 
-    <p>
-      Home Performance:
-      <strong>{{ statsUploadResult.hasHomeTeamPerformance ? 'Uploaded' : 'Pending' }}</strong>
-    </p>
+          </button>
 
-    <p>
-      Away Performance:
-      <strong>{{ statsUploadResult.hasAwayTeamPerformance ? 'Uploaded' : 'Pending' }}</strong>
-    </p>
+          <button
+            type="button"
+            class="manual-stats-button"
+            [disabled]="!selectedMatch || isUploadingResult"
+            (click)="openManualStats()">
 
-    <strong>
-      Status: {{ statsUploadResult.status }}
-    </strong>
-  </div>
+            Enter Stats Manually
 
-  <small>
-    <i class="fa-regular fa-circle-question"></i>
-    Select in this order: Match Summary, Home Team Performance, Away Team Performance.
-  </small>
+          </button>
 
-</div>
+          <div class="upload-status">
+
+            <small *ngIf="summaryFile">
+              <i class="fa-solid fa-check"></i>
+              Match Summary selected
+            </small>
+
+            <small *ngIf="homePerformanceFile">
+              <i class="fa-solid fa-check"></i>
+              Home Team Performance selected
+            </small>
+
+            <small *ngIf="awayPerformanceFile">
+              <i class="fa-solid fa-check"></i>
+              Away Team Performance selected
+            </small>
+
+          </div>
+
+          <div
+            class="ocr-preview"
+            *ngIf="statsUploadResult">
+
+            <h4>UPLOAD STATUS</h4>
+
+            <p>
+              Summary:
+
+              <strong>
+                {{
+                  statsUploadResult.hasMatchSummary
+                    ? 'Uploaded'
+                    : 'Pending'
+                }}
+              </strong>
+            </p>
+
+            <p>
+              Home Performance:
+
+              <strong>
+                {{
+                  statsUploadResult.hasHomeTeamPerformance
+                    ? 'Uploaded'
+                    : 'Pending'
+                }}
+              </strong>
+            </p>
+
+            <p>
+              Away Performance:
+
+              <strong>
+                {{
+                  statsUploadResult.hasAwayTeamPerformance
+                    ? 'Uploaded'
+                    : 'Pending'
+                }}
+              </strong>
+            </p>
+
+            <strong>
+              Status: {{ statsUploadResult.status }}
+            </strong>
+
+          </div>
+
+          <small>
+            <i class="fa-regular fa-circle-question"></i>
+
+            Select in this order:
+            Match Summary,
+            Home Team Performance,
+            Away Team Performance.
+          </small>
+
+        </div>
 
       </aside>
 
@@ -357,3 +505,15 @@
   </ng-container>
 
 </section>
+
+@if (manualStatsMatch) {
+  <app-manual-match-stats-modal
+    [matchId]="manualStatsMatch.id"
+    [homeTeamName]="manualStatsMatch.home.name"
+    [awayTeamName]="manualStatsMatch.away.name"
+    [homeGoals]="manualStatsMatch.homeScore ?? 0"
+    [awayGoals]="manualStatsMatch.awayScore ?? 0"
+    (closed)="closeManualStats()"
+    (saved)="onManualStatsSaved()">
+  </app-manual-match-stats-modal>
+}
