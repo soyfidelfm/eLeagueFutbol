@@ -20,8 +20,9 @@ public class MatchStatsController : ControllerBase
 	}
 
 	[HttpPost("ocr-summary-preview")]
+	[Consumes("multipart/form-data")]
 	public async Task<IActionResult> OcrSummaryPreview(
-		IFormFile image)
+		[FromForm] IFormFile image)
 	{
 		var result = await _ocrService
 			.PreviewMatchSummaryAsync(image);
@@ -30,8 +31,9 @@ public class MatchStatsController : ControllerBase
 	}
 
 	[HttpPost("ocr-team-performance-preview")]
+	[Consumes("multipart/form-data")]
 	public async Task<IActionResult> OcrTeamPerformancePreview(
-		IFormFile image)
+		[FromForm] IFormFile image)
 	{
 		var result = await _ocrService
 			.PreviewTeamPerformanceAsync(image);

@@ -1,7 +1,9 @@
 ﻿using backend.Data;
+using backend.Entities.Enums;
 using backend.Entities.MatchSummary;
 using backend.Entities.Stats;
 using backend.Features.Stats.Dtos;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Features.Stats.Services;
 
@@ -15,37 +17,76 @@ public class MatchStatsService : IMatchStatsService
 	}
 
 	public async Task SaveMatchSummaryAsync(
-		ConfirmMatchSummaryDto dto)
+	ConfirmMatchSummaryDto dto)
 	{
-		var summary = new MatchSummaryStats
+		var match = await _context.Matches
+			.FirstOrDefaultAsync(x =>
+				x.MatchId == dto.MatchId &&
+				!x.IsDeleted);
+
+		if (match is null)
+			throw new KeyNotFoundException("Match not found.");
+
+		var summary = await _context.MatchSummaryStats
+			.FirstOrDefaultAsync(x =>
+				x.MatchId == dto.MatchId);
+
+		if (summary is null)
 		{
-			MatchSummaryStatsId = Guid.NewGuid(),
+			summary = new MatchSummaryStats
+			{
+				MatchSummaryStatsId = Guid.NewGuid(),
+				MatchId = dto.MatchId
+			};
 
-			MatchId = dto.MatchId,
+			_context.MatchSummaryStats.Add(summary);
+		}
 
-			HomePossession = dto.HomePossession,
-			AwayPossession = dto.AwayPossession,
+		summary.HomePossession = dto.HomePossession;
+		summary.AwayPossession = dto.AwayPossession;
 
-			HomeShots = dto.HomeShots,
-			AwayShots = dto.AwayShots,
+		summary.HomeShots = dto.HomeShots;
+		summary.AwayShots = dto.AwayShots;
 
-			HomeExpectedGoals = dto.HomeExpectedGoals,
-			AwayExpectedGoals = dto.AwayExpectedGoals,
+		summary.HomeExpectedGoals = dto.HomeExpectedGoals;
+		summary.AwayExpectedGoals = dto.AwayExpectedGoals;
 
-			HomePasses = dto.HomePasses,
-			AwayPasses = dto.AwayPasses,
+		summary.HomePasses = dto.HomePasses;
+		summary.AwayPasses = dto.AwayPasses;
 
-			HomeTackles = dto.HomeTackles,
-			AwayTackles = dto.AwayTackles,
+		summary.HomeTackles = dto.HomeTackles;
+		summary.AwayTackles = dto.AwayTackles;
 
-			HomeCorners = dto.HomeCorners,
-			AwayCorners = dto.AwayCorners,
+		summary.HomeTacklesWon = dto.HomeTacklesWon;
+		summary.AwayTacklesWon = dto.AwayTacklesWon;
 
-			HomeYellowCards = dto.HomeYellowCards,
-			AwayYellowCards = dto.AwayYellowCards
-		};
+		summary.HomeInterceptions = dto.HomeInterceptions;
+		summary.AwayInterceptions = dto.AwayInterceptions;
 
-		_context.MatchSummaryStats.Add(summary);
+		summary.HomeSaves = dto.HomeSaves;
+		summary.AwaySaves = dto.AwaySaves;
+
+		summary.HomeFoulsCommitted = dto.HomeFoulsCommitted;
+		summary.AwayFoulsCommitted = dto.AwayFoulsCommitted;
+
+		summary.HomeOffsides = dto.HomeOffsides;
+		summary.AwayOffsides = dto.AwayOffsides;
+
+		summary.HomeCorners = dto.HomeCorners;
+		summary.AwayCorners = dto.AwayCorners;
+
+		summary.HomeFreeKicks = dto.HomeFreeKicks;
+		summary.AwayFreeKicks = dto.AwayFreeKicks;
+
+		summary.HomePenaltyKicks = dto.HomePenaltyKicks;
+		summary.AwayPenaltyKicks = dto.AwayPenaltyKicks;
+
+		summary.HomeYellowCards = dto.HomeYellowCards;
+		summary.AwayYellowCards = dto.AwayYellowCards;
+
+		match.HomeScore = dto.HomeGoals;
+		match.AwayScore = dto.AwayGoals;
+		match.Status = MatchStatus.Finished;
 
 		await _context.SaveChangesAsync();
 	}

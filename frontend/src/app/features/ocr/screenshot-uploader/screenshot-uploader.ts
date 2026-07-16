@@ -2,10 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 
 import {
-  MatchStatsService,
+  MatchStatsService
+} from '../../../core/services/match-stats.service';
+
+import {
   MatchStatsUploadType,
   MatchStatsUploadResult
-} from '../../../core/services/match-stats.service';
+} from '../../../core/models/match-stats.model';
 
 @Component({
   selector: 'app-screenshot-uploader',
