@@ -830,6 +830,110 @@ public class MatchService : IMatchService
 		Debug.WriteLine($"Detected Score: {summary.HomeGoals}-{summary.AwayGoals}");
 		await _context.SaveChangesAsync();
 	}
+
+	public async Task<SaveManualMatchStatsDto?> GetManualStatsAsync(
+	Guid matchId)
+	{
+		var match = await _context.Matches
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x =>
+				!x.IsDeleted &&
+				x.MatchId == matchId);
+
+		if (match is null)
+			return null;
+
+		var summary = await _context.MatchSummaryStats
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x =>
+				x.MatchId == matchId);
+
+		var savedPlayers = await _context.MatchPlayerStats
+			.AsNoTracking()
+			.Where(x => x.MatchId == matchId)
+			.OrderBy(x => x.Position)
+			.ThenByDescending(x => x.Rating)
+			.ToListAsync();
+
+		var result = new SaveManualMatchStatsDto
+		{
+			HomeGoals = Convert.ToInt32(match.HomeScore),
+			AwayGoals = Convert.ToInt32(match.AwayScore),
+
+			HomePossession = summary?.HomePossession ?? 0,
+			AwayPossession = summary?.AwayPossession ?? 0,
+
+			HomeShots = summary?.HomeShots ?? 0,
+			AwayShots = summary?.AwayShots ?? 0,
+
+			HomeExpectedGoals = summary?.HomeExpectedGoals ?? 0,
+			AwayExpectedGoals = summary?.AwayExpectedGoals ?? 0,
+
+			HomePasses = summary?.HomePasses ?? 0,
+			AwayPasses = summary?.AwayPasses ?? 0,
+
+			HomeTackles = summary?.HomeTackles ?? 0,
+			AwayTackles = summary?.AwayTackles ?? 0,
+
+			HomeTacklesWon = summary?.HomeTacklesWon ?? 0,
+			AwayTacklesWon = summary?.AwayTacklesWon ?? 0,
+
+			HomeInterceptions = summary?.HomeInterceptions ?? 0,
+			AwayInterceptions = summary?.AwayInterceptions ?? 0,
+
+			HomeSaves = summary?.HomeSaves ?? 0,
+			AwaySaves = summary?.AwaySaves ?? 0,
+
+			HomeFoulsCommitted = summary?.HomeFoulsCommitted ?? 0,
+			AwayFoulsCommitted = summary?.AwayFoulsCommitted ?? 0,
+
+			HomeOffsides = summary?.HomeOffsides ?? 0,
+			AwayOffsides = summary?.AwayOffsides ?? 0,
+
+			HomeCorners = summary?.HomeCorners ?? 0,
+			AwayCorners = summary?.AwayCorners ?? 0,
+
+			HomeFreeKicks = summary?.HomeFreeKicks ?? 0,
+			AwayFreeKicks = summary?.AwayFreeKicks ?? 0,
+
+			HomePenaltyKicks = summary?.HomePenaltyKicks ?? 0,
+			AwayPenaltyKicks = summary?.AwayPenaltyKicks ?? 0,
+
+			HomeYellowCards = summary?.HomeYellowCards ?? 0,
+			AwayYellowCards = summary?.AwayYellowCards ?? 0,
+
+			HomePlayers = [],
+			AwayPlayers = []
+		};
+
+		foreach (var player in savedPlayers
+			.Where(x => x.UserId == match.HomeUserId))
+		{
+			result.HomePlayers.Add(new()
+			{
+				Position = player.Position,
+				PlayerName = player.PlayerName,
+				Rating = player.Rating,
+				Goals = player.Goals,
+				Assists = player.Assists
+			});
+		}
+
+		foreach (var player in savedPlayers
+			.Where(x => x.UserId == match.AwayUserId))
+		{
+			result.AwayPlayers.Add(new()
+			{
+				Position = player.Position,
+				PlayerName = player.PlayerName,
+				Rating = player.Rating,
+				Goals = player.Goals,
+				Assists = player.Assists
+			});
+		}
+
+		return result;
+	}
 	public async Task<bool> SaveManualStatsAsync(
 	Guid matchId,
 	SaveManualMatchStatsDto dto)

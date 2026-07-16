@@ -18,9 +18,7 @@ import {
 })
 export class MatchService extends ApiService {
 
-  constructor(
-    protected override http: HttpClient
-  ) {
+  constructor(http: HttpClient) {
     super(http);
   }
 
@@ -70,13 +68,27 @@ export class MatchService extends ApiService {
     );
   }
 
+  getManualStats(
+    matchId: string
+  ): Observable<SaveManualMatchStatsRequest> {
+    return super.get<SaveManualMatchStatsRequest>(
+      `${API_ENDPOINTS.matches}/${matchId}/manual-stats`
+    );
+  }
+
   saveManualStats(
-  matchId: string,
-  dto: SaveManualMatchStatsRequest
-): Observable<void> {
-  return super.post<void>(
-    `${API_ENDPOINTS.matches}/${matchId}/manual-stats`,
-    dto
-  );
-}
+    matchId: string,
+    request: SaveManualMatchStatsRequest
+  ): Observable<{
+    message: string;
+    matchId: string;
+  }> {
+    return super.post<{
+      message: string;
+      matchId: string;
+    }>(
+      `${API_ENDPOINTS.matches}/${matchId}/manual-stats`,
+      request
+    );
+  }
 }

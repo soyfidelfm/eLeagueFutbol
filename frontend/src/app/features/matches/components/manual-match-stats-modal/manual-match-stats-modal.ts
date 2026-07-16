@@ -11,6 +11,7 @@ import {
   Output,
   SimpleChanges
 } from '@angular/core';
+
 import {
   FormArray,
   FormBuilder,
@@ -18,9 +19,12 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
+
 import { finalize } from 'rxjs';
 
-import { MatchService } from '../../../../core/services/match.service';
+import {
+  MatchService
+} from '../../../../core/services/match.service';
 
 import {
   SaveManualMatchStatsRequest
@@ -31,6 +35,11 @@ import {
   MatchSummaryStatsOcrPreview,
   TeamPerformanceOcrPreview
 } from '../../../../core/models/match-stats.model';
+
+type ManualPlayer =
+  NonNullable<
+    SaveManualMatchStatsRequest['homePlayers']
+  >[number];
 
 @Component({
   selector: 'app-manual-match-stats-modal',
@@ -47,30 +56,48 @@ export class ManualMatchStatsModal
   implements OnInit, OnChanges {
 
   private readonly fb = inject(FormBuilder);
-  private readonly matchService = inject(MatchService);
-  private readonly cdr = inject(ChangeDetectorRef);
 
-  @Input({ required: true }) matchId = '';
+  private readonly matchService =
+    inject(MatchService);
 
-  @Input() homeTeamName = 'Home';
-  @Input() awayTeamName = 'Away';
+  private readonly cdr =
+    inject(ChangeDetectorRef);
 
-  @Input() homeGoals = 0;
-  @Input() awayGoals = 0;
-
-  @Input()
-  summaryOcrPreview: MatchSummaryStatsOcrPreview | null = null;
+  @Input({ required: true })
+  matchId = '';
 
   @Input()
-  homePerformanceOcrPreview: TeamPerformanceOcrPreview | null = null;
+  homeTeamName = 'Home';
 
   @Input()
-  awayPerformanceOcrPreview: TeamPerformanceOcrPreview | null = null;
+  awayTeamName = 'Away';
 
-  @Output() closed = new EventEmitter<void>();
-  @Output() saved = new EventEmitter<void>();
+  @Input()
+  homeGoals = 0;
+
+  @Input()
+  awayGoals = 0;
+
+  @Input()
+  summaryOcrPreview:
+    MatchSummaryStatsOcrPreview | null = null;
+
+  @Input()
+  homePerformanceOcrPreview:
+    TeamPerformanceOcrPreview | null = null;
+
+  @Input()
+  awayPerformanceOcrPreview:
+    TeamPerformanceOcrPreview | null = null;
+
+  @Output()
+  closed = new EventEmitter<void>();
+
+  @Output()
+  saved = new EventEmitter<void>();
 
   isSaving = false;
+  isLoading = false;
   errorMessage = '';
 
   readonly form = this.fb.group({
@@ -316,45 +343,82 @@ export class ManualMatchStatsModal
       ]
     ],
 
-    homePlayers: this.fb.array([]),
-    awayPlayers: this.fb.array([])
+    homePlayers:
+      this.fb.array<FormGroup>([]),
+
+    awayPlayers:
+      this.fb.array<FormGroup>([])
   });
 
   ngOnInit(): void {
-    this.populateSummaryForm();
-    this.populatePlayerForms();
+    if (this.hasOcrPreview()) {
+      this.populateSummaryForm();
+      this.populatePlayerForms();
+      return;
+    }
+
+    this.loadSavedStats();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (
+  ngOnChanges(
+    changes: SimpleChanges
+  ): void {
+    const ocrChanged =
       changes['summaryOcrPreview'] ||
-      changes['homeGoals'] ||
-      changes['awayGoals']
+      changes['homePerformanceOcrPreview'] ||
+      changes['awayPerformanceOcrPreview'];
+
+    if (
+      ocrChanged &&
+      this.hasOcrPreview()
     ) {
       this.populateSummaryForm();
+      this.populatePlayerForms();
+      return;
     }
 
+    const scoreChanged =
+      changes['homeGoals'] ||
+      changes['awayGoals'];
+
     if (
-      changes['homePerformanceOcrPreview'] ||
-      changes['awayPerformanceOcrPreview']
+      scoreChanged &&
+      !this.summaryOcrPreview &&
+      !this.isLoading
     ) {
-      this.populatePlayerForms();
+      this.form.patchValue({
+        homeGoals: this.homeGoals,
+        awayGoals: this.awayGoals
+      });
+
+      this.cdr.markForCheck();
     }
   }
 
-  get homePlayers(): FormArray {
+  get homePlayers(): FormArray<FormGroup> {
     return this.form.controls.homePlayers;
   }
 
-  get awayPlayers(): FormArray {
+  get awayPlayers(): FormArray<FormGroup> {
     return this.form.controls.awayPlayers;
   }
 
   get ocrWarnings(): string[] {
     const warnings = [
-      ...(this.summaryOcrPreview?.warnings ?? []),
-      ...(this.homePerformanceOcrPreview?.warnings ?? []),
-      ...(this.awayPerformanceOcrPreview?.warnings ?? [])
+      ...(
+        this.summaryOcrPreview?.warnings ??
+        []
+      ),
+      ...(
+        this.homePerformanceOcrPreview
+          ?.warnings ??
+        []
+      ),
+      ...(
+        this.awayPerformanceOcrPreview
+          ?.warnings ??
+        []
+      )
     ];
 
     return [...new Set(warnings)];
@@ -379,37 +443,45 @@ export class ManualMatchStatsModal
   removeHomePlayer(index: number): void {
     this.homePlayers.removeAt(index);
 
+    this.ensurePlayerRows();
     this.cdr.markForCheck();
   }
 
   removeAwayPlayer(index: number): void {
     this.awayPlayers.removeAt(index);
 
+    this.ensurePlayerRows();
     this.cdr.markForCheck();
   }
 
   save(): void {
     if (!this.matchId) {
-      this.errorMessage = 'Match ID is required.';
+      this.errorMessage =
+        'Match ID is required.';
+
       return;
     }
 
-    if (this.form.invalid || this.isSaving) {
+    if (
+      this.form.invalid ||
+      this.isSaving ||
+      this.isLoading
+    ) {
       this.form.markAllAsTouched();
       this.cdr.markForCheck();
+
       return;
     }
 
     this.isSaving = true;
     this.errorMessage = '';
 
-    const dto =
-      this.form.getRawValue() as SaveManualMatchStatsRequest;
-
+    const request =
+      this.form.getRawValue()      as SaveManualMatchStatsRequest;
     this.matchService
       .saveManualStats(
         this.matchId,
-        dto
+        request
       )
       .pipe(
         finalize(() => {
@@ -422,6 +494,7 @@ export class ManualMatchStatsModal
           this.saved.emit();
           this.closed.emit();
         },
+
         error: error => {
           console.error(error);
 
@@ -435,15 +508,199 @@ export class ManualMatchStatsModal
   }
 
   close(): void {
-    if (this.isSaving) {
+    if (
+      this.isSaving ||
+      this.isLoading
+    ) {
       return;
     }
 
     this.closed.emit();
   }
 
+  private hasOcrPreview(): boolean {
+    return Boolean(
+      this.summaryOcrPreview ||
+      this.homePerformanceOcrPreview ||
+      this.awayPerformanceOcrPreview
+    );
+  }
+
+  private loadSavedStats(): void {
+    if (!this.matchId) {
+      this.setInitialValues();
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.matchService
+      .getManualStats(this.matchId)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: stats => {
+          this.populateSavedStats(stats);
+        },
+
+        error: error => {
+          console.error(
+            'Could not load saved match statistics.',
+            error
+          );
+
+          this.setInitialValues();
+
+          this.errorMessage =
+            error?.error?.message ??
+            'Could not load saved match statistics.';
+
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
+  private populateSavedStats(
+    stats: SaveManualMatchStatsRequest
+  ): void {
+    this.form.patchValue({
+      homeGoals:
+        stats.homeGoals ?? this.homeGoals,
+
+      awayGoals:
+        stats.awayGoals ?? this.awayGoals,
+
+      homePossession:
+        stats.homePossession ?? 50,
+
+      awayPossession:
+        stats.awayPossession ?? 50,
+
+      homeShots:
+        stats.homeShots ?? 0,
+
+      awayShots:
+        stats.awayShots ?? 0,
+
+      homeExpectedGoals:
+        stats.homeExpectedGoals ?? 0,
+
+      awayExpectedGoals:
+        stats.awayExpectedGoals ?? 0,
+
+      homePasses:
+        stats.homePasses ?? 0,
+
+      awayPasses:
+        stats.awayPasses ?? 0,
+
+      homeTackles:
+        stats.homeTackles ?? 0,
+
+      awayTackles:
+        stats.awayTackles ?? 0,
+
+      homeTacklesWon:
+        stats.homeTacklesWon ?? 0,
+
+      awayTacklesWon:
+        stats.awayTacklesWon ?? 0,
+
+      homeInterceptions:
+        stats.homeInterceptions ?? 0,
+
+      awayInterceptions:
+        stats.awayInterceptions ?? 0,
+
+      homeSaves:
+        stats.homeSaves ?? 0,
+
+      awaySaves:
+        stats.awaySaves ?? 0,
+
+      homeFoulsCommitted:
+        stats.homeFoulsCommitted ?? 0,
+
+      awayFoulsCommitted:
+        stats.awayFoulsCommitted ?? 0,
+
+      homeOffsides:
+        stats.homeOffsides ?? 0,
+
+      awayOffsides:
+        stats.awayOffsides ?? 0,
+
+      homeCorners:
+        stats.homeCorners ?? 0,
+
+      awayCorners:
+        stats.awayCorners ?? 0,
+
+      homeFreeKicks:
+        stats.homeFreeKicks ?? 0,
+
+      awayFreeKicks:
+        stats.awayFreeKicks ?? 0,
+
+      homePenaltyKicks:
+        stats.homePenaltyKicks ?? 0,
+
+      awayPenaltyKicks:
+        stats.awayPenaltyKicks ?? 0,
+
+      homeYellowCards:
+        stats.homeYellowCards ?? 0,
+
+      awayYellowCards:
+        stats.awayYellowCards ?? 0
+    });
+
+    this.homePlayers.clear();
+    this.awayPlayers.clear();
+
+    for (
+      const player of
+      stats.homePlayers ?? []
+    ) {
+      this.homePlayers.push(
+        this.createPlayerForm(player)
+      );
+    }
+
+    for (
+      const player of
+      stats.awayPlayers ?? []
+    ) {
+      this.awayPlayers.push(
+        this.createPlayerForm(player)
+      );
+    }
+
+    this.ensurePlayerRows();
+    this.cdr.markForCheck();
+  }
+
+  private setInitialValues(): void {
+    this.form.patchValue({
+      homeGoals: this.homeGoals,
+      awayGoals: this.awayGoals
+    });
+
+    this.homePlayers.clear();
+    this.awayPlayers.clear();
+
+    this.ensurePlayerRows();
+    this.cdr.markForCheck();
+  }
+
   private populateSummaryForm(): void {
-    const preview = this.summaryOcrPreview;
+    const preview =
+      this.summaryOcrPreview;
 
     if (!preview) {
       this.form.patchValue({
@@ -456,14 +713,23 @@ export class ManualMatchStatsModal
     }
 
     this.form.patchValue({
-      homeGoals: preview.homeGoals,
-      awayGoals: preview.awayGoals,
+      homeGoals:
+        preview.homeGoals,
 
-      homePossession: preview.homePossession,
-      awayPossession: preview.awayPossession,
+      awayGoals:
+        preview.awayGoals,
 
-      homeShots: preview.homeShots,
-      awayShots: preview.awayShots,
+      homePossession:
+        preview.homePossession,
+
+      awayPossession:
+        preview.awayPossession,
+
+      homeShots:
+        preview.homeShots,
+
+      awayShots:
+        preview.awayShots,
 
       homeExpectedGoals:
         preview.homeExpectedGoals,
@@ -471,11 +737,17 @@ export class ManualMatchStatsModal
       awayExpectedGoals:
         preview.awayExpectedGoals,
 
-      homePasses: preview.homePasses,
-      awayPasses: preview.awayPasses,
+      homePasses:
+        preview.homePasses,
 
-      homeTackles: preview.homeTackles,
-      awayTackles: preview.awayTackles,
+      awayPasses:
+        preview.awayPasses,
+
+      homeTackles:
+        preview.homeTackles,
+
+      awayTackles:
+        preview.awayTackles,
 
       homeTacklesWon:
         preview.homeTacklesWon,
@@ -489,8 +761,11 @@ export class ManualMatchStatsModal
       awayInterceptions:
         preview.awayInterceptions,
 
-      homeSaves: preview.homeSaves,
-      awaySaves: preview.awaySaves,
+      homeSaves:
+        preview.homeSaves,
+
+      awaySaves:
+        preview.awaySaves,
 
       homeFoulsCommitted:
         preview.homeFoulsCommitted,
@@ -498,11 +773,17 @@ export class ManualMatchStatsModal
       awayFoulsCommitted:
         preview.awayFoulsCommitted,
 
-      homeOffsides: preview.homeOffsides,
-      awayOffsides: preview.awayOffsides,
+      homeOffsides:
+        preview.homeOffsides,
 
-      homeCorners: preview.homeCorners,
-      awayCorners: preview.awayCorners,
+      awayOffsides:
+        preview.awayOffsides,
+
+      homeCorners:
+        preview.homeCorners,
+
+      awayCorners:
+        preview.awayCorners,
 
       homeFreeKicks:
         preview.homeFreeKicks,
@@ -531,10 +812,14 @@ export class ManualMatchStatsModal
     this.awayPlayers.clear();
 
     const homePlayers =
-      this.homePerformanceOcrPreview?.players ?? [];
+      this.homePerformanceOcrPreview
+        ?.players ??
+      [];
 
     const awayPlayers =
-      this.awayPerformanceOcrPreview?.players ?? [];
+      this.awayPerformanceOcrPreview
+        ?.players ??
+      [];
 
     for (const player of homePlayers) {
       this.homePlayers.push(
@@ -548,6 +833,11 @@ export class ManualMatchStatsModal
       );
     }
 
+    this.ensurePlayerRows();
+    this.cdr.markForCheck();
+  }
+
+  private ensurePlayerRows(): void {
     if (this.homePlayers.length === 0) {
       this.homePlayers.push(
         this.createPlayerForm()
@@ -559,12 +849,12 @@ export class ManualMatchStatsModal
         this.createPlayerForm()
       );
     }
-
-    this.cdr.markForCheck();
   }
 
   private createPlayerForm(
-    player?: MatchPlayerStatsOcrPreview
+    player?:
+      | ManualPlayer
+      | MatchPlayerStatsOcrPreview
   ): FormGroup {
     return this.fb.group({
       position: [

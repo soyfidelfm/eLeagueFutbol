@@ -27,4 +27,5 @@ public interface IMatchService
 	Task<bool> SaveManualStatsAsync(
 	Guid matchId,
 	SaveManualMatchStatsDto dto);
+	Task<SaveManualMatchStatsDto?> GetManualStatsAsync(Guid matchId);
 }

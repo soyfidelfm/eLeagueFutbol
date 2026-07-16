@@ -82,6 +82,23 @@ public class MatchesController : ControllerBase
 
 		return Ok();
 	}
+
+	[HttpGet("{matchId:guid}/manual-stats")]
+	public async Task<IActionResult> GetManualStats(Guid matchId)
+	{
+		var result = await _matchService.GetManualStatsAsync(matchId);
+
+		if (result is null)
+		{
+			return NotFound(new
+			{
+				message = "Match not found."
+			});
+		}
+
+		return Ok(result);
+	}
+
 	[HttpPost("{matchId:guid}/manual-stats")]
 	public async Task<IActionResult> SaveManualStats(
 	Guid matchId,
