@@ -1,132 +1,23 @@
-.modal-backdrop {
-  position: fixed;
-  top: 82px;
-  
-  right: 0;
-  bottom: 0;
-  left: 0;
-
-  // Debe quedar arriba del footer móvil, que tiene z-index: 9999
-  z-index: 12000;
-
-  display: grid;
-  place-items: center;
-
-  padding: 20px;
-  overflow: hidden;
-
-  background: rgb(0 0 0 / 78%);
-  backdrop-filter: blur(8px);
-}
-
-.modal-card {
-  display: flex;
-  flex-direction: column;
-
-  width: min(1050px, 100%);
-  max-height: min(780px, 100%);
-
-  overflow: hidden;
-
-  border: 1px solid rgb(0 255 136 / 35%);
-  border-radius: 18px;
-
-  background: #080d12;
-  box-shadow: 0 0 50px rgb(0 255 136 / 12%);
-}
-
-.modal-header {
-  position: relative;
-  z-index: 5;
-
-  flex: 0 0 auto;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-
-  padding: 18px 24px;
-
-  border-bottom: 1px solid rgb(255 255 255 / 8%);
-  background: #080d12;
-}
-
-.modal-header > div {
-  min-width: 0;
-}
-
-.modal-header h2,
-.summary-section h3,
-.players-section h3 {
-  margin: 0;
-  color: #fff;
-}
-
-.modal-header h2 {
-  margin-top: 5px;
-  font-size: 24px;
-}
-
-.eyebrow {
-  color: #00ff88;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 2px;
-}
-
-.close-button,
-.remove-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  flex: 0 0 auto;
-
-  border: 0;
-  background: transparent;
-  color: #ff6577;
-
-  font: inherit;
-  cursor: pointer;
-}
+/* ==========================================================
+   BOTONES ESPECÍFICOS
+========================================================== */
 
 .close-button {
-  width: 42px;
-  height: 42px;
-
-  border-radius: 10px;
-
   font-size: 24px;
 }
 
-.close-button:hover,
-.remove-button:hover {
-  background: rgb(255 101 119 / 10%);
+.remove-button {
+  width: 34px;
+  min-width: 34px;
+  height: 44px;
+  min-height: 44px;
+
+  font-size: 20px;
 }
 
-form {
-  flex: 1 1 auto;
-  min-height: 0;
-
-  display: flex;
-  flex-direction: column;
-
-  overflow: hidden;
-}
-
-.modal-content {
-  flex: 1 1 auto;
-  min-height: 0;
-
-  padding: 24px;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
+/* ==========================================================
+   MARCADOR
+========================================================== */
 
 .score-section {
   display: flex;
@@ -143,22 +34,24 @@ form {
 
   color: #fff;
   text-align: center;
-}
 
-.score-control label {
-  overflow: hidden;
+  label {
+    overflow: hidden;
 
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+    margin: 0;
 
-.score-control input {
-  width: 110px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
-  font-size: 34px;
-  font-weight: 700;
-  text-align: center;
+  input {
+    width: 110px;
+
+    font-size: 34px;
+    font-weight: 700;
+    text-align: center;
+  }
 }
 
 .score-separator {
@@ -168,6 +61,10 @@ form {
   font-size: 32px;
 }
 
+/* ==========================================================
+   SECCIONES
+========================================================== */
+
 .summary-section,
 .players-section {
   padding: 20px;
@@ -176,7 +73,16 @@ form {
   border-radius: 14px;
 
   background: rgb(255 255 255 / 2%);
+
+  h3 {
+    margin: 0;
+    color: #fff;
+  }
 }
+
+/* ==========================================================
+   RESUMEN DEL PARTIDO
+========================================================== */
 
 .summary-header,
 .stat-row {
@@ -193,64 +99,44 @@ form {
 .summary-header {
   color: #00ff88;
   font-weight: 700;
+
+  span {
+    min-width: 0;
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
-.summary-header span {
-  min-width: 0;
-  overflow: hidden;
-
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.stat-row {
+  label {
+    margin: 0;
+    color: #aeb8c2;
+  }
 }
 
-.stat-row label {
-  color: #aeb8c2;
-}
-
-input {
-  width: 100%;
-  min-width: 0;
-  height: 44px;
-
-  padding: 10px 12px;
-
-  border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 8px;
-  outline: none;
-
-  background: #101820;
-  color: #fff;
-
-  font: inherit;
-}
-
-input:focus {
-  border-color: #00ff88;
-  box-shadow: 0 0 0 2px rgb(0 255 136 / 8%);
-}
-
-input::placeholder {
-  color: rgb(255 255 255 / 42%);
-}
+/* ==========================================================
+   JUGADORES
+========================================================== */
 
 .players-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
 
   margin-top: 20px;
 }
 
-.section-header,
-.modal-footer {
+.section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-}
 
-.section-header h3 {
-  min-width: 0;
+  h3 {
+    min-width: 0;
+  }
 }
 
 .player-row {
@@ -262,92 +148,25 @@ input::placeholder {
     75px
     75px
     34px;
+
   align-items: center;
   gap: 8px;
 
   margin-top: 12px;
 }
 
-.remove-button {
-  width: 34px;
-  height: 44px;
-
-  border-radius: 8px;
-
-  font-size: 20px;
-}
-
-.primary-button,
-.secondary-button {
-  min-height: 42px;
-  padding: 10px 16px;
-
-  border-radius: 8px;
-
-  font: inherit;
-  font-weight: 700;
-
-  cursor: pointer;
-}
-
-.primary-button {
-  border: 1px solid #00ff88;
-  background: #00ff88;
-  color: #03140d;
-}
-
-.primary-button:hover:not(:disabled) {
-  background: #35ff9f;
-}
-
-.secondary-button {
-  border: 1px solid rgb(255 255 255 / 15%);
-  background: transparent;
-  color: #fff;
-}
-
-.secondary-button:hover:not(:disabled) {
-  border-color: rgb(0 255 136 / 45%);
-  background: rgb(0 255 136 / 7%);
-}
-
-.modal-footer {
-  position: relative;
-  z-index: 10;
-
-  flex: 0 0 auto;
-
-  padding: 18px 24px;
-
-  border-top: 1px solid rgb(255 255 255 / 8%);
-  background: #080d12;
-
-  box-shadow: 0 -10px 25px rgb(0 0 0 / 20%);
-}
+/* ==========================================================
+   MENSAJES
+========================================================== */
 
 .error-message {
   margin-top: 16px;
   color: #ff6577;
 }
 
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-@media (max-width: 1100px) {
-  .player-row {
-    grid-template-columns:
-      64px
-      minmax(120px, 1fr)
-      76px
-      68px
-      68px
-      32px;
-
-    gap: 6px;
-  }
-}
+/* ==========================================================
+   TABLET
+========================================================== */
 
 @media (max-width: 900px) {
   .players-grid {
@@ -362,51 +181,14 @@ button:disabled {
       75px
       75px
       34px;
-
-    gap: 8px;
   }
 }
 
+/* ==========================================================
+   MÓVIL
+========================================================== */
+
 @media (max-width: 650px) {
-  .modal-backdrop {
-    // En móvil cubre navbar y footer global completamente
-    inset: 0;
-
-    z-index: 12000;
-
-    place-items: stretch;
-    bottom: 82px;
-
-    padding:
-      max(8px, env(safe-area-inset-top))
-      8px
-      max(8px, env(safe-area-inset-bottom));
-  }
-
-  .modal-card {
-    width: 100%;
-    height: 100%;
-    max-height: none;
-
-    border-radius: 14px;
-  }
-
-  .modal-header {
-    padding: 14px 16px;
-  }
-
-  .modal-header h2 {
-    font-size: 20px;
-  }
-
-  .eyebrow {
-    font-size: 11px;
-  }
-
-  .modal-content {
-    padding: 16px;
-  }
-
   .score-section {
     gap: 10px;
     margin-bottom: 20px;
@@ -415,25 +197,26 @@ button:disabled {
   .score-control {
     flex: 1;
     min-width: 0;
-  }
 
-  .score-control label {
-    max-width: 130px;
-    font-size: 13px;
-  }
+    label {
+      max-width: 130px;
+      font-size: 13px;
+    }
 
-  .score-control input {
-    width: 100%;
-    max-width: 105px;
-    height: 48px;
+    input {
+      width: 100%;
+      max-width: 105px;
+      height: 48px;
 
-    margin: 0 auto;
+      margin: 0 auto;
 
-    font-size: 27px;
+      font-size: 27px;
+    }
   }
 
   .score-separator {
     padding-bottom: 10px;
+
     font-size: 23px;
   }
 
@@ -456,49 +239,44 @@ button:disabled {
     font-size: 11px;
   }
 
-  .stat-row label {
-    font-size: 12px;
-    line-height: 1.15;
-  }
+  .stat-row {
+    label {
+      font-size: 12px;
+      line-height: 1.15;
+    }
 
-  .stat-row input {
-    height: 42px;
-    padding: 8px;
+    input {
+      height: 42px;
+      padding: 8px;
 
-    text-align: center;
+      text-align: center;
+    }
   }
 
   .players-grid {
     gap: 16px;
+
     margin-top: 16px;
   }
 
   .section-header {
     align-items: flex-start;
+
+    h3 {
+      padding-top: 8px;
+
+      font-size: 17px;
+    }
+
+    .btn {
+      flex: 0 0 auto;
+
+      padding: 8px 10px;
+
+      font-size: 12px;
+    }
   }
 
-  .section-header h3 {
-    padding-top: 8px;
-    font-size: 17px;
-  }
-
-  .section-header .secondary-button {
-    flex: 0 0 auto;
-
-    padding: 8px 10px;
-
-    font-size: 12px;
-  }
-
-  /*
-   * MÓVIL:
-   *
-   * Fila 1:
-   * Posición | Nombre | Eliminar
-   *
-   * Fila 2:
-   * Rating | Goals | Assists
-   */
   .player-row {
     grid-template-columns:
       minmax(0, 0.8fr)
@@ -506,10 +284,9 @@ button:disabled {
       minmax(0, 1fr);
 
     grid-template-areas:
-      "position name remove"
-      "rating goals assists";
+      'position name remove'
+      'rating goals assists';
 
-    align-items: center;
     gap: 8px;
 
     margin-top: 14px;
@@ -519,68 +296,54 @@ button:disabled {
     border-radius: 12px;
 
     background: rgb(255 255 255 / 1.5%);
-  }
 
-  .player-row input:nth-of-type(1) {
-    grid-area: position;
-  }
+    input {
+      height: 44px;
+      padding: 9px 10px;
+    }
 
-  .player-row input:nth-of-type(2) {
-    grid-area: name;
-  }
+    input:nth-of-type(1) {
+      grid-area: position;
+      text-align: center;
+    }
 
-  .player-row input:nth-of-type(3) {
-    grid-area: rating;
-  }
+    input:nth-of-type(2) {
+      grid-area: name;
+    }
 
-  .player-row input:nth-of-type(4) {
-    grid-area: goals;
-  }
+    input:nth-of-type(3) {
+      grid-area: rating;
+      text-align: center;
+    }
 
-  .player-row input:nth-of-type(5) {
-    grid-area: assists;
-  }
+    input:nth-of-type(4) {
+      grid-area: goals;
+      text-align: center;
+    }
 
-  .player-row .remove-button {
-    grid-area: remove;
+    input:nth-of-type(5) {
+      grid-area: assists;
+      text-align: center;
+    }
 
-    justify-self: end;
+    .remove-button {
+      grid-area: remove;
 
-    width: 42px;
-    height: 42px;
-  }
+      justify-self: end;
 
-  .player-row input {
-    height: 44px;
-    padding: 9px 10px;
-  }
-
-  .player-row input:nth-of-type(1),
-  .player-row input:nth-of-type(3),
-  .player-row input:nth-of-type(4),
-  .player-row input:nth-of-type(5) {
-    text-align: center;
-  }
-
-  .modal-footer {
-    padding:
-      12px
-      16px
-      max(12px, env(safe-area-inset-bottom));
-
-    box-shadow: 0 -10px 30px rgb(0 0 0 / 45%);
-  }
-
-  .modal-footer button {
-    flex: 1;
+      width: 42px;
+      min-width: 42px;
+      height: 42px;
+      min-height: 42px;
+    }
   }
 }
 
-@media (max-width: 380px) {
-  .modal-content {
-    padding: 12px;
-  }
+/* ==========================================================
+   TELÉFONOS PEQUEÑOS
+========================================================== */
 
+@media (max-width: 380px) {
   .summary-section,
   .players-section {
     padding: 11px;
@@ -599,23 +362,11 @@ button:disabled {
   .player-row {
     gap: 6px;
     padding: 10px;
-  }
 
-  .player-row input {
-    padding: 8px;
-    font-size: 14px;
-  }
+    input {
+      padding: 8px;
 
-  .modal-footer {
-    gap: 8px;
-    padding-right: 12px;
-    padding-left: 12px;
-  }
-
-  .modal-footer button {
-    padding-right: 10px;
-    padding-left: 10px;
-
-    font-size: 13px;
+      font-size: 14px;
+    }
   }
 }

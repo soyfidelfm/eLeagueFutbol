@@ -1,4 +1,6 @@
-<div class="modal-backdrop" (click)="close()">
+<div
+  class="modal-backdrop"
+  (click)="close()">
 
   <section
     class="modal-card"
@@ -12,7 +14,8 @@
 
       <button
         type="button"
-        class="close-button"
+        class="btn btn-danger btn-icon close-button"
+        aria-label="Close modal"
         [disabled]="isSaving"
         (click)="close()">
         ✕
@@ -20,270 +23,358 @@
     </header>
 
     <form
+      class="modal-form"
       [formGroup]="form"
       (ngSubmit)="save()">
 
-      <section class="score-section">
+      <div class="modal-content">
 
-        <div class="score-control">
-          <label>{{ homeTeamName }}</label>
+        <section class="score-section">
+          <div class="score-control">
+            <label>{{ homeTeamName }}</label>
 
-          <input
-            type="number"
-            min="0"
-            formControlName="homeGoals">
-        </div>
-
-        <span class="score-separator">-</span>
-
-        <div class="score-control">
-          <label>{{ awayTeamName }}</label>
-
-          <input
-            type="number"
-            min="0"
-            formControlName="awayGoals">
-        </div>
-
-      </section>
-
-      <section class="summary-section">
-        <h3>Match Summary</h3>
-
-        <div class="summary-header">
-          <span>{{ homeTeamName }}</span>
-          <span>Statistic</span>
-          <span>{{ awayTeamName }}</span>
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homePossession">
-          <label>Possession %</label>
-          <input type="number" formControlName="awayPossession">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homeShots">
-          <label>Shots</label>
-          <input type="number" formControlName="awayShots">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" step="0.1" formControlName="homeExpectedGoals">
-          <label>Expected Goals</label>
-          <input type="number" step="0.1" formControlName="awayExpectedGoals">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homePasses">
-          <label>Passes</label>
-          <input type="number" formControlName="awayPasses">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homeTackles">
-          <label>Tackles</label>
-          <input type="number" formControlName="awayTackles">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homeTacklesWon">
-          <label>Tackles Won</label>
-          <input type="number" formControlName="awayTacklesWon">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homeInterceptions">
-          <label>Interceptions</label>
-          <input type="number" formControlName="awayInterceptions">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homeSaves">
-          <label>Saves</label>
-          <input type="number" formControlName="awaySaves">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homeFoulsCommitted">
-          <label>Fouls</label>
-          <input type="number" formControlName="awayFoulsCommitted">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homeOffsides">
-          <label>Offsides</label>
-          <input type="number" formControlName="awayOffsides">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homeCorners">
-          <label>Corners</label>
-          <input type="number" formControlName="awayCorners">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homeFreeKicks">
-          <label>Free Kicks</label>
-          <input type="number" formControlName="awayFreeKicks">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homePenaltyKicks">
-          <label>Penalties</label>
-          <input type="number" formControlName="awayPenaltyKicks">
-        </div>
-
-        <div class="stat-row">
-          <input type="number" formControlName="homeYellowCards">
-          <label>Yellow Cards</label>
-          <input type="number" formControlName="awayYellowCards">
-        </div>
-      </section>
-
-      <section class="players-grid">
-
-        <div class="players-section">
-          <div class="section-header">
-            <h3>{{ homeTeamName }} Players</h3>
-
-            <button
-              type="button"
-              class="secondary-button"
-              (click)="addHomePlayer()">
-              + Add Player
-            </button>
+            <input
+              type="number"
+              min="0"
+              formControlName="homeGoals">
           </div>
 
-          <div formArrayName="homePlayers">
-            @for (
-              player of homePlayers.controls;
-              track player;
-              let index = $index
-            ) {
-              <div
-                class="player-row"
-                [formGroupName]="index">
+          <span class="score-separator">-</span>
 
-                <input
-                  type="text"
-                  placeholder="Pos"
-                  formControlName="position">
+          <div class="score-control">
+            <label>{{ awayTeamName }}</label>
 
-                <input
-                  type="text"
-                  placeholder="Player name"
-                  formControlName="playerName">
-
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  placeholder="Rating"
-                  formControlName="rating">
-
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="Goals"
-                  formControlName="goals">
-
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="Assists"
-                  formControlName="assists">
-
-                <button
-                  type="button"
-                  class="remove-button"
-                  (click)="removeHomePlayer(index)">
-                  ✕
-                </button>
-
-              </div>
-            }
+            <input
+              type="number"
+              min="0"
+              formControlName="awayGoals">
           </div>
-        </div>
+        </section>
 
-        <div class="players-section">
-          <div class="section-header">
-            <h3>{{ awayTeamName }} Players</h3>
+        <section class="summary-section">
+          <h3>Match Summary</h3>
 
-            <button
-              type="button"
-              class="secondary-button"
-              (click)="addAwayPlayer()">
-              + Add Player
-            </button>
+          <div class="summary-header">
+            <span>{{ homeTeamName }}</span>
+            <span>Statistic</span>
+            <span>{{ awayTeamName }}</span>
           </div>
 
-          <div formArrayName="awayPlayers">
-            @for (
-              player of awayPlayers.controls;
-              track player;
-              let index = $index
-            ) {
-              <div
-                class="player-row"
-                [formGroupName]="index">
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homePossession">
 
-                <input
-                  type="text"
-                  placeholder="Pos"
-                  formControlName="position">
+            <label>Possession %</label>
 
-                <input
-                  type="text"
-                  placeholder="Player name"
-                  formControlName="playerName">
-
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  placeholder="Rating"
-                  formControlName="rating">
-
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="Goals"
-                  formControlName="goals">
-
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="Assists"
-                  formControlName="assists">
-
-                <button
-                  type="button"
-                  class="remove-button"
-                  (click)="removeAwayPlayer(index)">
-                  ✕
-                </button>
-
-              </div>
-            }
+            <input
+              type="number"
+              formControlName="awayPossession">
           </div>
-        </div>
 
-      </section>
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homeShots">
 
-      @if (errorMessage) {
-        <div class="error-message">
-          {{ errorMessage }}
-        </div>
-      }
+            <label>Shots</label>
+
+            <input
+              type="number"
+              formControlName="awayShots">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              step="0.1"
+              formControlName="homeExpectedGoals">
+
+            <label>Expected Goals</label>
+
+            <input
+              type="number"
+              step="0.1"
+              formControlName="awayExpectedGoals">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homePasses">
+
+            <label>Passes</label>
+
+            <input
+              type="number"
+              formControlName="awayPasses">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homeTackles">
+
+            <label>Tackles</label>
+
+            <input
+              type="number"
+              formControlName="awayTackles">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homeTacklesWon">
+
+            <label>Tackles Won</label>
+
+            <input
+              type="number"
+              formControlName="awayTacklesWon">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homeInterceptions">
+
+            <label>Interceptions</label>
+
+            <input
+              type="number"
+              formControlName="awayInterceptions">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homeSaves">
+
+            <label>Saves</label>
+
+            <input
+              type="number"
+              formControlName="awaySaves">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homeFoulsCommitted">
+
+            <label>Fouls</label>
+
+            <input
+              type="number"
+              formControlName="awayFoulsCommitted">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homeOffsides">
+
+            <label>Offsides</label>
+
+            <input
+              type="number"
+              formControlName="awayOffsides">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homeCorners">
+
+            <label>Corners</label>
+
+            <input
+              type="number"
+              formControlName="awayCorners">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homeFreeKicks">
+
+            <label>Free Kicks</label>
+
+            <input
+              type="number"
+              formControlName="awayFreeKicks">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homePenaltyKicks">
+
+            <label>Penalties</label>
+
+            <input
+              type="number"
+              formControlName="awayPenaltyKicks">
+          </div>
+
+          <div class="stat-row">
+            <input
+              type="number"
+              formControlName="homeYellowCards">
+
+            <label>Yellow Cards</label>
+
+            <input
+              type="number"
+              formControlName="awayYellowCards">
+          </div>
+        </section>
+
+        <section class="players-grid">
+
+          <div class="players-section">
+            <div class="section-header">
+              <h3>{{ homeTeamName }} Players</h3>
+
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="addHomePlayer()">
+                + Add Player
+              </button>
+            </div>
+
+            <div formArrayName="homePlayers">
+              @for (
+                player of homePlayers.controls;
+                track player;
+                let index = $index
+              ) {
+                <div
+                  class="player-row"
+                  [formGroupName]="index">
+
+                  <input
+                    type="text"
+                    placeholder="Pos"
+                    formControlName="position">
+
+                  <input
+                    type="text"
+                    placeholder="Player name"
+                    formControlName="playerName">
+
+                  <input
+                    type="number"
+                    min="0"
+                    max="10"
+                    step="0.1"
+                    placeholder="Rating"
+                    formControlName="rating">
+
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Goals"
+                    formControlName="goals">
+
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Assists"
+                    formControlName="assists">
+
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-icon remove-button"
+                    aria-label="Remove home player"
+                    (click)="removeHomePlayer(index)">
+                    ✕
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="players-section">
+            <div class="section-header">
+              <h3>{{ awayTeamName }} Players</h3>
+
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="addAwayPlayer()">
+                + Add Player
+              </button>
+            </div>
+
+            <div formArrayName="awayPlayers">
+              @for (
+                player of awayPlayers.controls;
+                track player;
+                let index = $index
+              ) {
+                <div
+                  class="player-row"
+                  [formGroupName]="index">
+
+                  <input
+                    type="text"
+                    placeholder="Pos"
+                    formControlName="position">
+
+                  <input
+                    type="text"
+                    placeholder="Player name"
+                    formControlName="playerName">
+
+                  <input
+                    type="number"
+                    min="0"
+                    max="10"
+                    step="0.1"
+                    placeholder="Rating"
+                    formControlName="rating">
+
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Goals"
+                    formControlName="goals">
+
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Assists"
+                    formControlName="assists">
+
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-icon remove-button"
+                    aria-label="Remove away player"
+                    (click)="removeAwayPlayer(index)">
+                    ✕
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+        </section>
+
+        @if (errorMessage) {
+          <div class="error-message">
+            {{ errorMessage }}
+          </div>
+        }
+
+      </div>
 
       <footer class="modal-footer">
-
         <button
           type="button"
-          class="secondary-button"
+          class="btn btn-secondary"
           [disabled]="isSaving"
           (click)="close()">
           Cancel
@@ -291,11 +382,10 @@
 
         <button
           type="submit"
-          class="primary-button"
+          class="btn btn-primary"
           [disabled]="isSaving">
           {{ isSaving ? 'Saving...' : 'Save Statistics' }}
         </button>
-
       </footer>
 
     </form>

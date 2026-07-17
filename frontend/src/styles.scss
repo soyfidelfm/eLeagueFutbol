@@ -1,6 +1,9 @@
 @use '@angular/material' as mat;
 @use "tailwindcss";
 @use './styles/colors';
+@use './styles/components/forms';
+@use './styles/components/buttons';
+@use './styles/components/modals';
 
 /* =========================
    ANGULAR MATERIAL THEME

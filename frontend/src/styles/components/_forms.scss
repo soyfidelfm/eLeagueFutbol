@@ -1,0 +1,47 @@
+.form-control,
+input:not([type='checkbox']):not([type='radio']):not([type='file']),
+textarea,
+select {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+
+  padding: 10px 12px;
+
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 8px;
+  outline: none;
+
+  background: #101820;
+  color: #fff;
+
+  font: inherit;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &::placeholder {
+    color: rgb(255 255 255 / 42%);
+  }
+
+  &:focus {
+    border-color: #00ff88;
+    box-shadow: 0 0 0 2px rgb(0 255 136 / 8%);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+textarea.form-control,
+textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.form-error {
+  color: #ff6577;
+}
