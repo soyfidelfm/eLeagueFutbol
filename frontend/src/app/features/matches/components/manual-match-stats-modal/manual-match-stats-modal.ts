@@ -455,57 +455,88 @@ export class ManualMatchStatsModal
   }
 
   save(): void {
-    if (!this.matchId) {
-      this.errorMessage =
-        'Match ID is required.';
-
-      return;
-    }
-
-    if (
-      this.form.invalid ||
-      this.isSaving ||
-      this.isLoading
-    ) {
-      this.form.markAllAsTouched();
-      this.cdr.markForCheck();
-
-      return;
-    }
-
-    this.isSaving = true;
-    this.errorMessage = '';
-
-    const request =
-      this.form.getRawValue()      as SaveManualMatchStatsRequest;
-    this.matchService
-      .saveManualStats(
-        this.matchId,
-        request
-      )
-      .pipe(
-        finalize(() => {
-          this.isSaving = false;
-          this.cdr.detectChanges();
-        })
-      )
-      .subscribe({
-        next: () => {
-          this.saved.emit();
-          this.closed.emit();
-        },
-
-        error: error => {
-          console.error(error);
-
-          this.errorMessage =
-            error?.error?.message ??
-            'Could not save match statistics.';
-
-          this.cdr.detectChanges();
-        }
-      });
+  if (!this.matchId) {
+    this.errorMessage = 'Match ID is required.';
+    this.cdr.markForCheck();
+    return;
   }
+
+  if (this.isSaving || this.isLoading) {
+    return;
+  }
+
+  // Elimina filas completamente vacías antes de validar.
+  this.removeEmptyPlayerRows(this.homePlayers);
+  this.removeEmptyPlayerRows(this.awayPlayers);
+
+  if (this.form.invalid) {
+    this.form.markAllAsTouched();
+
+    this.errorMessage =
+      'Complete all required player fields or remove incomplete player rows.';
+
+    console.log(
+      'FORM INVALID:',
+      this.form.getRawValue(),
+      this.form.errors
+    );
+
+    this.cdr.markForCheck();
+    return;
+  }
+
+  this.isSaving = true;
+  this.errorMessage = '';
+
+  const rawValue = this.form.getRawValue();
+
+  const request: SaveManualMatchStatsRequest = {
+    ...rawValue,
+    homePlayers: rawValue.homePlayers ?? [],
+    awayPlayers: rawValue.awayPlayers ?? []
+  } as SaveManualMatchStatsRequest;
+
+  console.log('Saving manual statistics:', {
+    matchId: this.matchId,
+    request
+  });
+
+  this.matchService
+    .saveManualStats(this.matchId, request)
+    .pipe(
+      finalize(() => {
+        this.isSaving = false;
+        this.cdr.markForCheck();
+      })
+    )
+    .subscribe({
+      next: response => {
+        console.log(
+          'Manual statistics saved successfully:',
+          response
+        );
+
+        this.saved.emit();
+        this.closed.emit();
+      },
+
+      error: error => {
+        console.error(
+          'Could not save manual statistics:',
+          error
+        );
+
+        this.errorMessage =
+          error?.error?.message ??
+          error?.message ??
+          'Could not save match statistics.';
+
+        // Regresa una fila vacía si ambas listas quedaron vacías.
+        this.ensurePlayerRows();
+        this.cdr.markForCheck();
+      }
+    });
+}
 
   close(): void {
     if (
@@ -893,4 +924,41 @@ export class ManualMatchStatsModal
       ]
     });
   }
+private removeEmptyPlayerRows(
+  players: FormArray<FormGroup>
+): void {
+  for (
+    let index = players.length - 1;
+    index >= 0;
+    index--
+  ) {
+    const player = players.at(index).getRawValue();
+
+    const position =
+      String(player.position ?? '').trim();
+
+    const playerName =
+      String(player.playerName ?? '').trim();
+
+    const rating =
+      Number(player.rating ?? 0);
+
+    const goals =
+      Number(player.goals ?? 0);
+
+    const assists =
+      Number(player.assists ?? 0);
+
+    const isCompletelyEmpty =
+      !position &&
+      !playerName &&
+      rating === 0 &&
+      goals === 0 &&
+      assists === 0;
+
+    if (isCompletelyEmpty) {
+      players.removeAt(index);
+    }
+  }
+}
 }
