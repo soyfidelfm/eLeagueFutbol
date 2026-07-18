@@ -1098,4 +1098,83 @@ public class MatchService : IMatchService
 			throw;
 		}
 	}
+
+	public async Task<MatchPlayerOptionsDto?>
+	GetMatchPlayerOptionsAsync(Guid matchId)
+	{
+		var result = await _context.Matches
+			.AsNoTracking()
+			.Where(match =>
+				!match.IsDeleted &&
+				match.MatchId == matchId)
+			.Select(match => new MatchPlayerOptionsDto
+			{
+				HomeTeamPlayers = match.HomeGameClub.Players
+					.OrderBy(player => player.Position)
+					.ThenByDescending(player => player.Overall)
+					.ThenBy(player => player.Name)
+					.Select(player => new TeamPlayerOptionDto
+					{
+						GamePlayerId =
+							player.GamePlayerId,
+
+						Name =
+							player.FullName != null &&
+							player.FullName != string.Empty
+								? player.FullName
+								: player.Name,
+
+						Position =
+	player.Position == null
+		? string.Empty
+		: player.Position.Contains(",")
+			? player.Position
+				.Substring(0, player.Position.IndexOf(","))
+				.Trim()
+			: player.Position.Trim(),
+
+						Overall =
+							player.Overall,
+
+						ImageUrl =
+							player.ImageUrl
+					})
+					.ToList(),
+
+				AwayTeamPlayers = match.AwayGameClub.Players
+					.OrderBy(player => player.Position)
+					.ThenByDescending(player => player.Overall)
+					.ThenBy(player => player.Name)
+					.Select(player => new TeamPlayerOptionDto
+					{
+						GamePlayerId =
+							player.GamePlayerId,
+
+						Name =
+							player.FullName != null &&
+							player.FullName != string.Empty
+								? player.FullName
+								: player.Name,
+
+						Position =
+	player.Position == null
+		? string.Empty
+		: player.Position.Contains(",")
+			? player.Position
+				.Substring(0, player.Position.IndexOf(","))
+				.Trim()
+			: player.Position.Trim(),
+
+						Overall =
+							player.Overall,
+
+						ImageUrl =
+							player.ImageUrl
+					})
+					.ToList()
+			})
+			.FirstOrDefaultAsync();
+
+		return result;
+	}
 }

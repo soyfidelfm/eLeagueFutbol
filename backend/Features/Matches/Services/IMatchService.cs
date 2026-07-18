@@ -28,4 +28,7 @@ public interface IMatchService
 	Guid matchId,
 	SaveManualMatchStatsDto dto);
 	Task<SaveManualMatchStatsDto?> GetManualStatsAsync(Guid matchId);
+	Task<MatchPlayerOptionsDto?> GetMatchPlayerOptionsAsync(
+		Guid matchId);
+
 }

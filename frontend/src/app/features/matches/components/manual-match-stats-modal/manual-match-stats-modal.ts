@@ -36,6 +36,10 @@ import {
   TeamPerformanceOcrPreview
 } from '../../../../core/models/match-stats.model';
 
+import {
+  TeamPlayerOption
+} from '../../../../core/models/team-player-option.model';
+
 type ManualPlayer =
   NonNullable<
     SaveManualMatchStatsRequest['homePlayers']
@@ -56,12 +60,8 @@ export class ManualMatchStatsModal
   implements OnInit, OnChanges {
 
   private readonly fb = inject(FormBuilder);
-
-  private readonly matchService =
-    inject(MatchService);
-
-  private readonly cdr =
-    inject(ChangeDetectorRef);
+  private readonly matchService = inject(MatchService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @Input({ required: true })
   matchId = '';
@@ -77,6 +77,13 @@ export class ManualMatchStatsModal
 
   @Input()
   awayGoals = 0;
+
+  /*
+   * Jugadores disponibles para cada equipo.
+   * Estas listas deben venir desde el componente padre.
+   */
+  homeTeamPlayers: TeamPlayerOption[] = [];
+  awayTeamPlayers: TeamPlayerOption[] = [];
 
   @Input()
   summaryOcrPreview:
@@ -351,6 +358,8 @@ export class ManualMatchStatsModal
   });
 
   ngOnInit(): void {
+    this.loadMatchPlayerOptions();
+
     if (this.hasOcrPreview()) {
       this.populateSummaryForm();
       this.populatePlayerForms();
@@ -359,10 +368,73 @@ export class ManualMatchStatsModal
 
     this.loadSavedStats();
   }
+  private loadMatchPlayerOptions(): void {
+    if (!this.matchId) {
+      return;
+    }
+
+    this.matchService
+      .getMatchPlayerOptions(this.matchId)
+      .subscribe({
+        next: response => {
+          this.homeTeamPlayers =
+            response.homeTeamPlayers ?? [];
+
+          this.awayTeamPlayers =
+            response.awayTeamPlayers ?? [];
+
+          /*
+           * Relaciona estadísticas previamente cargadas
+           * por nombre con el gamePlayerId real.
+           */
+          this.syncPlayersWithRosters();
+
+          console.log(
+            'Match player options loaded:',
+            {
+              homeTeamPlayers:
+                this.homeTeamPlayers,
+
+              awayTeamPlayers:
+                this.awayTeamPlayers
+            }
+          );
+
+          this.cdr.markForCheck();
+        },
+
+        error: error => {
+          console.error(
+            'Could not load match player options:',
+            error
+          );
+
+          this.homeTeamPlayers = [];
+          this.awayTeamPlayers = [];
+
+          this.errorMessage =
+            error?.error?.message ??
+            'Could not load team players.';
+
+          this.cdr.markForCheck();
+        }
+      });
+  }
 
   ngOnChanges(
     changes: SimpleChanges
   ): void {
+    const matchChanged =
+      changes['matchId'];
+
+    if (
+      matchChanged &&
+      !matchChanged.firstChange &&
+      this.matchId
+    ) {
+      this.loadMatchPlayerOptions();
+    }
+
     const ocrChanged =
       changes['summaryOcrPreview'] ||
       changes['homePerformanceOcrPreview'] ||
@@ -410,13 +482,11 @@ export class ManualMatchStatsModal
         []
       ),
       ...(
-        this.homePerformanceOcrPreview
-          ?.warnings ??
+        this.homePerformanceOcrPreview?.warnings ??
         []
       ),
       ...(
-        this.awayPerformanceOcrPreview
-          ?.warnings ??
+        this.awayPerformanceOcrPreview?.warnings ??
         []
       )
     ];
@@ -426,7 +496,10 @@ export class ManualMatchStatsModal
 
   addHomePlayer(): void {
     this.homePlayers.push(
-      this.createPlayerForm()
+      this.createPlayerForm(
+        undefined,
+        this.homeTeamPlayers
+      )
     );
 
     this.cdr.markForCheck();
@@ -434,7 +507,10 @@ export class ManualMatchStatsModal
 
   addAwayPlayer(): void {
     this.awayPlayers.push(
-      this.createPlayerForm()
+      this.createPlayerForm(
+        undefined,
+        this.awayTeamPlayers
+      )
     );
 
     this.cdr.markForCheck();
@@ -454,89 +530,187 @@ export class ManualMatchStatsModal
     this.cdr.markForCheck();
   }
 
-  save(): void {
-  if (!this.matchId) {
-    this.errorMessage = 'Match ID is required.';
-    this.cdr.markForCheck();
-    return;
-  }
+  onHomePlayerSelected(index: number): void {
+    const playerForm =
+      this.homePlayers.at(index);
 
-  if (this.isSaving || this.isLoading) {
-    return;
-  }
-
-  // Elimina filas completamente vacías antes de validar.
-  this.removeEmptyPlayerRows(this.homePlayers);
-  this.removeEmptyPlayerRows(this.awayPlayers);
-
-  if (this.form.invalid) {
-    this.form.markAllAsTouched();
-
-    this.errorMessage =
-      'Complete all required player fields or remove incomplete player rows.';
-
-    console.log(
-      'FORM INVALID:',
-      this.form.getRawValue(),
-      this.form.errors
+    const gamePlayerId = String(
+      playerForm
+        .get('gamePlayerId')
+        ?.value ?? ''
     );
 
-    this.cdr.markForCheck();
-    return;
+    const selectedPlayer =
+      this.homeTeamPlayers.find(
+        player =>
+          player.gamePlayerId ===
+          gamePlayerId
+      );
+
+    this.applySelectedPlayer(
+      playerForm,
+      selectedPlayer
+    );
   }
 
-  this.isSaving = true;
-  this.errorMessage = '';
+  onAwayPlayerSelected(index: number): void {
+    const playerForm =
+      this.awayPlayers.at(index);
 
-  const rawValue = this.form.getRawValue();
+    const gamePlayerId = String(
+      playerForm
+        .get('gamePlayerId')
+        ?.value ?? ''
+    );
 
-  const request: SaveManualMatchStatsRequest = {
-    ...rawValue,
-    homePlayers: rawValue.homePlayers ?? [],
-    awayPlayers: rawValue.awayPlayers ?? []
-  } as SaveManualMatchStatsRequest;
+    const selectedPlayer =
+      this.awayTeamPlayers.find(
+        player =>
+          player.gamePlayerId ===
+          gamePlayerId
+      );
 
-  console.log('Saving manual statistics:', {
-    matchId: this.matchId,
-    request
-  });
+    this.applySelectedPlayer(
+      playerForm,
+      selectedPlayer
+    );
+  }
 
-  this.matchService
-    .saveManualStats(this.matchId, request)
-    .pipe(
-      finalize(() => {
-        this.isSaving = false;
-        this.cdr.markForCheck();
-      })
-    )
-    .subscribe({
-      next: response => {
-        console.log(
-          'Manual statistics saved successfully:',
-          response
-        );
+  isHomePlayerSelected(
+    gamePlayerId: string,
+    currentIndex: number
+  ): boolean {
+    return this.isPlayerAlreadySelected(
+      this.homePlayers,
+      gamePlayerId,
+      currentIndex
+    );
+  }
 
-        this.saved.emit();
-        this.closed.emit();
-      },
+  isAwayPlayerSelected(
+    gamePlayerId: string,
+    currentIndex: number
+  ): boolean {
+    return this.isPlayerAlreadySelected(
+      this.awayPlayers,
+      gamePlayerId,
+      currentIndex
+    );
+  }
 
-      error: error => {
-        console.error(
-          'Could not save manual statistics:',
-          error
-        );
+  save(): void {
+    if (!this.matchId) {
+      this.errorMessage =
+        'Match ID is required.';
 
-        this.errorMessage =
-          error?.error?.message ??
-          error?.message ??
-          'Could not save match statistics.';
+      this.cdr.markForCheck();
+      return;
+    }
 
-        // Regresa una fila vacía si ambas listas quedaron vacías.
-        this.ensurePlayerRows();
-        this.cdr.markForCheck();
+    if (
+      this.isSaving ||
+      this.isLoading
+    ) {
+      return;
+    }
+
+    this.removeEmptyPlayerRows(
+      this.homePlayers
+    );
+
+    this.removeEmptyPlayerRows(
+      this.awayPlayers
+    );
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+
+      this.errorMessage =
+        'Complete all required player fields or remove incomplete player rows.';
+
+      console.log(
+        'FORM INVALID:',
+        this.form.getRawValue(),
+        this.form.errors
+      );
+
+      this.ensurePlayerRows();
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.isSaving = true;
+    this.errorMessage = '';
+
+    const rawValue =
+      this.form.getRawValue();
+
+    /*
+     * gamePlayerId se usa solamente en el frontend.
+     *
+     * Aquí construimos los jugadores manualmente para
+     * continuar enviando exactamente lo que espera tu DTO.
+     */
+    const request: SaveManualMatchStatsRequest = {
+      ...rawValue,
+
+      homePlayers:
+        this.toRequestPlayers(
+          this.homePlayers
+        ),
+
+      awayPlayers:
+        this.toRequestPlayers(
+          this.awayPlayers
+        )
+    } as SaveManualMatchStatsRequest;
+
+    console.log(
+      'Saving manual statistics:',
+      {
+        matchId: this.matchId,
+        request
       }
-    });
-}
+    );
+
+    this.matchService
+      .saveManualStats(
+        this.matchId,
+        request
+      )
+      .pipe(
+        finalize(() => {
+          this.isSaving = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: response => {
+          console.log(
+            'Manual statistics saved successfully:',
+            response
+          );
+
+          this.saved.emit();
+          this.closed.emit();
+        },
+
+        error: error => {
+          console.error(
+            'Could not save manual statistics:',
+            error
+          );
+
+          this.errorMessage =
+            error?.error?.message ??
+            error?.message ??
+            'Could not save match statistics.';
+
+          this.ensurePlayerRows();
+          this.cdr.markForCheck();
+        }
+      });
+  }
 
   close(): void {
     if (
@@ -547,6 +721,77 @@ export class ManualMatchStatsModal
     }
 
     this.closed.emit();
+  }
+
+  private applySelectedPlayer(
+    playerForm: FormGroup,
+    selectedPlayer:
+      TeamPlayerOption | undefined
+  ): void {
+    if (!selectedPlayer) {
+      playerForm.patchValue({
+        playerName: '',
+        position: ''
+      });
+
+      playerForm
+        .get('playerName')
+        ?.markAsTouched();
+
+      playerForm
+        .get('position')
+        ?.markAsTouched();
+
+      this.cdr.markForCheck();
+      return;
+    }
+
+    playerForm.patchValue({
+      gamePlayerId:
+        selectedPlayer.gamePlayerId,
+
+      playerName:
+        selectedPlayer.name,
+
+      position:
+        selectedPlayer.position
+    });
+
+    playerForm
+      .get('playerName')
+      ?.markAsDirty();
+
+    playerForm
+      .get('position')
+      ?.markAsDirty();
+
+    this.cdr.markForCheck();
+  }
+
+  private isPlayerAlreadySelected(
+    players: FormArray<FormGroup>,
+    gamePlayerId: string,
+    currentIndex: number
+  ): boolean {
+    if (!gamePlayerId) {
+      return false;
+    }
+
+    return players.controls.some(
+      (control, index) => {
+        if (index === currentIndex) {
+          return false;
+        }
+
+        const selectedId = String(
+          control
+            .get('gamePlayerId')
+            ?.value ?? ''
+        );
+
+        return selectedId === gamePlayerId;
+      }
+    );
   }
 
   private hasOcrPreview(): boolean {
@@ -601,10 +846,12 @@ export class ManualMatchStatsModal
   ): void {
     this.form.patchValue({
       homeGoals:
-        stats.homeGoals ?? this.homeGoals,
+        stats.homeGoals ??
+        this.homeGoals,
 
       awayGoals:
-        stats.awayGoals ?? this.awayGoals,
+        stats.awayGoals ??
+        this.awayGoals,
 
       homePossession:
         stats.homePossession ?? 50,
@@ -699,7 +946,10 @@ export class ManualMatchStatsModal
       stats.homePlayers ?? []
     ) {
       this.homePlayers.push(
-        this.createPlayerForm(player)
+        this.createPlayerForm(
+          player,
+          this.homeTeamPlayers
+        )
       );
     }
 
@@ -708,7 +958,10 @@ export class ManualMatchStatsModal
       stats.awayPlayers ?? []
     ) {
       this.awayPlayers.push(
-        this.createPlayerForm(player)
+        this.createPlayerForm(
+          player,
+          this.awayTeamPlayers
+        )
       );
     }
 
@@ -844,23 +1097,27 @@ export class ManualMatchStatsModal
 
     const homePlayers =
       this.homePerformanceOcrPreview
-        ?.players ??
-      [];
+        ?.players ?? [];
 
     const awayPlayers =
       this.awayPerformanceOcrPreview
-        ?.players ??
-      [];
+        ?.players ?? [];
 
     for (const player of homePlayers) {
       this.homePlayers.push(
-        this.createPlayerForm(player)
+        this.createPlayerForm(
+          player,
+          this.homeTeamPlayers
+        )
       );
     }
 
     for (const player of awayPlayers) {
       this.awayPlayers.push(
-        this.createPlayerForm(player)
+        this.createPlayerForm(
+          player,
+          this.awayTeamPlayers
+        )
       );
     }
 
@@ -871,13 +1128,19 @@ export class ManualMatchStatsModal
   private ensurePlayerRows(): void {
     if (this.homePlayers.length === 0) {
       this.homePlayers.push(
-        this.createPlayerForm()
+        this.createPlayerForm(
+          undefined,
+          this.homeTeamPlayers
+        )
       );
     }
 
     if (this.awayPlayers.length === 0) {
       this.awayPlayers.push(
-        this.createPlayerForm()
+        this.createPlayerForm(
+          undefined,
+          this.awayTeamPlayers
+        )
       );
     }
   }
@@ -885,21 +1148,41 @@ export class ManualMatchStatsModal
   private createPlayerForm(
     player?:
       | ManualPlayer
-      | MatchPlayerStatsOcrPreview
+      | MatchPlayerStatsOcrPreview,
+
+    teamPlayers:
+      TeamPlayerOption[] = []
   ): FormGroup {
+    const playerName =
+      player?.playerName ?? '';
+
+    const matchingPlayer =
+      this.findPlayerByName(
+        teamPlayers,
+        playerName
+      );
+
     return this.fb.group({
+      gamePlayerId: [
+        matchingPlayer?.gamePlayerId ?? ''
+      ],
+
       position: [
-        player?.position ?? '',
+        player?.position ??
+        matchingPlayer?.position ??
+        '',
         Validators.required
       ],
 
       playerName: [
-        player?.playerName ?? '',
+        playerName ||
+        matchingPlayer?.name ||
+        '',
         Validators.required
       ],
 
       rating: [
-        player?.rating ?? 0,
+        player?.rating ?? null,
         [
           Validators.required,
           Validators.min(0),
@@ -908,7 +1191,7 @@ export class ManualMatchStatsModal
       ],
 
       goals: [
-        player?.goals ?? 0,
+        player?.goals ?? null,
         [
           Validators.required,
           Validators.min(0)
@@ -916,7 +1199,7 @@ export class ManualMatchStatsModal
       ],
 
       assists: [
-        player?.assists ?? 0,
+        player?.assists ?? null,
         [
           Validators.required,
           Validators.min(0)
@@ -924,41 +1207,191 @@ export class ManualMatchStatsModal
       ]
     });
   }
-private removeEmptyPlayerRows(
-  players: FormArray<FormGroup>
-): void {
-  for (
-    let index = players.length - 1;
-    index >= 0;
-    index--
-  ) {
-    const player = players.at(index).getRawValue();
 
-    const position =
-      String(player.position ?? '').trim();
+  private syncPlayersWithRosters(): void {
+    this.syncPlayerArrayWithRoster(
+      this.homePlayers,
+      this.homeTeamPlayers
+    );
 
-    const playerName =
-      String(player.playerName ?? '').trim();
+    this.syncPlayerArrayWithRoster(
+      this.awayPlayers,
+      this.awayTeamPlayers
+    );
 
-    const rating =
-      Number(player.rating ?? 0);
+    this.cdr.markForCheck();
+  }
 
-    const goals =
-      Number(player.goals ?? 0);
+  private syncPlayerArrayWithRoster(
+    players: FormArray<FormGroup>,
+    teamPlayers: TeamPlayerOption[]
+  ): void {
+    for (
+      const playerForm of
+      players.controls
+    ) {
+      const currentId = String(
+        playerForm
+          .get('gamePlayerId')
+          ?.value ?? ''
+      );
 
-    const assists =
-      Number(player.assists ?? 0);
+      if (currentId) {
+        continue;
+      }
 
-    const isCompletelyEmpty =
-      !position &&
-      !playerName &&
-      rating === 0 &&
-      goals === 0 &&
-      assists === 0;
+      const playerName = String(
+        playerForm
+          .get('playerName')
+          ?.value ?? ''
+      );
 
-    if (isCompletelyEmpty) {
-      players.removeAt(index);
+      if (!playerName) {
+        continue;
+      }
+
+      const matchingPlayer =
+        this.findPlayerByName(
+          teamPlayers,
+          playerName
+        );
+
+      if (!matchingPlayer) {
+        continue;
+      }
+
+      playerForm.patchValue(
+        {
+          gamePlayerId:
+            matchingPlayer.gamePlayerId,
+
+          playerName:
+            matchingPlayer.name,
+
+          position:
+            playerForm
+              .get('position')
+              ?.value ||
+            matchingPlayer.position
+        },
+        {
+          emitEvent: false
+        }
+      );
     }
   }
-}
+
+  private findPlayerByName(
+    teamPlayers: TeamPlayerOption[],
+    playerName: string
+  ): TeamPlayerOption | undefined {
+    const normalizedPlayerName =
+      this.normalizePlayerName(playerName);
+
+    if (!normalizedPlayerName) {
+      return undefined;
+    }
+
+    return teamPlayers.find(player =>
+      this.normalizePlayerName(
+        player.name
+      ) === normalizedPlayerName
+    );
+  }
+
+  private normalizePlayerName(
+    value: string
+  ): string {
+    return String(value ?? '')
+      .normalize('NFD')
+      .replace(
+        /[\u0300-\u036f]/g,
+        ''
+      )
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, ' ');
+  }
+
+  private toRequestPlayers(
+    players: FormArray<FormGroup>
+  ): ManualPlayer[] {
+    return players.controls.map(control => {
+      const player = control.getRawValue();
+
+      return {
+        gamePlayerId:
+          player.gamePlayerId || null,
+
+        position: String(
+          player.position ?? ''
+        ).trim(),
+
+        playerName: String(
+          player.playerName ?? ''
+        ).trim(),
+
+        rating: Number(
+          player.rating ?? 0
+        ),
+
+        goals: Number(
+          player.goals ?? 0
+        ),
+
+        assists: Number(
+          player.assists ?? 0
+        )
+      } as ManualPlayer;
+    });
+  }
+
+  private removeEmptyPlayerRows(
+    players: FormArray<FormGroup>
+  ): void {
+    for (
+      let index = players.length - 1;
+      index >= 0;
+      index--
+    ) {
+      const player =
+        players.at(index).getRawValue();
+
+      const gamePlayerId =
+        String(
+          player.gamePlayerId ?? ''
+        ).trim();
+
+      const position =
+        String(
+          player.position ?? ''
+        ).trim();
+
+      const playerName =
+        String(
+          player.playerName ?? ''
+        ).trim();
+
+      const rating =
+        Number(player.rating ?? 0);
+
+      const goals =
+        Number(player.goals ?? 0);
+
+      const assists =
+        Number(player.assists ?? 0);
+
+      const isCompletelyEmpty =
+        !gamePlayerId &&
+        !position &&
+        !playerName &&
+        rating === 0 &&
+        goals === 0 &&
+        assists === 0;
+
+      if (isCompletelyEmpty) {
+        players.removeAt(index);
+      }
+    }
+  }
 }

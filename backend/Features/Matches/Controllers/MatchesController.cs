@@ -98,6 +98,23 @@ public class MatchesController : ControllerBase
 
 		return Ok(result);
 	}
+	[HttpGet("{matchId:guid}/player-options")]
+	public async Task<IActionResult> GetPlayerOptions(
+	Guid matchId)
+	{
+		var result = await _matchService
+			.GetMatchPlayerOptionsAsync(matchId);
+
+		if (result is null)
+		{
+			return NotFound(new
+			{
+				message = "Match not found."
+			});
+		}
+
+		return Ok(result);
+	}
 
 	[HttpPost("{matchId:guid}/manual-stats")]
 	public async Task<IActionResult> SaveManualStats(

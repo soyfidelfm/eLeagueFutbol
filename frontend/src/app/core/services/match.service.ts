@@ -10,8 +10,12 @@ import {
   MatchWeekDto,
   UploadMatchResultDto,
   MatchResultDto,
-  SaveManualMatchStatsRequest
+  SaveManualMatchStatsRequest,  
+
 } from '../models/match.model';
+import {
+  TeamPlayerOption
+} from '../models/team-player-option.model';
 
 @Injectable({
   providedIn: 'root'
@@ -45,11 +49,27 @@ export class MatchService extends ApiService {
     );
   }
 
-  getById(matchId: string): Observable<MatchDto> {
+  getById(
+    matchId: string
+  ): Observable<MatchDto> {
     return super.get<MatchDto>(
       `${API_ENDPOINTS.matches}/${matchId}`
     );
   }
+
+  getMatchPlayerOptions(
+  matchId: string
+): Observable<{
+  homeTeamPlayers: TeamPlayerOption[];
+  awayTeamPlayers: TeamPlayerOption[];
+}> {
+  return super.get<{
+    homeTeamPlayers: TeamPlayerOption[];
+    awayTeamPlayers: TeamPlayerOption[];
+  }>(
+    `${API_ENDPOINTS.matches}/${matchId}/player-options`
+  );
+}
 
   uploadResult(
     matchId: string,

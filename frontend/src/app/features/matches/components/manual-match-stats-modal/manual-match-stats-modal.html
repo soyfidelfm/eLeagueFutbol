@@ -29,7 +29,9 @@
 
       <div class="modal-content">
 
+        <!-- SCORE -->
         <section class="score-section">
+
           <div class="score-control">
             <label>{{ homeTeamName }}</label>
 
@@ -49,8 +51,10 @@
               min="0"
               formControlName="awayGoals">
           </div>
+
         </section>
 
+        <!-- MATCH SUMMARY -->
         <section class="summary-section">
           <h3>Match Summary</h3>
 
@@ -63,30 +67,37 @@
           <div class="stat-row">
             <input
               type="number"
+              min="0"
+              max="100"
               formControlName="homePossession">
 
             <label>Possession %</label>
 
             <input
               type="number"
+              min="0"
+              max="100"
               formControlName="awayPossession">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homeShots">
 
             <label>Shots</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awayShots">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               step="0.1"
               formControlName="homeExpectedGoals">
 
@@ -94,6 +105,7 @@
 
             <input
               type="number"
+              min="0"
               step="0.1"
               formControlName="awayExpectedGoals">
           </div>
@@ -101,139 +113,164 @@
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homePasses">
 
             <label>Passes</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awayPasses">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homeTackles">
 
             <label>Tackles</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awayTackles">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homeTacklesWon">
 
             <label>Tackles Won</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awayTacklesWon">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homeInterceptions">
 
             <label>Interceptions</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awayInterceptions">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homeSaves">
 
             <label>Saves</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awaySaves">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homeFoulsCommitted">
 
             <label>Fouls</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awayFoulsCommitted">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homeOffsides">
 
             <label>Offsides</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awayOffsides">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homeCorners">
 
             <label>Corners</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awayCorners">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homeFreeKicks">
 
             <label>Free Kicks</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awayFreeKicks">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homePenaltyKicks">
 
             <label>Penalties</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awayPenaltyKicks">
           </div>
 
           <div class="stat-row">
             <input
               type="number"
+              min="0"
               formControlName="homeYellowCards">
 
             <label>Yellow Cards</label>
 
             <input
               type="number"
+              min="0"
               formControlName="awayYellowCards">
           </div>
         </section>
 
+        <!-- PLAYERS -->
         <section class="players-grid">
 
+          <!-- HOME PLAYERS -->
           <div class="players-section">
+
             <div class="section-header">
               <h3>{{ homeTeamName }} Players</h3>
 
@@ -246,6 +283,7 @@
             </div>
 
             <div formArrayName="homePlayers">
+
               @for (
                 player of homePlayers.controls;
                 track player;
@@ -258,12 +296,36 @@
                   <input
                     type="text"
                     placeholder="Pos"
-                    formControlName="position">
+                    formControlName="position"
+                    readonly>
 
-                  <input
-                    type="text"
-                    placeholder="Player name"
-                    formControlName="playerName">
+                  <select
+                    formControlName="gamePlayerId"
+                    (change)="onHomePlayerSelected(index)">
+
+                    <option value="">
+                      Select player
+                    </option>
+
+                    @for (
+                      teamPlayer of homeTeamPlayers;
+                      track teamPlayer.gamePlayerId
+                    ) {
+                      <option
+                        [value]="teamPlayer.gamePlayerId"
+                        [disabled]="isHomePlayerSelected(
+                          teamPlayer.gamePlayerId,
+                          index
+                        )">
+
+                        {{ teamPlayer.name }}
+
+                        @if (teamPlayer.position) {
+                          - {{ teamPlayer.position }}
+                        }
+                      </option>
+                    }
+                  </select>
 
                   <input
                     type="number"
@@ -292,12 +354,16 @@
                     (click)="removeHomePlayer(index)">
                     ✕
                   </button>
+
                 </div>
               }
+
             </div>
           </div>
 
+          <!-- AWAY PLAYERS -->
           <div class="players-section">
+
             <div class="section-header">
               <h3>{{ awayTeamName }} Players</h3>
 
@@ -310,6 +376,7 @@
             </div>
 
             <div formArrayName="awayPlayers">
+
               @for (
                 player of awayPlayers.controls;
                 track player;
@@ -322,12 +389,36 @@
                   <input
                     type="text"
                     placeholder="Pos"
-                    formControlName="position">
+                    formControlName="position"
+                    readonly>
 
-                  <input
-                    type="text"
-                    placeholder="Player name"
-                    formControlName="playerName">
+                  <select
+                    formControlName="gamePlayerId"
+                    (change)="onAwayPlayerSelected(index)">
+
+                    <option value="">
+                      Select player
+                    </option>
+
+                    @for (
+                      teamPlayer of awayTeamPlayers;
+                      track teamPlayer.gamePlayerId
+                    ) {
+                      <option
+                        [value]="teamPlayer.gamePlayerId"
+                        [disabled]="isAwayPlayerSelected(
+                          teamPlayer.gamePlayerId,
+                          index
+                        )">
+
+                        {{ teamPlayer.name }}
+
+                        @if (teamPlayer.position) {
+                          - {{ teamPlayer.position }}
+                        }
+                      </option>
+                    }
+                  </select>
 
                   <input
                     type="number"
@@ -356,8 +447,10 @@
                     (click)="removeAwayPlayer(index)">
                     ✕
                   </button>
+
                 </div>
               }
+
             </div>
           </div>
 
@@ -372,10 +465,11 @@
       </div>
 
       <footer class="modal-footer">
+
         <button
           type="button"
           class="btn btn-secondary"
-          [disabled]="isSaving"
+          [disabled]="isSaving || isLoading"
           (click)="close()">
           Cancel
         </button>
@@ -383,9 +477,16 @@
         <button
           type="submit"
           class="btn btn-primary"
-          [disabled]="isSaving">
-          {{ isSaving ? 'Saving...' : 'Save Statistics' }}
+          [disabled]="isSaving || isLoading">
+
+          @if (isLoading) {
+            Loading...
+          } @else {
+            {{ isSaving ? 'Saving...' : 'Save Statistics' }}
+          }
+
         </button>
+
       </footer>
 
     </form>
