@@ -167,6 +167,16 @@ export class Sidebar implements OnInit, OnDestroy {
       return;
     }
 
+    if (cleanUrl.startsWith('/messages')) {
+      this.currentSection = 'messages';
+      return;
+    }
+
+    if (cleanUrl.startsWith('/draft')) {
+      this.currentSection = 'draft';
+      return;
+    }
+
     this.currentSection = 'dashboard';
   }
 }

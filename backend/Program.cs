@@ -10,6 +10,7 @@ using backend.Features.Matches.Services;
 using backend.Features.Messages.Services;
 using backend.Features.Notifications.Services;
 using backend.Features.Rankings.Services;
+using backend.Features.Realtime;
 using backend.Features.Seasons.Services;
 using backend.Features.Sidebar.Services;
 using backend.Features.Stats.Services;
@@ -22,6 +23,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -31,6 +33,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 		builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Services
+builder.Services.AddSingleton<PresenceTracker>();
+builder.Services.AddScoped<IAppRealtimeService, AppRealtimeService>();
 builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -43,12 +47,11 @@ builder.Services.AddScoped<IActivityFeedService, ActivityFeedService>();
 builder.Services.AddScoped<IRankingService, RankingService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<ISidebarService, SidebarService>();
-builder.Services.AddScoped<IDraftService, DraftService>();
+builder.Services.AddScoped<DraftService>();
+builder.Services.AddScoped<IDraftService, DraftRealtimeDecorator>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<INotificationInboxService, NotificationInboxService>();
-builder.Services.AddScoped<IStatsService, StatsService>();
-builder.Services.AddScoped<IMatchStatsOcrService, MatchStatsOcrService>();
 builder.Services.AddScoped<IMatchStatsService, MatchStatsService>();
 
 // Settings
@@ -97,6 +100,23 @@ builder.Services
 
 		options.Audience =
 			builder.Configuration["Auth0:Audience"];
+
+		options.Events = new JwtBearerEvents
+		{
+			OnMessageReceived = context =>
+			{
+				var accessToken = context.Request.Query["access_token"];
+				var path = context.HttpContext.Request.Path;
+
+				if (!string.IsNullOrEmpty(accessToken) &&
+					path.StartsWithSegments("/hubs"))
+				{
+					context.Token = accessToken;
+				}
+
+				return Task.CompletedTask;
+			}
+		};
 	});
 
 builder.Services.AddAuthorization();
@@ -115,5 +135,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<AppHub>("/hubs/app");
 
 app.Run();
