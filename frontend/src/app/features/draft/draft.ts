@@ -2,10 +2,11 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize, forkJoin, take } from 'rxjs';
+import { finalize, forkJoin, Subscription, take } from 'rxjs';
 
 import { DraftService } from '../../core/services/draft.service';
 import { SeasonService } from '../../core/services/season.service';
+import { RealtimeService } from '../../core/services/realtime.service';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
 import {
   DraftCenter,
@@ -65,6 +66,8 @@ export class Draft implements OnInit, OnDestroy {
 
   private timerId?: number;
   private lotteryTimeoutId?: number;
+  private subscription = new Subscription();
+  private joinedSeasonId = '';
 
   readonly playerImageFallback = 'https://cdn.sofifa.net/players/239/085/26_120.png';
 
@@ -88,10 +91,21 @@ export class Draft implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private draftService: DraftService,
     private seasonService: SeasonService,
+    private realtime: RealtimeService,
     private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
+    this.subscription.add(
+      this.realtime.draftEvents$.subscribe(event => {
+        if (!event || (this.seasonId && event.seasonId && event.seasonId !== this.seasonId)) {
+          return;
+        }
+
+        this.handleDraftEvent(event.eventType);
+      })
+    );
+
     this.route.queryParamMap
       .pipe(take(1))
       .subscribe(params => {
@@ -99,6 +113,7 @@ export class Draft implements OnInit, OnDestroy {
 
         if (this.seasonId) {
           this.loadDraft();
+          void this.joinSeasonRoom();
           return;
         }
 
@@ -107,12 +122,18 @@ export class Draft implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+
     if (this.timerId) {
       window.clearInterval(this.timerId);
     }
 
     if (this.lotteryTimeoutId) {
       window.clearTimeout(this.lotteryTimeoutId);
+    }
+
+    if (this.joinedSeasonId) {
+      void this.realtime.leaveSeason(this.joinedSeasonId);
     }
   }
 
@@ -242,6 +263,7 @@ export class Draft implements OnInit, OnDestroy {
 
           this.seasonId = currentSeason.seasonId;
           this.loadDraft();
+          void this.joinSeasonRoom();
         },
         error: err => {
           console.error('Error loading current season:', err);
@@ -479,12 +501,12 @@ export class Draft implements OnInit, OnDestroy {
   }
 
   draftPlayer(player: DraftPlayer): void {
-    // if (!this.isMyTurn) {
-    //   this.showToast(
-    //     `⏳ You're on deck. ${this.currentClubName} is currently on the clock.`
-    //   );
-    //   return;
-    // }
+    if (!this.isMyTurn) {
+      this.showToast(
+        `⏳ You're on deck. ${this.currentClubName} is currently on the clock.`
+      );
+      return;
+    }
 
     if (!this.seasonId) {
       this.showToast('Season was not found.');
@@ -540,14 +562,50 @@ export class Draft implements OnInit, OnDestroy {
       });
   }
 
-  
-
   getPrimaryPosition(position: string): string {
     if (!position) {
       return '';
     }
 
     return position.split(',')[0].trim();
+  }
+
+  private handleDraftEvent(eventType: string): void {
+    const type = (eventType ?? '').toLowerCase();
+
+    if (type === 'pickmade' || type === 'pick') {
+      this.showToast('Nuevo pick en el draft');
+    } else if (type === 'started' || type === 'start') {
+      this.showToast('El draft inició');
+    } else if (type === 'turn' || type === 'turnchanged' || type === 'advanced') {
+      this.showToast('Cambio de turno en el draft');
+    } else if (type === 'skipped' || type === 'skip') {
+      this.showToast('Turno saltado por tiempo');
+    } else if (type === 'completed' || type === 'complete') {
+      this.showToast('Draft completado');
+    } else if (type === 'order' || type === 'lottery') {
+      this.showToast('El orden del draft se actualizó');
+    }
+
+    this.loadDraft();
+
+    if (this.isDraftPicksModalOpen) {
+      this.loadDraftPicks();
+    }
+  }
+
+  private async joinSeasonRoom(): Promise<void> {
+    if (!this.seasonId) {
+      return;
+    }
+
+    try {
+      await this.realtime.connect();
+      await this.realtime.joinSeason(this.seasonId);
+      this.joinedSeasonId = this.seasonId;
+    } catch (err) {
+      console.error('Could not join draft season hub', err);
+    }
   }
 
   private showToast(message: string): void {
