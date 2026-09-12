@@ -1,8 +1,8 @@
-import { Component, HostListener, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
-import { firstValueFrom, take } from 'rxjs';
+import { firstValueFrom, Subscription, take } from 'rxjs';
 
 import { Profile } from '../../features/profile/profile';
 import { Notifications } from '../../features/notifications/notifications';
@@ -13,6 +13,7 @@ import { SeasonService } from '../../core/services/season.service';
 import { MessageService } from '../../core/services/message.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { NotificationInboxService } from '../../core/services/notification-inbox.service';
+import { RealtimeService } from '../../core/services/realtime.service';
 
 import { MeUserDto } from '../../core/models/user.model';
 
@@ -29,9 +30,10 @@ import { MeUserDto } from '../../core/models/user.model';
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss'
 })
-export class Navbar implements OnInit {
+export class Navbar implements OnInit, OnDestroy {
   me: MeUserDto | null = null;
   private firstProfileCheckDone = false;
+  private subscription = new Subscription();
 
   showToast = false;
   toastMessage = '';
@@ -48,6 +50,7 @@ export class Navbar implements OnInit {
     private messageService: MessageService,
     private pushNotificationService: NotificationService,
     private notificationInboxService: NotificationInboxService,
+    private realtime: RealtimeService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
@@ -60,6 +63,52 @@ export class Navbar implements OnInit {
     window.addEventListener('eleague-message-received', () => {
       this.loadUnreadMessagesCount();
     });
+
+    this.subscription.add(
+      this.realtime.messages$.subscribe(() => {
+        this.loadUnreadMessagesCount();
+      })
+    );
+
+    this.subscription.add(
+      this.realtime.userOnline$.subscribe(user => {
+        this.toastMessage = `${user.displayName} se conectó`;
+        this.showToast = true;
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
+          if (this.toastMessage === `${user.displayName} se conectó`) {
+            this.showToast = false;
+            this.cdr.detectChanges();
+          }
+        }, 3500);
+      })
+    );
+
+    this.subscription.add(
+      this.realtime.draftEvents$.subscribe(event => {
+        if (!event?.eventType) {
+          return;
+        }
+
+        this.toastMessage = event.eventType === 'pickMade'
+          ? 'Nuevo pick en el draft'
+          : event.eventType === 'started'
+            ? 'El draft inició'
+            : 'El draft se actualizó';
+        this.showToast = true;
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
+          this.showToast = false;
+          this.cdr.detectChanges();
+        }, 3500);
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 
   async setupPushNotifications(): Promise<void> {
@@ -79,8 +128,6 @@ export class Navbar implements OnInit {
       );
 
       this.pushNotificationService.listenForMessages();
-
-      console.log('Push notifications enabled.');
     } catch (error) {
       console.error('Error setting up push notifications:', error);
     }
@@ -92,6 +139,10 @@ export class Navbar implements OnInit {
       .subscribe({
         next: me => {
           this.me = me;
+
+          if (me?.userId) {
+            this.realtime.setCurrentUserId(me.userId);
+          }
 
           const profileIncomplete =
             !me.gamerTag?.trim() ||
@@ -184,6 +235,8 @@ export class Navbar implements OnInit {
   }
 
   logout(): void {
+    void this.realtime.disconnect();
+
     this.auth.logout({
       logoutParams: {
         returnTo: window.location.origin
