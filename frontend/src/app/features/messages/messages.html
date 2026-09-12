@@ -42,9 +42,14 @@
             [class.active]="selectedUserId === item.userId"
             (click)="openConversation(item)">
 
-            <img
-              [src]="item.avatarUrl || '/images/default-avatar.png'"
-              [alt]="item.displayName">
+            <div class="avatar-wrap">
+              <img
+                [src]="item.avatarUrl || '/images/default-avatar.png'"
+                [alt]="item.displayName">
+              <span
+                class="presence-dot"
+                [class.online]="isUserOnline(item.userId)"></span>
+            </div>
 
             <div>
               <strong>{{ item.displayName }}</strong>
@@ -92,13 +97,19 @@
 
         </button>
 
-        <img
-          [src]="selectedConversation?.avatarUrl || '/images/default-avatar.png'"
-          [alt]="selectedConversation?.displayName || 'User'">
+        <div class="avatar-wrap">
+          <img
+            [src]="selectedConversation?.avatarUrl || '/images/default-avatar.png'"
+            [alt]="selectedConversation?.displayName || 'User'">
+          <span
+            class="presence-dot"
+            [class.online]="isUserOnline(selectedUserId)"></span>
+        </div>
 
         <div>
           <strong>{{ selectedConversation?.displayName }}</strong>
-          <span>Private message</span>
+          <span *ngIf="isUserOnline(selectedUserId)" class="online-label">En línea</span>
+          <span *ngIf="!isUserOnline(selectedUserId)">Private message</span>
         </div>
 
       </header>
@@ -245,13 +256,18 @@
             *ngFor="let user of userResults"
             (click)="startConversationWith(user)">
 
-            <img
-              [src]="user.avatarUrl || '/images/default-avatar.png'"
-              [alt]="user.displayName">
+            <div class="avatar-wrap">
+              <img
+                [src]="user.avatarUrl || '/images/default-avatar.png'"
+                [alt]="user.displayName">
+              <span
+                class="presence-dot"
+                [class.online]="isUserOnline(user.userId)"></span>
+            </div>
 
             <div>
               <strong>{{ user.displayName }}</strong>
-              <small>Start private message</small>
+              <small>{{ isUserOnline(user.userId) ? 'En línea' : 'Start private message' }}</small>
             </div>
 
             <i class="fa-solid fa-arrow-right"></i>
