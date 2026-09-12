@@ -91,11 +91,7 @@ export class Navbar implements OnInit, OnDestroy {
           return;
         }
 
-        this.toastMessage = event.eventType === 'pickMade'
-          ? 'Nuevo pick en el draft'
-          : event.eventType === 'started'
-            ? 'El draft inició'
-            : 'El draft se actualizó';
+        this.toastMessage = this.draftToastMessage(event.eventType);
         this.showToast = true;
         this.cdr.detectChanges();
 
@@ -109,6 +105,32 @@ export class Navbar implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+  }
+
+  private draftToastMessage(eventType: string): string {
+    const type = (eventType ?? '').toLowerCase();
+
+    if (type === 'pickmade' || type === 'pick') {
+      return 'Nuevo pick en el draft';
+    }
+
+    if (type === 'started' || type === 'start') {
+      return 'El draft inició';
+    }
+
+    if (type === 'turn' || type === 'turnchanged' || type === 'advanced') {
+      return 'Cambio de turno en el draft';
+    }
+
+    if (type === 'skipped' || type === 'skip') {
+      return 'Turno saltado por tiempo';
+    }
+
+    if (type === 'completed' || type === 'complete') {
+      return 'Draft completado';
+    }
+
+    return 'El draft se actualizó';
   }
 
   async setupPushNotifications(): Promise<void> {
