@@ -1,0 +1,44 @@
+.avatar-wrap {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+}
+
+.avatar-wrap img {
+  width: 50px;
+  height: 50px;
+}
+
+.chat-header .avatar-wrap,
+.user-result .avatar-wrap {
+  width: 48px;
+  height: 48px;
+}
+
+.chat-header .avatar-wrap img,
+.user-result .avatar-wrap img {
+  width: 48px;
+  height: 48px;
+}
+
+.presence-dot {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--success, #00ff88);
+  border: 2px solid rgba(6, 10, 16, .95);
+  box-shadow: 0 0 10px rgba(0, 255, 136, .8);
+}
+
+.presence-dot.offline {
+  background: #6b7280;
+  box-shadow: none;
+}
+
+.online-label {
+  color: var(--neon-primary) !important;
+}
