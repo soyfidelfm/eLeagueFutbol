@@ -1,7 +1,8 @@
-﻿namespace backend.Features.Seasons.Controllers;
+namespace backend.Features.Seasons.Controllers;
 
 using backend.Features.Seasons.Dtos;
 using backend.Features.Seasons.Services;
+using backend.Features.Users.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -11,10 +12,14 @@ using System.Security.Claims;
 public class SeasonsController : ControllerBase
 {
 	private readonly ISeasonService _seasonService;
+	private readonly IAdminAccessService _adminAccess;
 
-	public SeasonsController(ISeasonService seasonService)
+	public SeasonsController(
+		ISeasonService seasonService,
+		IAdminAccessService adminAccess)
 	{
 		_seasonService = seasonService;
+		_adminAccess = adminAccess;
 	}
 
 	[HttpGet]
@@ -39,44 +44,89 @@ public class SeasonsController : ControllerBase
 		return Ok(result);
 	}
 
+	[Authorize]
 	[HttpPost]
 	public async Task<ActionResult<SeasonDto>> Create(
 		[FromBody] CreateSeasonDto dto,
 		CancellationToken ct)
 	{
-		var result = await _seasonService.CreateAsync(dto, ct);
+		var auth0Id = GetAuth0Id();
 
-		return CreatedAtAction(
-			nameof(GetById),
-			new { seasonId = result.SeasonId },
-			result);
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
+
+		try
+		{
+			await _adminAccess.EnsureAdminAsync(auth0Id, ct);
+
+			var result = await _seasonService.CreateAsync(dto, ct);
+
+			return CreatedAtAction(
+				nameof(GetById),
+				new { seasonId = result.SeasonId },
+				result);
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
 	}
 
+	[Authorize]
 	[HttpPut("{seasonId:guid}")]
 	public async Task<ActionResult<SeasonDto>> Update(
 		Guid seasonId,
 		[FromBody] UpdateSeasonDto dto,
 		CancellationToken ct)
 	{
-		var result = await _seasonService.UpdateAsync(seasonId, dto, ct);
+		var auth0Id = GetAuth0Id();
 
-		if (!result)
-			return NotFound();
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
 
-		return NoContent();
+		try
+		{
+			await _adminAccess.EnsureAdminAsync(auth0Id, ct);
+
+			var result = await _seasonService.UpdateAsync(seasonId, dto, ct);
+
+			if (!result)
+				return NotFound();
+
+			return NoContent();
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
 	}
 
+	[Authorize]
 	[HttpDelete("{seasonId:guid}")]
 	public async Task<IActionResult> Delete(
 		Guid seasonId,
 		CancellationToken ct)
 	{
-		var deleted = await _seasonService.DeleteAsync(seasonId, ct);
+		var auth0Id = GetAuth0Id();
 
-		if (!deleted)
-			return NotFound();
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
 
-		return NoContent();
+		try
+		{
+			await _adminAccess.EnsureAdminAsync(auth0Id, ct);
+
+			var deleted = await _seasonService.DeleteAsync(seasonId, ct);
+
+			if (!deleted)
+				return NotFound();
+
+			return NoContent();
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
 	}
 
 	[Authorize]
