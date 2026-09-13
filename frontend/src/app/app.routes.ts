@@ -59,6 +59,13 @@ export const routes: Routes = [
       },
 
       {
+        path: 'teams',
+        loadComponent: () =>
+          import('./features/teams/teams')
+            .then(m => m.Teams)
+      },
+
+      {
         path: 'rankings',
         loadComponent: () =>
           import('./features/rankings/rankings')
