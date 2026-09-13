@@ -26,11 +26,11 @@
     Create, manage and track league seasons.
   </p>
 
-  <div class="form-actions">
+  <div class="form-actions" *ngIf="isAdmin">
     <button
       type="button"
       class="primary-action"
-      (click)="view = 'create'">
+      (click)="openCreate()">
       <i class="fa-solid fa-plus"></i>
       Create Season
     </button>
@@ -109,7 +109,7 @@
 
         </div>
 
-        <div class="form-actions">
+        <div class="form-actions" *ngIf="isAdmin">
           <button
             type="button"
             class="primary-action"
@@ -126,7 +126,7 @@
     <div
       class="season-panel"
       id="create-season"
-      *ngIf="view === 'create'"
+      *ngIf="isAdmin && view === 'create'"
     >
 
       <div class="panel-title">
@@ -355,10 +355,10 @@
                 <th>Start</th>
                 <th>End</th>
                 <th>Weeks</th>
-                <th>Schedule</th>
+                <th *ngIf="isAdmin">Schedule</th>
                 <th>Current</th>
                 <th>Active</th>
-                <th>Actions</th>
+                <th *ngIf="isAdmin">Actions</th>
               </tr>
             </thead>
 
@@ -374,15 +374,15 @@
                 <td>{{ season.endDate | date:'medium' }}</td>
                 <td>{{ season.totalWeeks }}</td>
 
-                <td>
-                  <!-- <button
+                <td *ngIf="isAdmin">
+                  <button
                     type="button"
                     class="generate-btn"
                     [disabled]="isSaving"
                     (click)="generateSchedule(season)"
                   >
                     Generate
-                  </button> -->
+                  </button>
                 </td>
 
                 <td>
@@ -417,7 +417,7 @@
                   </span>
                 </td>
 
-                <td>
+                <td *ngIf="isAdmin">
                   <div class="row-actions">
 
                     <button
