@@ -22,6 +22,39 @@ h1 {
   font-size: 28px;
 }
 
+.live-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  color: #8fd48f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.live-line.closed {
+  color: #ffb4b4;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3dff8a;
+  box-shadow: 0 0 10px rgba(61, 255, 138, 0.8);
+}
+
+.live-dot.refreshing {
+  animation: live-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+
 .budget {
   text-align: right;
 }
@@ -110,6 +143,11 @@ button {
   border-radius: 8px;
   padding: 8px 12px;
   cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 button.ghost {
