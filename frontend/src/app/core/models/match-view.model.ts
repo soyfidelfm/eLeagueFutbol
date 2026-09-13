@@ -2,6 +2,7 @@ export interface MatchView {
   id: string;
   weekNumber: number;
   isMatchOfTheWeek: boolean;
+  status: string;
 
   arena: string;
   mode: string;
@@ -10,6 +11,8 @@ export interface MatchView {
 
   homeScore?: number;
   awayScore?: number;
+  homeUserId?: string;
+  awayUserId?: string;
 
   home: MatchViewTeam;
   away: MatchViewTeam;
