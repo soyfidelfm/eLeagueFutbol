@@ -5,6 +5,7 @@ using backend.Entities.Clubs;
 using backend.Entities.Notifications;
 using backend.Entities.Transfers;
 using backend.Features.Notifications.Dtos;
+using backend.Features.Notifications.Services;
 using backend.Features.Realtime;
 using backend.Features.Transfers.Dtos;
 using Microsoft.EntityFrameworkCore;
@@ -18,11 +19,16 @@ public class TransferService : ITransferService
 
 	private readonly AppDbContext _context;
 	private readonly IAppRealtimeService _realtime;
+	private readonly INotificationService _push;
 
-	public TransferService(AppDbContext context, IAppRealtimeService realtime)
+	public TransferService(
+		AppDbContext context,
+		IAppRealtimeService realtime,
+		INotificationService push)
 	{
 		_context = context;
 		_realtime = realtime;
+		_push = push;
 	}
 
 	public async Task<TransferBoardDto> GetBoardAsync(string auth0Id, Guid seasonId)
@@ -345,12 +351,6 @@ public class TransferService : ITransferService
 
 	private async Task<TransferOfferDto> MapOffer(Guid id, Guid myClubId)
 	{
-		var offer = await QueryOffers(Guid.Empty)
-			.IgnoreQueryFilters()
-			.Where(x => x.TransferRecordId == id)
-			.FirstAsync();
-
-		// QueryOffers filters by season; remap directly.
 		var row = await _context.TransferRecords
 			.AsNoTracking()
 			.Where(x => x.TransferRecordId == id)
@@ -403,6 +403,17 @@ public class TransferService : ITransferService
 			IsRead = false,
 			CreatedAtUTC = DateTime.UtcNow
 		});
+
+		await _push.SendToUserAsync(
+			userId,
+			title,
+			message,
+			new Dictionary<string, string>
+			{
+				{ "type", "transfer" },
+				{ "url", url },
+				{ "notificationId", notification.NotificationId.ToString() }
+			});
 	}
 
 	private async Task<backend.Entities.Identity.User> GetUserAsync(string auth0Id)
