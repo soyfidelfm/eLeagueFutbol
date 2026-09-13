@@ -2,55 +2,40 @@
   <app-loading *ngIf="isLoading"></app-loading>
 
   <header *ngIf="!isLoading">
-    <p class="eyebrow">TEAMS</p>
-    <h1>{{ mine?.name || 'League teams' }}</h1>
+    <p class="eyebrow">MI EQUIPO</p>
+    <h1>{{ club?.name || 'Plantilla' }}</h1>
+    <p class="meta" *ngIf="club">
+      {{ players.length }} jugadores · formacion {{ club.formation || '—' }}
+    </p>
   </header>
 
   <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
-  <article class="panel" *ngIf="!isLoading && !mine">
-    <h2>Create your team</h2>
-    <input [(ngModel)]="teamName" placeholder="Team name" />
-    <input [(ngModel)]="teamDescription" placeholder="Description" />
-    <button type="button" (click)="createTeam()">Create team</button>
+  <article class="panel" *ngIf="!isLoading && !players.length">
+    <h2>Sin plantilla</h2>
+    <p class="empty">Los jugadores salen del draft. No se agregan usuarios de la app.</p>
+    <a routerLink="/draft">Ir al draft</a>
   </article>
 
-  <article class="panel" *ngIf="!isLoading && mine">
-    <h2>My team</h2>
-    <p>{{ mine.description || mine.gameClubName }}</p>
-
-    <div class="member" *ngFor="let member of mine.members">
-      <img [src]="member.avatarUrl || '/images/default-avatar.png'" [alt]="member.displayName" />
+  <article class="panel" *ngIf="!isLoading && players.length">
+    <h2>Plantilla</h2>
+    <div class="member" *ngFor="let player of players">
+      <img [src]="player.avatarUrl || '/images/default-avatar.png'" [alt]="player.name" />
       <div>
-        <strong>{{ member.displayName }}</strong>
-        <span>{{ member.gamerTag }} {{ member.isCaptain ? '· Captain' : '' }}</span>
-      </div>
-      <button
-        type="button"
-        class="ghost"
-        *ngIf="mine.isOwner && !member.isCaptain"
-        (click)="removeMember(member.userId)">
-        Remove
-      </button>
-    </div>
-
-    <div class="invite" *ngIf="mine.isOwner">
-      <input [(ngModel)]="searchTerm" (keyup.enter)="search()" placeholder="Search manager to add" />
-      <button type="button" (click)="search()">Search</button>
-      <div class="result" *ngFor="let user of searchResults">
-        <span>{{ user.displayName }}</span>
-        <button type="button" (click)="addMember(user.userId)">Add</button>
+        <strong>{{ player.name }}</strong>
+        <span>{{ player.position || 'Jugador' }} · OVR {{ player.overall ?? '—' }}</span>
       </div>
     </div>
+    <a class="ghost-link" routerLink="/clubs">Editar alineacion</a>
   </article>
 
-  <article class="panel" *ngIf="!isLoading">
-    <h2>All teams</h2>
-    <p *ngIf="!teams.length" class="empty">No teams yet.</p>
-    <div class="team-row" *ngFor="let team of teams">
+  <article class="panel" *ngIf="!isLoading && starters.length">
+    <h2>Titulares</h2>
+    <div class="member" *ngFor="let player of starters">
+      <img [src]="player.avatarUrl || '/images/default-avatar.png'" [alt]="player.name" />
       <div>
-        <strong>{{ team.name }}</strong>
-        <span>{{ team.members.length }} members · {{ team.ownerDisplayName }}</span>
+        <strong>{{ player.name }}</strong>
+        <span>Slot {{ player.slotIndex }} · {{ player.position || '—' }}</span>
       </div>
     </div>
   </article>
