@@ -32,7 +32,6 @@ export class Shell implements OnInit {
   ) { }
 
   async ngOnInit(): Promise<void> {
-
     this.notificationService.listenForMessages();
 
     this.userService.getMe().subscribe({
@@ -44,37 +43,32 @@ export class Shell implements OnInit {
         }
 
         void this.realtime.connect();
+        void this.registerPushToken();
       },
       error: () => {
         void this.realtime.connect();
       }
     });
+  }
 
-    const userSynced = localStorage.getItem('userSynced') === 'true';
-    const userId = localStorage.getItem('userId');
+  private async registerPushToken(): Promise<void> {
+    try {
+      const token = await this.notificationService.requestPermissionAndGetToken();
 
-    if (!userSynced || !userId) {
-      return;
-    }
+      if (!token) {
+        return;
+      }
 
-    const token =
-      await this.notificationService.requestPermissionAndGetToken();
-
-    if (!token) {
-      return;
-    }
-
-    this.notificationInboxService.saveToken({
-      token,
-      deviceType: 'web'
-    })
-      .subscribe({
+      this.notificationInboxService.saveToken({
+        token,
+        deviceType: 'web'
+      }).subscribe({
         error: error => {
-          console.error(
-            'Error saving notification token:',
-            error
-          );
+          console.error('Error saving notification token:', error);
         }
       });
+    } catch (error) {
+      console.error('Error registering push token:', error);
+    }
   }
 }

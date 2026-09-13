@@ -14,20 +14,53 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log('Background message received:', payload);
+  const title =
+    payload.notification?.title ||
+    payload.data?.title ||
+    'eLeagueFutbol';
 
-  const notificationTitle =
-    payload.notification?.title ?? 'eLeagueFutbol';
+  const body =
+    payload.notification?.body ||
+    payload.data?.body ||
+    '';
 
-  const notificationOptions = {
-    body: payload.notification?.body ?? '',
+  // Data-only payloads need a manual notification.
+  // Notification payloads are already displayed by the browser.
+  if (payload.notification) {
+    return;
+  }
+
+  return self.registration.showNotification(title, {
+    body,
     icon: '/images/iOSicon.png',
     badge: '/images/iOSicon.png',
-    data: payload.data
-  };
+    data: payload.data || {}
+  });
+});
 
-  self.registration.showNotification(
-    notificationTitle,
-    notificationOptions
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const target =
+    event.notification.data?.url ||
+    event.notification.data?.link ||
+    '/dashboard';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client) {
+          client.focus();
+          if ('navigate' in client) {
+            client.navigate(target);
+          }
+          return;
+        }
+      }
+
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(target);
+      }
+    })
   );
 });
