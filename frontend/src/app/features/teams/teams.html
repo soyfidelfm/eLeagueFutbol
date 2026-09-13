@@ -1,0 +1,57 @@
+<section class="teams-page">
+  <app-loading *ngIf="isLoading"></app-loading>
+
+  <header *ngIf="!isLoading">
+    <p class="eyebrow">TEAMS</p>
+    <h1>{{ mine?.name || 'League teams' }}</h1>
+  </header>
+
+  <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <article class="panel" *ngIf="!isLoading && !mine">
+    <h2>Create your team</h2>
+    <input [(ngModel)]="teamName" placeholder="Team name" />
+    <input [(ngModel)]="teamDescription" placeholder="Description" />
+    <button type="button" (click)="createTeam()">Create team</button>
+  </article>
+
+  <article class="panel" *ngIf="!isLoading && mine">
+    <h2>My team</h2>
+    <p>{{ mine.description || mine.gameClubName }}</p>
+
+    <div class="member" *ngFor="let member of mine.members">
+      <img [src]="member.avatarUrl || '/images/default-avatar.png'" [alt]="member.displayName" />
+      <div>
+        <strong>{{ member.displayName }}</strong>
+        <span>{{ member.gamerTag }} {{ member.isCaptain ? '· Captain' : '' }}</span>
+      </div>
+      <button
+        type="button"
+        class="ghost"
+        *ngIf="mine.isOwner && !member.isCaptain"
+        (click)="removeMember(member.userId)">
+        Remove
+      </button>
+    </div>
+
+    <div class="invite" *ngIf="mine.isOwner">
+      <input [(ngModel)]="searchTerm" (keyup.enter)="search()" placeholder="Search manager to add" />
+      <button type="button" (click)="search()">Search</button>
+      <div class="result" *ngFor="let user of searchResults">
+        <span>{{ user.displayName }}</span>
+        <button type="button" (click)="addMember(user.userId)">Add</button>
+      </div>
+    </div>
+  </article>
+
+  <article class="panel" *ngIf="!isLoading">
+    <h2>All teams</h2>
+    <p *ngIf="!teams.length" class="empty">No teams yet.</p>
+    <div class="team-row" *ngFor="let team of teams">
+      <div>
+        <strong>{{ team.name }}</strong>
+        <span>{{ team.members.length }} members · {{ team.ownerDisplayName }}</span>
+      </div>
+    </div>
+  </article>
+</section>
