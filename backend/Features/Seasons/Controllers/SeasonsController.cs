@@ -31,6 +31,18 @@ public class SeasonsController : ControllerBase
 		return Ok(result);
 	}
 
+	[HttpGet("current")]
+	public async Task<ActionResult<SeasonDto>> GetCurrent(
+		CancellationToken ct)
+	{
+		var result = await _seasonService.GetCurrentAsync(ct);
+
+		if (result is null)
+			return NotFound();
+
+		return Ok(result);
+	}
+
 	[HttpGet("{seasonId:guid}")]
 	public async Task<ActionResult<SeasonDto>> GetById(
 		Guid seasonId,
@@ -182,6 +194,91 @@ public class SeasonsController : ControllerBase
 			ct);
 
 		return Ok(result);
+	}
+
+	[Authorize]
+	[HttpPost("{seasonId:guid}/close-registration")]
+	public async Task<ActionResult<SeasonDto>> CloseRegistration(
+		Guid seasonId,
+		CancellationToken ct)
+	{
+		return await ExecuteAdminSeasonAction(
+			() => _seasonService.CloseRegistrationAsync(seasonId, ct),
+			ct);
+	}
+
+	[Authorize]
+	[HttpPost("{seasonId:guid}/open-registration")]
+	public async Task<ActionResult<SeasonDto>> OpenRegistration(
+		Guid seasonId,
+		CancellationToken ct)
+	{
+		return await ExecuteAdminSeasonAction(
+			() => _seasonService.OpenRegistrationAsync(seasonId, ct),
+			ct);
+	}
+
+	[Authorize]
+	[HttpPost("{seasonId:guid}/set-current")]
+	public async Task<ActionResult<SeasonDto>> SetCurrent(
+		Guid seasonId,
+		CancellationToken ct)
+	{
+		return await ExecuteAdminSeasonAction(
+			() => _seasonService.SetCurrentAsync(seasonId, ct),
+			ct);
+	}
+
+	[Authorize]
+	[HttpPost("{seasonId:guid}/close")]
+	public async Task<ActionResult<SeasonDto>> CloseSeason(
+		Guid seasonId,
+		CancellationToken ct)
+	{
+		return await ExecuteAdminSeasonAction(
+			() => _seasonService.CloseSeasonAsync(seasonId, ct),
+			ct);
+	}
+
+	[Authorize]
+	[HttpPost("{seasonId:guid}/activate")]
+	public async Task<ActionResult<SeasonDto>> ActivateSeason(
+		Guid seasonId,
+		CancellationToken ct)
+	{
+		return await ExecuteAdminSeasonAction(
+			() => _seasonService.ActivateSeasonAsync(seasonId, ct),
+			ct);
+	}
+
+	private async Task<ActionResult<SeasonDto>> ExecuteAdminSeasonAction(
+		Func<Task<SeasonDto>> action,
+		CancellationToken ct)
+	{
+		var auth0Id = GetAuth0Id();
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
+
+		try
+		{
+			await _adminAccess.EnsureAdminAsync(auth0Id, ct);
+
+			var result = await action();
+			return Ok(result);
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(new { message = ex.Message });
+		}
+		catch (InvalidOperationException ex)
+		{
+			return BadRequest(new { message = ex.Message });
+		}
 	}
 
 	private string? GetAuth0Id()
