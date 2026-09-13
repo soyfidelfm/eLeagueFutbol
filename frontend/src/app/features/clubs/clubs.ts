@@ -27,7 +27,7 @@ type ClubPlayer = NonNullable<MyClubDto['players']>[number];
     AppLoading
   ],
   templateUrl: './clubs.html',
-  styleUrl: './clubs.scss'
+  styleUrls: ['./clubs.scss', './clubs-squad.scss']
 })
 export class Clubs implements OnInit {
 
