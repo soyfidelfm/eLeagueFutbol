@@ -1,4 +1,4 @@
-﻿namespace backend.Data;
+namespace backend.Data;
 
 using backend.Entities.Clubs;
 using backend.Entities.Common;
@@ -11,7 +11,6 @@ using backend.Entities.MatchSummary;
 using backend.Entities.Messaging;
 using backend.Entities.Notifications;
 using backend.Entities.Stats;
-using backend.Entities.Teams;
 using backend.Entities.Tournaments;
 using backend.Entities.Transfers;
 using Microsoft.EntityFrameworkCore;
@@ -24,9 +23,6 @@ public class AppDbContext : DbContext
 	}
 
 	public DbSet<User> Users => Set<User>();
-
-	public DbSet<Team> Teams => Set<Team>();
-	public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
 
 	public DbSet<Season> Seasons => Set<Season>();
 	public DbSet<Tournament> Tournaments => Set<Tournament>();
