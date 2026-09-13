@@ -91,7 +91,7 @@ export class Navbar implements OnInit, OnDestroy {
           return;
         }
 
-        this.toastMessage = this.draftToastMessage(event.eventType);
+        this.toastMessage = this.realtimeToastMessage(event.eventType);
         this.showToast = true;
         this.cdr.detectChanges();
 
@@ -107,8 +107,24 @@ export class Navbar implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  private draftToastMessage(eventType: string): string {
+  private realtimeToastMessage(eventType: string): string {
     const type = (eventType ?? '').toLowerCase();
+
+    if (type === 'transferoffer') {
+      return 'Nueva oferta de transferencia';
+    }
+
+    if (type === 'transfercompleted' || type === 'transferaccepted') {
+      return 'Transferencia completada';
+    }
+
+    if (type === 'transferrejected') {
+      return 'Oferta de transferencia rechazada';
+    }
+
+    if (type === 'transfercancelled') {
+      return 'Oferta de transferencia cancelada';
+    }
 
     if (type === 'pickmade' || type === 'pick') {
       return 'Nuevo pick en el draft';
@@ -128,6 +144,10 @@ export class Navbar implements OnInit, OnDestroy {
 
     if (type === 'completed' || type === 'complete') {
       return 'Draft completado';
+    }
+
+    if (type.startsWith('transfer')) {
+      return 'El mercado de transfers se actualizó';
     }
 
     return 'El draft se actualizó';
