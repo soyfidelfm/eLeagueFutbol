@@ -1,6 +1,9 @@
-﻿using backend.Features.Matches.Dtos;
+using backend.Features.Matches.Dtos;
 using backend.Features.Matches.Services;
+using backend.Features.Users.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace backend.Controllers;
 
@@ -9,10 +12,14 @@ namespace backend.Controllers;
 public class MatchesController : ControllerBase
 {
 	private readonly IMatchService _matchService;
+	private readonly IAdminAccessService _adminAccess;
 
-	public MatchesController(IMatchService matchService)
+	public MatchesController(
+		IMatchService matchService,
+		IAdminAccessService adminAccess)
 	{
 		_matchService = matchService;
+		_adminAccess = adminAccess;
 	}
 
 	[HttpGet("weeks")]
@@ -72,15 +79,30 @@ public class MatchesController : ControllerBase
 		return Ok(result);
 	}
 
+	[Authorize]
 	[HttpPost("generate-schedule/{seasonId:guid}")]
 	public async Task<IActionResult> GenerateSchedule(Guid seasonId)
 	{
-		var generated = await _matchService.GenerateScheduleAsync(seasonId);
+		var auth0Id = GetAuth0Id();
 
-		if (!generated)
-			return BadRequest("Could not generate schedule.");
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
 
-		return Ok();
+		try
+		{
+			await _adminAccess.EnsureAdminAsync(auth0Id);
+
+			var generated = await _matchService.GenerateScheduleAsync(seasonId);
+
+			if (!generated)
+				return BadRequest(new { message = "Could not generate schedule." });
+
+			return Ok();
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
 	}
 
 	[HttpGet("{matchId:guid}/manual-stats")]
@@ -98,6 +120,7 @@ public class MatchesController : ControllerBase
 
 		return Ok(result);
 	}
+
 	[HttpGet("{matchId:guid}/player-options")]
 	public async Task<IActionResult> GetPlayerOptions(
 	Guid matchId)
@@ -136,5 +159,12 @@ public class MatchesController : ControllerBase
 			message = "Match statistics saved successfully.",
 			matchId
 		});
+	}
+
+	private string? GetAuth0Id()
+	{
+		return User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+			?? User.FindFirst("sub")?.Value
+			?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
 	}
 }

@@ -12,6 +12,7 @@ import {
 
 import { SeasonService } from '../../core/services/season.service';
 import { MatchService } from '../../core/services/match.service';
+import { UserService } from '../../core/services/user.service';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
 
 @Component({
@@ -33,6 +34,7 @@ export class Seasons implements OnInit {
   isLoading = false;
   isSaving = false;
   isEditMode = false;
+  isAdmin = false;
 
   selectedSeasonId: string | null = null;
   errorMessage = '';
@@ -52,6 +54,7 @@ export class Seasons implements OnInit {
   constructor(
     private seasonService: SeasonService,
     private matchService: MatchService,
+    private userService: UserService,
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef
@@ -68,13 +71,31 @@ export class Seasons implements OnInit {
       } else {
         this.view = 'list';
       }
+
+      this.enforceAdminView();
     });
 
+    this.loadCurrentUser();
     this.loadSeasons();
   }
 
   get currentSeason(): Season | null {
     return this.seasons.find(season => season.isCurrent) ?? null;
+  }
+
+  loadCurrentUser(): void {
+    this.userService.getMe().subscribe({
+      next: () => {
+        this.isAdmin = this.userService.isAdmin;
+        this.enforceAdminView();
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isAdmin = false;
+        this.enforceAdminView();
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   loadSeasons(): void {
@@ -100,7 +121,21 @@ export class Seasons implements OnInit {
       });
   }
 
+  openCreate(): void {
+    if (!this.isAdmin) {
+      return;
+    }
+
+    this.resetForm();
+    this.view = 'create';
+  }
+
   save(): void {
+    if (!this.isAdmin) {
+      alert('Only admins can manage seasons.');
+      return;
+    }
+
     if (!this.form.name.trim()) {
       alert('Season name is required');
       return;
@@ -161,13 +196,13 @@ export class Seasons implements OnInit {
         },
         error: err => {
           console.error('Error saving season:', err);
-          alert('Error saving season');
+          alert(err?.error?.message || 'Error saving season');
         }
       });
   }
 
   edit(season: Season | null): void {
-    if (!season) return;
+    if (!this.isAdmin || !season) return;
 
     this.isEditMode = true;
     this.selectedSeasonId = season.seasonId;
@@ -199,7 +234,7 @@ export class Seasons implements OnInit {
   }
 
   generateSchedule(season: Season): void {
-    if (!season?.seasonId) {
+    if (!this.isAdmin || !season?.seasonId) {
       return;
     }
 
@@ -223,19 +258,23 @@ export class Seasons implements OnInit {
         },
         error: err => {
           console.error('Error generating schedule:', err);
-          alert('Error generating schedule.');
+          alert(err?.error?.message || 'Error generating schedule.');
         }
       });
   }
 
   delete(seasonId: string): void {
+    if (!this.isAdmin) {
+      return;
+    }
+
     if (!confirm('Are you sure you want to delete this season?')) return;
 
     this.seasonService.remove(seasonId).subscribe({
       next: () => this.loadSeasons(),
       error: err => {
         console.error('Error deleting season:', err);
-        alert('Error deleting season');
+        alert(err?.error?.message || 'Error deleting season');
       }
     });
   }
@@ -255,6 +294,13 @@ export class Seasons implements OnInit {
       maxPlayers: 20,
       totalWeeks: 8
     };
+  }
+
+  private enforceAdminView(): void {
+    if (!this.isAdmin && this.view === 'create') {
+      this.view = 'list';
+      this.resetForm();
+    }
   }
 
   private buildDto(): CreateSeasonDto {

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 import { ApiService } from '../services/api.service.ts';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
@@ -22,11 +22,22 @@ export interface UserSearchResult {
   providedIn: 'root'
 })
 export class UserService extends ApiService {
+  private readonly currentUserSubject = new BehaviorSubject<MeUserDto | null>(null);
+
+  readonly currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(
     protected override http: HttpClient
   ) {
     super(http);
+  }
+
+  get currentUser(): MeUserDto | null {
+    return this.currentUserSubject.value;
+  }
+
+  get isAdmin(): boolean {
+    return this.currentUser?.role?.toLowerCase() === 'admin';
   }
 
   getAll(): Observable<User[]> {
@@ -58,6 +69,8 @@ export class UserService extends ApiService {
   getMe(): Observable<MeUserDto> {
     return this.get<MeUserDto>(
       `${API_ENDPOINTS.users}/me`
+    ).pipe(
+      tap(me => this.currentUserSubject.next(me))
     );
   }
 
