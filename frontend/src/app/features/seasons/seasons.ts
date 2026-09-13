@@ -7,7 +7,8 @@ import { finalize, Observable } from 'rxjs';
 import {
   Season,
   CreateSeasonDto,
-  UpdateSeasonDto
+  UpdateSeasonDto,
+  SeasonPhase
 } from '../../core/models/season.model';
 
 import { SeasonService } from '../../core/services/season.service';
@@ -119,6 +120,32 @@ export class Seasons implements OnInit {
           this.errorMessage = 'Could not load seasons.';
         }
       });
+  }
+
+  phaseLabel(season: Season | null): string {
+    const phase = (season?.phase ?? this.inferPhase(season)) as SeasonPhase;
+
+    switch (phase) {
+      case 'DraftReady':
+        return 'Draft ready';
+      case 'Drafting':
+        return 'Drafting';
+      case 'Competition':
+        return 'Competition';
+      case 'Closed':
+        return 'Closed';
+      default:
+        return season?.registrationOpen ? 'Registration' : 'Registration closed';
+    }
+  }
+
+  phaseClass(season: Season | null): string {
+    const phase = season?.phase ?? this.inferPhase(season);
+
+    if (phase === 'Closed') return 'off';
+    if (phase === 'Competition') return 'active';
+    if (phase === 'Drafting' || phase === 'DraftReady') return 'current';
+    return season?.registrationOpen ? 'active' : 'off';
   }
 
   openCreate(): void {
@@ -242,25 +269,65 @@ export class Seasons implements OnInit {
       return;
     }
 
-    this.isSaving = true;
+    this.runAction(
+      this.matchService.generateSchedule(season.seasonId),
+      'Schedule generated successfully.'
+    );
+  }
 
-    this.matchService.generateSchedule(season.seasonId)
-      .pipe(
-        finalize(() => {
-          this.isSaving = false;
-          this.cdr.detectChanges();
-        })
-      )
-      .subscribe({
-        next: () => {
-          this.loadSeasons();
-          alert('Schedule generated successfully.');
-        },
-        error: err => {
-          console.error('Error generating schedule:', err);
-          alert(err?.error?.message || 'Error generating schedule.');
-        }
-      });
+  closeRegistration(season: Season): void {
+    if (!this.confirmAdmin(season, `Close registration for ${season.name}?`)) {
+      return;
+    }
+
+    this.runAction(
+      this.seasonService.closeRegistration(season.seasonId),
+      'Registration closed.'
+    );
+  }
+
+  openRegistration(season: Season): void {
+    if (!this.confirmAdmin(season, `Open registration for ${season.name}?`)) {
+      return;
+    }
+
+    this.runAction(
+      this.seasonService.openRegistration(season.seasonId),
+      'Registration opened.'
+    );
+  }
+
+  setCurrent(season: Season): void {
+    if (!this.confirmAdmin(season, `Set ${season.name} as the current season?`)) {
+      return;
+    }
+
+    this.runAction(
+      this.seasonService.setCurrent(season.seasonId),
+      'Current season updated.'
+    );
+  }
+
+  closeSeason(season: Season): void {
+    if (!this.confirmAdmin(season, `Close ${season.name}? Pending transfer offers will be cancelled.`)) {
+      return;
+    }
+
+    this.runAction(
+      this.seasonService.closeSeason(season.seasonId),
+      'Season closed.'
+    );
+  }
+
+  activateSeason(season: Season): void {
+    if (!this.confirmAdmin(season, `Activate ${season.name}?`)) {
+      return;
+    }
+
+    this.runAction(
+      this.seasonService.activateSeason(season.seasonId),
+      'Season activated.'
+    );
   }
 
   delete(seasonId: string): void {
@@ -294,6 +361,45 @@ export class Seasons implements OnInit {
       maxPlayers: 20,
       totalWeeks: 8
     };
+  }
+
+  private confirmAdmin(season: Season | null, message: string): boolean {
+    if (!this.isAdmin || !season?.seasonId) {
+      return false;
+    }
+
+    return confirm(message);
+  }
+
+  private runAction(request$: Observable<unknown>, successMessage: string): void {
+    this.isSaving = true;
+
+    request$
+      .pipe(
+        finalize(() => {
+          this.isSaving = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.loadSeasons();
+          alert(successMessage);
+        },
+        error: err => {
+          console.error(err);
+          alert(err?.error?.message || 'Action failed.');
+        }
+      });
+  }
+
+  private inferPhase(season: Season | null): SeasonPhase {
+    if (!season) return 'Registration';
+    if (!season.isActive) return 'Closed';
+    if (season.draftActive) return 'Drafting';
+    if (season.hasSchedule) return 'Competition';
+    if (season.hasDraft) return 'DraftReady';
+    return 'Registration';
   }
 
   private enforceAdminView(): void {
