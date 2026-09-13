@@ -36,6 +36,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Services
 builder.Services.AddSingleton<PresenceTracker>();
 builder.Services.AddScoped<IAppRealtimeService, AppRealtimeService>();
+builder.Services.AddScoped<IAdminAccessService, AdminAccessService>();
 builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserService, UserService>();
