@@ -1,4 +1,4 @@
-﻿using backend.Entities.Enums;
+using backend.Entities.Enums;
 using backend.Features.Draft.Dtos;
 using backend.Features.Draft.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -45,22 +45,8 @@ public class DraftController : ControllerBase
 		if (string.IsNullOrWhiteSpace(auth0Id))
 			return Unauthorized();
 
-		try
-		{
-			var result = await _draftService.GenerateDraftOrderAsync(
-				seasonId,
-				auth0Id,
-				dto);
-
-			return Ok(result);
-		}
-		catch (Exception ex)
-		{
-			return BadRequest(new
-			{
-				message = ex.Message
-			});
-		}
+		return await ExecuteAdminDraftAction(() =>
+			_draftService.GenerateDraftOrderAsync(seasonId, auth0Id, dto));
 	}
 
 	[HttpPost("start")]
@@ -72,21 +58,8 @@ public class DraftController : ControllerBase
 		if (string.IsNullOrWhiteSpace(auth0Id))
 			return Unauthorized();
 
-		try
-		{
-			var result = await _draftService.StartDraftAsync(
-				seasonId,
-				auth0Id);
-
-			return Ok(result);
-		}
-		catch (Exception ex)
-		{
-			return BadRequest(new
-			{
-				message = ex.Message
-			});
-		}
+		return await ExecuteAdminDraftAction(() =>
+			_draftService.StartDraftAsync(seasonId, auth0Id));
 	}
 
 	[HttpGet("players")]
@@ -156,17 +129,26 @@ public class DraftController : ControllerBase
 		if (string.IsNullOrWhiteSpace(auth0Id))
 			return Unauthorized();
 
+		return await ExecuteAdminDraftAction(() =>
+			_draftService.PreviewDraftOrderAsync(seasonId, drawNumber, auth0Id));
+	}
+
+	private async Task<ActionResult<T>> ExecuteAdminDraftAction<T>(Func<Task<T>> action)
+	{
 		try
 		{
-			var result = await _draftService.PreviewDraftOrderAsync(
-				seasonId,
-				drawNumber,
-				auth0Id);
-
+			var result = await action();
 			return Ok(result);
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
 		}
 		catch (Exception ex)
 		{
+			if (ex.Message.Contains("Only admins", StringComparison.OrdinalIgnoreCase))
+				return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+
 			return BadRequest(new
 			{
 				message = ex.Message
