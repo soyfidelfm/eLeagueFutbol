@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { finalize, forkJoin, Subscription } from 'rxjs';
 
 import { MessageService } from '../../core/services/message.service';
+import { RealtimeService } from '../../core/services/realtime.service';
 import { UserService } from '../../core/services/user.service';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
 
@@ -24,7 +26,56 @@ interface MessageUserResult {
   standalone: true,
   imports: [CommonModule, FormsModule, AppLoading],
   templateUrl: './messages.html',
-  styleUrl: './messages.scss'
+  styleUrl: './messages.scss',
+  styles: [`
+    .avatar-wrap {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      flex-shrink: 0;
+    }
+
+    .avatar-wrap img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+    }
+
+    .chat-header .avatar-wrap,
+    .chat-header .avatar-wrap img {
+      width: 48px;
+      height: 48px;
+    }
+
+    .user-result .avatar-wrap,
+    .user-result .avatar-wrap img {
+      width: 48px;
+      height: 48px;
+    }
+
+    .presence-dot {
+      position: absolute;
+      right: 0;
+      bottom: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #5b6b63;
+      border: 2px solid #02120a;
+    }
+
+    .presence-dot.online {
+      background: #00ff88;
+      box-shadow: 0 0 8px rgba(0, 255, 136, .8);
+    }
+
+    .online-label {
+      color: #00ff88 !important;
+    }
+  `]
 })
 export class Messages implements OnInit, OnDestroy {
 
@@ -50,10 +101,13 @@ export class Messages implements OnInit, OnDestroy {
 
   private messageListener?: EventListener;
   private subscription = new Subscription();
+  private pendingQueryUserId = '';
 
   constructor(
     private messageService: MessageService,
     private userService: UserService,
+    private realtime: RealtimeService,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -74,6 +128,55 @@ export class Messages implements OnInit, OnDestroy {
       'eleague-message-received',
       this.messageListener
     );
+
+    this.subscription.add(
+      this.route.queryParamMap.subscribe(params => {
+        const userId = params.get('userId')?.trim();
+
+        if (!userId) {
+          return;
+        }
+
+        this.pendingQueryUserId = userId;
+        this.openFromQuery(userId);
+      })
+    );
+
+    this.subscription.add(
+      this.realtime.messages$.subscribe(message => {
+        this.handleLiveMessage(message);
+      })
+    );
+
+    this.subscription.add(
+      this.realtime.messageRead$.subscribe(event => {
+        this.messages = this.messages.map(message =>
+          message.messageId === event.messageId
+            ? { ...message, isRead: true }
+            : message
+        );
+
+        this.cdr.detectChanges();
+      })
+    );
+
+    this.subscription.add(
+      this.realtime.onlineUsers$.subscribe(() => {
+        this.cdr.detectChanges();
+      })
+    );
+
+    this.subscription.add(
+      this.realtime.userOnline$.subscribe(() => {
+        this.cdr.detectChanges();
+      })
+    );
+
+    this.subscription.add(
+      this.realtime.userOffline$.subscribe(() => {
+        this.cdr.detectChanges();
+      })
+    );
   }
 
   ngOnDestroy(): void {
@@ -85,6 +188,14 @@ export class Messages implements OnInit, OnDestroy {
         this.messageListener
       );
     }
+  }
+
+  isUserOnline(userId?: string | null): boolean {
+    if (!userId) {
+      return false;
+    }
+
+    return this.realtime.isOnline(userId);
   }
 
   get filteredConversations(): ConversationDto[] {
@@ -124,6 +235,10 @@ export class Messages implements OnInit, OnDestroy {
             if (selected) {
               this.selectedConversation = selected;
             }
+          }
+
+          if (this.pendingQueryUserId) {
+            this.openFromQuery(this.pendingQueryUserId);
           }
 
           this.cdr.detectChanges();
@@ -246,10 +361,7 @@ export class Messages implements OnInit, OnDestroy {
       )
       .subscribe({
         next: message => {
-          this.messages = [
-            ...this.messages,
-            message
-          ];
+          this.appendMessage(message);
 
           this.newMessageText = '';
 
@@ -358,6 +470,116 @@ export class Messages implements OnInit, OnDestroy {
 
     this.closeNewMessageModal();
     this.cdr.detectChanges();
+  }
+
+  private openFromQuery(userId: string): void {
+    if (!userId) {
+      return;
+    }
+
+    if (this.selectedUserId === userId && this.selectedConversation) {
+      this.pendingQueryUserId = '';
+      return;
+    }
+
+    const existing = this.conversations.find(x => x.userId === userId);
+
+    if (existing) {
+      this.pendingQueryUserId = '';
+      this.openConversation(existing);
+      return;
+    }
+
+    this.selectedUserId = userId;
+    this.selectedConversation = {
+      userId,
+      displayName: 'Conversation',
+      avatarUrl: null,
+      lastMessage: '',
+      lastMessageAtUTC: new Date().toISOString(),
+      unreadCount: 0
+    };
+
+    this.pendingQueryUserId = '';
+    this.loadConversation(userId);
+  }
+
+  private handleLiveMessage(message: MessageDto): void {
+    const otherUserId = message.isMine
+      ? message.receiverUserId
+      : message.senderUserId;
+
+    if (this.selectedUserId && otherUserId === this.selectedUserId) {
+      this.appendMessage(message);
+
+      if (!message.isMine && !message.isRead) {
+        this.messageService.markAsRead(message.messageId).subscribe({
+          next: () => {
+            this.messages = this.messages.map(item =>
+              item.messageId === message.messageId
+                ? { ...item, isRead: true }
+                : item
+            );
+            this.cdr.detectChanges();
+          },
+          error: error => console.error('Error marking live message as read:', error)
+        });
+      }
+    }
+
+    this.upsertConversationFromLive(message, otherUserId);
+    this.cdr.detectChanges();
+  }
+
+  private appendMessage(message: MessageDto): void {
+    if (!message?.messageId) {
+      return;
+    }
+
+    if (this.messages.some(x => x.messageId === message.messageId)) {
+      return;
+    }
+
+    this.messages = [...this.messages, message];
+  }
+
+  private upsertConversationFromLive(message: MessageDto, otherUserId: string): void {
+    const existing = this.conversations.find(x => x.userId === otherUserId);
+    const isSelected = this.selectedUserId === otherUserId;
+
+    if (existing) {
+      existing.lastMessage = message.text;
+      existing.lastMessageAtUTC = message.sentAtUTC;
+
+      if (!message.isMine && !isSelected) {
+        existing.unreadCount += 1;
+      }
+
+      if (isSelected) {
+        existing.unreadCount = 0;
+        this.selectedConversation = existing;
+      }
+
+      this.conversations = [
+        existing,
+        ...this.conversations.filter(x => x.userId !== otherUserId)
+      ];
+      return;
+    }
+
+    const displayName = message.isMine ? message.receiverName : message.senderName;
+
+    this.conversations = [
+      {
+        userId: otherUserId,
+        displayName,
+        avatarUrl: null,
+        lastMessage: message.text,
+        lastMessageAtUTC: message.sentAtUTC,
+        unreadCount: message.isMine || isSelected ? 0 : 1
+      },
+      ...this.conversations
+    ];
   }
 
   private upsertConversationAfterSend(message: MessageDto): void {

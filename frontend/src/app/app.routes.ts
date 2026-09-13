@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AuthGuard } from '@auth0/auth0-angular';
 
 import { Login } from './features/auth/login/login';
 import { Shell } from './layout/shell/shell';
@@ -19,6 +20,7 @@ export const routes: Routes = [
   {
     path: '',
     component: Shell,
+    canActivate: [AuthGuard],
     children: [
 
       {
@@ -82,10 +84,10 @@ export const routes: Routes = [
             .then(m => m.Draft)
       },
       {
-  path: 'messages',
-  loadComponent: () =>
-    import('./features/messages/messages').then(m => m.Messages)
-}
+        path: 'messages',
+        loadComponent: () =>
+          import('./features/messages/messages').then(m => m.Messages)
+      }
 
     ]
   },
