@@ -23,7 +23,7 @@
   <h1>Seasons</h1>
 
   <p>
-    Create, manage and track league seasons.
+    Create, manage and close the league season loop.
   </p>
 
   <div class="form-actions" *ngIf="isAdmin">
@@ -42,14 +42,14 @@
 
       <div
         class="empty-state"
-        *ngIf="!seasons || seasons.length === 0"
+        *ngIf="!currentSeason"
       >
         No current season found.
       </div>
 
       <div
         class="season-panel"
-        *ngIf="seasons && seasons.length > 0"
+        *ngIf="currentSeason"
       >
 
         <div class="panel-title">
@@ -87,8 +87,8 @@
             <span class="custom-check"></span>
 
             <div>
-              <strong>Total Weeks</strong>
-              <p>{{ currentSeason?.totalWeeks }} Weeks</p>
+              <strong>Phase</strong>
+              <p>{{ phaseLabel(currentSeason) }}</p>
             </div>
           </div>
 
@@ -96,26 +96,50 @@
             <span class="custom-check"></span>
 
             <div>
-              <strong>Status</strong>
-              <p>
-                {{
-                  currentSeason?.isActive
-                    ? 'Active Season'
-                    : 'Inactive Season'
-                }}
-              </p>
+              <strong>Registered</strong>
+              <p>{{ currentSeason?.registeredCount || 0 }} / {{ currentSeason?.maxPlayers }}</p>
             </div>
           </div>
 
         </div>
 
-        <div class="form-actions" *ngIf="isAdmin">
+        <div class="form-actions lifecycle-actions" *ngIf="isAdmin && currentSeason">
           <button
             type="button"
             class="primary-action"
             (click)="edit(currentSeason)"
           >
             Edit Current Season
+          </button>
+
+          <button
+            *ngIf="currentSeason.registrationOpen"
+            type="button"
+            class="secondary-action"
+            [disabled]="isSaving"
+            (click)="closeRegistration(currentSeason)"
+          >
+            Close registration
+          </button>
+
+          <button
+            *ngIf="!currentSeason.registrationOpen && currentSeason.isActive && !currentSeason.draftActive && !currentSeason.hasSchedule"
+            type="button"
+            class="secondary-action"
+            [disabled]="isSaving"
+            (click)="openRegistration(currentSeason)"
+          >
+            Open registration
+          </button>
+
+          <button
+            *ngIf="currentSeason.isActive"
+            type="button"
+            class="delete-btn"
+            [disabled]="isSaving"
+            (click)="closeSeason(currentSeason)"
+          >
+            Close season
           </button>
         </div>
 
@@ -266,7 +290,7 @@
 
             <div>
               <strong>Set as current season</strong>
-              <p>This season will be marked as the active current season.</p>
+              <p>Only one season can be current. Others will be unmarked.</p>
             </div>
           </label>
 
@@ -355,6 +379,8 @@
                 <th>Start</th>
                 <th>End</th>
                 <th>Weeks</th>
+                <th>Phase</th>
+                <th>Players</th>
                 <th *ngIf="isAdmin">Schedule</th>
                 <th>Current</th>
                 <th>Active</th>
@@ -374,11 +400,19 @@
                 <td>{{ season.endDate | date:'medium' }}</td>
                 <td>{{ season.totalWeeks }}</td>
 
+                <td>
+                  <span class="status-pill" [ngClass]="phaseClass(season)">
+                    {{ phaseLabel(season) }}
+                  </span>
+                </td>
+
+                <td>{{ season.registeredCount || 0 }} / {{ season.maxPlayers }}</td>
+
                 <td *ngIf="isAdmin">
                   <button
                     type="button"
                     class="generate-btn"
-                    [disabled]="isSaving"
+                    [disabled]="isSaving || !season.isActive"
                     (click)="generateSchedule(season)"
                   >
                     Generate
@@ -426,6 +460,56 @@
                       (click)="edit(season)"
                     >
                       Edit
+                    </button>
+
+                    <button
+                      *ngIf="season.registrationOpen && season.isActive"
+                      type="button"
+                      class="edit-btn"
+                      [disabled]="isSaving"
+                      (click)="closeRegistration(season)"
+                    >
+                      Close reg.
+                    </button>
+
+                    <button
+                      *ngIf="!season.registrationOpen && season.isActive && !season.draftActive && !season.hasSchedule"
+                      type="button"
+                      class="edit-btn"
+                      [disabled]="isSaving"
+                      (click)="openRegistration(season)"
+                    >
+                      Open reg.
+                    </button>
+
+                    <button
+                      *ngIf="!season.isCurrent"
+                      type="button"
+                      class="generate-btn"
+                      [disabled]="isSaving"
+                      (click)="setCurrent(season)"
+                    >
+                      Make current
+                    </button>
+
+                    <button
+                      *ngIf="season.isActive"
+                      type="button"
+                      class="delete-btn"
+                      [disabled]="isSaving"
+                      (click)="closeSeason(season)"
+                    >
+                      Close
+                    </button>
+
+                    <button
+                      *ngIf="!season.isActive"
+                      type="button"
+                      class="generate-btn"
+                      [disabled]="isSaving"
+                      (click)="activateSeason(season)"
+                    >
+                      Activate
                     </button>
 
                     <button

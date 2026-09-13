@@ -1,4 +1,4 @@
-﻿using backend.Common.Helpers;
+using backend.Common.Helpers;
 using backend.Data;
 using backend.Entities.Clubs;
 using backend.Entities.Tournaments;
@@ -11,6 +11,8 @@ namespace backend.Features.Seasons.Services;
 public class SeasonService : ISeasonService
 {
 	private const decimal InitialClubBudget = 350_000_000m;
+	private const string OfferPending = "OfferPending";
+	private const string OfferCancelled = "OfferCancelled";
 
 	private readonly AppDbContext _db;
 
@@ -27,7 +29,7 @@ public class SeasonService : ISeasonService
 			.OrderByDescending(x => x.StartDate)
 			.ToListAsync(ct);
 
-		return seasons.Select(ToDto).ToList();
+		return await EnrichAsync(seasons, ct);
 	}
 
 	public async Task<SeasonDto?> GetByIdAsync(Guid id, CancellationToken ct)
@@ -36,7 +38,26 @@ public class SeasonService : ISeasonService
 			.AsNoTracking()
 			.FirstOrDefaultAsync(x => x.SeasonId == id && !x.IsDeleted, ct);
 
-		return season is null ? null : ToDto(season);
+		if (season is null)
+			return null;
+
+		var list = await EnrichAsync([season], ct);
+		return list[0];
+	}
+
+	public async Task<SeasonDto?> GetCurrentAsync(CancellationToken ct)
+	{
+		var season = await _db.Seasons
+			.AsNoTracking()
+			.Where(x => !x.IsDeleted && x.IsCurrent)
+			.OrderByDescending(x => x.StartDate)
+			.FirstOrDefaultAsync(ct);
+
+		if (season is null)
+			return null;
+
+		var list = await EnrichAsync([season], ct);
+		return list[0];
 	}
 
 	public async Task<SeasonDto> CreateAsync(CreateSeasonDto dto, CancellationToken ct)
@@ -56,9 +77,14 @@ public class SeasonService : ISeasonService
 		};
 
 		_db.Seasons.Add(season);
+
+		if (season.IsCurrent)
+			await ClearOtherCurrentAsync(season.SeasonId, ct);
+
 		await _db.SaveChangesAsync(ct);
 
-		return ToDto(season);
+		var list = await EnrichAsync([season], ct);
+		return list[0];
 	}
 
 	public async Task<bool> UpdateAsync(Guid id, UpdateSeasonDto dto, CancellationToken ct)
@@ -79,6 +105,12 @@ public class SeasonService : ISeasonService
 		season.RegistrationOpen = dto.RegistrationOpen;
 		season.MaxPlayers = dto.MaxPlayers;
 
+		if (!season.IsActive)
+			season.RegistrationOpen = false;
+
+		if (season.IsCurrent)
+			await ClearOtherCurrentAsync(season.SeasonId, ct);
+
 		await _db.SaveChangesAsync(ct);
 
 		return true;
@@ -93,6 +125,9 @@ public class SeasonService : ISeasonService
 			return false;
 
 		season.IsDeleted = true;
+		season.IsCurrent = false;
+		season.IsActive = false;
+		season.RegistrationOpen = false;
 
 		await _db.SaveChangesAsync(ct);
 
@@ -129,6 +164,12 @@ public class SeasonService : ISeasonService
 
 		if (!season.RegistrationOpen)
 			throw new Exception("Registration is closed.");
+
+		var draftStarted = await _db.DraftSessions
+			.AnyAsync(x => x.SeasonId == seasonId && x.CurrentPickStartedAtUTC != null, ct);
+
+		if (draftStarted)
+			throw new Exception("Registration closed because the draft has started.");
 
 		var gameClubExists = await _db.GameClubs
 			.AnyAsync(x =>
@@ -231,22 +272,218 @@ public class SeasonService : ISeasonService
 				ct);
 	}
 
-	private static SeasonDto ToDto(Season season)
+	public async Task<SeasonDto> CloseRegistrationAsync(Guid id, CancellationToken ct)
 	{
-		return new SeasonDto
+		var season = await GetTrackedSeasonAsync(id, ct);
+
+		season.RegistrationOpen = false;
+		await _db.SaveChangesAsync(ct);
+
+		var list = await EnrichAsync([season], ct);
+		return list[0];
+	}
+
+	public async Task<SeasonDto> OpenRegistrationAsync(Guid id, CancellationToken ct)
+	{
+		var season = await GetTrackedSeasonAsync(id, ct);
+
+		if (!season.IsActive)
+			throw new InvalidOperationException("Activate the season before opening registration.");
+
+		var draftStarted = await _db.DraftSessions
+			.AnyAsync(x => x.SeasonId == id && x.CurrentPickStartedAtUTC != null, ct);
+
+		if (draftStarted)
+			throw new InvalidOperationException("Cannot reopen registration after the draft has started.");
+
+		var hasSchedule = await SeasonHasScheduleAsync(id, ct);
+
+		if (hasSchedule)
+			throw new InvalidOperationException("Cannot reopen registration after the fixture exists.");
+
+		season.RegistrationOpen = true;
+		await _db.SaveChangesAsync(ct);
+
+		var list = await EnrichAsync([season], ct);
+		return list[0];
+	}
+
+	public async Task<SeasonDto> SetCurrentAsync(Guid id, CancellationToken ct)
+	{
+		var season = await GetTrackedSeasonAsync(id, ct);
+
+		season.IsCurrent = true;
+		season.IsActive = true;
+
+		await ClearOtherCurrentAsync(season.SeasonId, ct);
+		await _db.SaveChangesAsync(ct);
+
+		var list = await EnrichAsync([season], ct);
+		return list[0];
+	}
+
+	public async Task<SeasonDto> CloseSeasonAsync(Guid id, CancellationToken ct)
+	{
+		var season = await GetTrackedSeasonAsync(id, ct);
+
+		season.IsActive = false;
+		season.IsCurrent = false;
+		season.RegistrationOpen = false;
+
+		var pending = await _db.TransferRecords
+			.Where(x =>
+				x.SeasonId == id &&
+				!x.IsDeleted &&
+				x.TransferType == OfferPending)
+			.ToListAsync(ct);
+
+		foreach (var offer in pending)
 		{
-			SeasonId = season.SeasonId,
-			Name = season.Name,
-			Description = season.Description,
-			StartDate = season.StartDate,
-			EndDate = season.EndDate,
-			IsCurrent = season.IsCurrent,
-			IsActive = season.IsActive,
-			RegistrationOpen = season.RegistrationOpen,
-			MaxPlayers = season.MaxPlayers,
-			CreatedAtUTC = season.CreatedAtUTC,
-			UpdatedAtUTC = season.UpdatedAtUTC,
-			TotalWeeks = season.TotalWeeks
-		};
+			offer.TransferType = OfferCancelled;
+			offer.Notes = "Cancelled because the season was closed.";
+		}
+
+		await _db.SaveChangesAsync(ct);
+
+		var list = await EnrichAsync([season], ct);
+		return list[0];
+	}
+
+	public async Task<SeasonDto> ActivateSeasonAsync(Guid id, CancellationToken ct)
+	{
+		var season = await GetTrackedSeasonAsync(id, ct);
+
+		season.IsActive = true;
+		await _db.SaveChangesAsync(ct);
+
+		var list = await EnrichAsync([season], ct);
+		return list[0];
+	}
+
+	private async Task<Season> GetTrackedSeasonAsync(Guid id, CancellationToken ct)
+	{
+		var season = await _db.Seasons
+			.FirstOrDefaultAsync(x => x.SeasonId == id && !x.IsDeleted, ct);
+
+		if (season is null)
+			throw new KeyNotFoundException("Season not found.");
+
+		return season;
+	}
+
+	private async Task ClearOtherCurrentAsync(Guid keepSeasonId, CancellationToken ct)
+	{
+		var others = await _db.Seasons
+			.Where(x =>
+				!x.IsDeleted &&
+				x.IsCurrent &&
+				x.SeasonId != keepSeasonId)
+			.ToListAsync(ct);
+
+		foreach (var other in others)
+			other.IsCurrent = false;
+	}
+
+	private async Task<bool> SeasonHasScheduleAsync(Guid seasonId, CancellationToken ct)
+	{
+		return await _db.Matches
+			.AsNoTracking()
+			.AnyAsync(x =>
+				!x.IsDeleted &&
+				x.Tournament.SeasonId == seasonId,
+				ct);
+	}
+
+	private async Task<List<SeasonDto>> EnrichAsync(
+		IReadOnlyList<Season> seasons,
+		CancellationToken ct)
+	{
+		if (seasons.Count == 0)
+			return [];
+
+		var ids = seasons.Select(x => x.SeasonId).ToList();
+
+		var registrationCounts = await _db.SeasonRegistrations
+			.AsNoTracking()
+			.Where(x => ids.Contains(x.SeasonId))
+			.GroupBy(x => x.SeasonId)
+			.Select(g => new { g.Key, Count = g.Count() })
+			.ToDictionaryAsync(x => x.Key, x => x.Count, ct);
+
+		var drafts = await _db.DraftSessions
+			.AsNoTracking()
+			.Where(x => ids.Contains(x.SeasonId))
+			.Select(x => new { x.SeasonId, x.IsActive })
+			.ToListAsync(ct);
+
+		var draftBySeason = drafts
+			.GroupBy(x => x.SeasonId)
+			.ToDictionary(
+				g => g.Key,
+				g => new
+				{
+					HasDraft = true,
+					DraftActive = g.Any(x => x.IsActive)
+				});
+
+		var scheduledIds = await _db.Matches
+			.AsNoTracking()
+			.Where(x => !x.IsDeleted && ids.Contains(x.Tournament.SeasonId))
+			.Select(x => x.Tournament.SeasonId)
+			.Distinct()
+			.ToListAsync(ct);
+
+		var scheduled = scheduledIds.ToHashSet();
+
+		return seasons.Select(season =>
+		{
+			registrationCounts.TryGetValue(season.SeasonId, out var registered);
+			draftBySeason.TryGetValue(season.SeasonId, out var draft);
+			var hasDraft = draft?.HasDraft == true;
+			var draftActive = draft?.DraftActive == true;
+			var hasSchedule = scheduled.Contains(season.SeasonId);
+
+			return new SeasonDto
+			{
+				SeasonId = season.SeasonId,
+				Name = season.Name,
+				Description = season.Description,
+				StartDate = season.StartDate,
+				EndDate = season.EndDate,
+				IsCurrent = season.IsCurrent,
+				IsActive = season.IsActive,
+				RegistrationOpen = season.RegistrationOpen,
+				MaxPlayers = season.MaxPlayers,
+				CreatedAtUTC = season.CreatedAtUTC,
+				UpdatedAtUTC = season.UpdatedAtUTC,
+				TotalWeeks = season.TotalWeeks,
+				RegisteredCount = registered,
+				HasDraft = hasDraft,
+				DraftActive = draftActive,
+				HasSchedule = hasSchedule,
+				Phase = ResolvePhase(season.IsActive, draftActive, hasDraft, hasSchedule)
+			};
+		}).ToList();
+	}
+
+	private static string ResolvePhase(
+		bool isActive,
+		bool draftActive,
+		bool hasDraft,
+		bool hasSchedule)
+	{
+		if (!isActive)
+			return "Closed";
+
+		if (draftActive)
+			return "Drafting";
+
+		if (hasSchedule)
+			return "Competition";
+
+		if (hasDraft)
+			return "DraftReady";
+
+		return "Registration";
 	}
 }
