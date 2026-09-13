@@ -1,4 +1,4 @@
-﻿namespace backend.Features.Seasons.Dtos;
+namespace backend.Features.Seasons.Dtos;
 
 public class SeasonDto
 {
@@ -20,6 +20,16 @@ public class SeasonDto
 
 	public int MaxPlayers { get; set; }
 	public int TotalWeeks { get; set; }
+
+	public string Phase { get; set; } = "Registration";
+
+	public int RegisteredCount { get; set; }
+
+	public bool HasDraft { get; set; }
+
+	public bool DraftActive { get; set; }
+
+	public bool HasSchedule { get; set; }
 
 	public DateTime CreatedAtUTC { get; set; }
 
