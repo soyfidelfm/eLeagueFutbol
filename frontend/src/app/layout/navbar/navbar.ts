@@ -126,6 +126,10 @@ export class Navbar implements OnInit, OnDestroy {
       return 'Oferta de transferencia cancelada';
     }
 
+    if (type === 'matchresult' || type.startsWith('match')) {
+      return 'Resultado de partido actualizado';
+    }
+
     if (type === 'pickmade' || type === 'pick') {
       return 'Nuevo pick en el draft';
     }
