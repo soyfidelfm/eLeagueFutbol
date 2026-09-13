@@ -1,0 +1,77 @@
+<section class="transfers-page">
+  <app-loading *ngIf="isLoading"></app-loading>
+
+  <header class="transfers-header" *ngIf="!isLoading">
+    <div>
+      <p class="eyebrow">TRANSFER MARKET</p>
+      <h1>{{ board?.myClubName || 'Transfers' }}</h1>
+    </div>
+    <div class="budget">
+      <span>Budget</span>
+      <strong>€{{ (board?.currentBudget || 0) | number:'1.0-0' }}</strong>
+    </div>
+  </header>
+
+  <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <div class="grid" *ngIf="!isLoading && board">
+    <article class="panel">
+      <h2>Incoming offers</h2>
+      <p *ngIf="!board.incomingOffers.length" class="empty">No incoming offers.</p>
+      <div class="offer" *ngFor="let offer of board.incomingOffers">
+        <div>
+          <strong>{{ offer.playerName }}</strong>
+          <span>{{ offer.toClubName }} · €{{ offer.transferFee | number:'1.0-0' }}</span>
+        </div>
+        <div class="actions">
+          <button type="button" (click)="accept(offer)">Accept</button>
+          <button type="button" class="ghost" (click)="reject(offer)">Reject</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel">
+      <h2>My offers</h2>
+      <p *ngIf="!board.outgoingOffers.length" class="empty">No outgoing offers.</p>
+      <div class="offer" *ngFor="let offer of board.outgoingOffers">
+        <div>
+          <strong>{{ offer.playerName }}</strong>
+          <span>{{ offer.fromClubName }} · €{{ offer.transferFee | number:'1.0-0' }}</span>
+        </div>
+        <button type="button" class="ghost" (click)="cancel(offer)">Cancel</button>
+      </div>
+    </article>
+  </div>
+
+  <article class="panel market" *ngIf="!isLoading && board">
+    <div class="market-head">
+      <h2>Available players</h2>
+      <input [(ngModel)]="searchTerm" placeholder="Search player, club or position" />
+    </div>
+
+    <p *ngIf="!filteredMarket.length" class="empty">No players on the market yet.</p>
+
+    <div class="player" *ngFor="let player of filteredMarket">
+      <img [src]="player.imageUrl || 'https://cdn.sofifa.net/players/239/085/26_120.png'" [alt]="player.name" />
+      <div class="meta">
+        <strong>{{ player.name }}</strong>
+        <span>{{ player.position }} · {{ player.overall }} OVR · {{ player.ownerClubName }}</span>
+      </div>
+      <div class="bid" *ngIf="!player.hasMyPendingOffer">
+        <input type="number" [(ngModel)]="offerAmount[player.gamePlayerId]" [placeholder]="(player.marketValue || 0).toString()" />
+        <button type="button" (click)="makeOffer(player)">Offer</button>
+      </div>
+      <span class="pending" *ngIf="player.hasMyPendingOffer">Offer sent</span>
+    </div>
+  </article>
+
+  <article class="panel" *ngIf="!isLoading && board?.history?.length">
+    <h2>Completed transfers</h2>
+    <div class="offer" *ngFor="let item of board?.history">
+      <div>
+        <strong>{{ item.playerName }}</strong>
+        <span>{{ item.fromClubName }} → {{ item.toClubName }} · €{{ item.transferFee | number:'1.0-0' }}</span>
+      </div>
+    </div>
+  </article>
+</section>

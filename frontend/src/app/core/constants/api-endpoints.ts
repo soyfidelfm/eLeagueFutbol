@@ -2,7 +2,6 @@ import { environment } from '../../../environments/environment';
 
 export const API_ENDPOINTS = {
   seasons: `${environment.api.baseUrl}/api/seasons`,
-  teams: `${environment.api.baseUrl}/api/teams`,
   tournaments: `${environment.api.baseUrl}/api/tournaments`,
   matches: `${environment.api.baseUrl}/api/matches`,
   users: `${environment.api.baseUrl}/api/users`,
@@ -33,5 +32,6 @@ export const API_ENDPOINTS = {
   sidebar: `${environment.api.baseUrl}/api/sidebar`,
   draft: `${environment.api.baseUrl}/api/draft`,
   notifications: `${environment.api.baseUrl}/api/notifications`,
-  messages: `${environment.api.baseUrl}/api/messages`
+  messages: `${environment.api.baseUrl}/api/messages`,
+  transfers: `${environment.api.baseUrl}/api/transfers`
 };

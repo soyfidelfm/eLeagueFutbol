@@ -59,6 +59,13 @@ export const routes: Routes = [
       },
 
       {
+        path: 'teams',
+        loadComponent: () =>
+          import('./features/teams/teams')
+            .then(m => m.Teams)
+      },
+
+      {
         path: 'rankings',
         loadComponent: () =>
           import('./features/rankings/rankings')
@@ -82,6 +89,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/draft/draft')
             .then(m => m.Draft)
+      },
+      {
+        path: 'transfers',
+        loadComponent: () =>
+          import('./features/transfers/transfers')
+            .then(m => m.Transfers)
       },
       {
         path: 'messages',

@@ -1,0 +1,42 @@
+<section class="teams-page">
+  <app-loading *ngIf="isLoading"></app-loading>
+
+  <header *ngIf="!isLoading">
+    <p class="eyebrow">MI EQUIPO</p>
+    <h1>{{ club?.name || 'Plantilla' }}</h1>
+    <p class="meta" *ngIf="club">
+      {{ players.length }} jugadores · formacion {{ club.formation || '—' }}
+    </p>
+  </header>
+
+  <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <article class="panel" *ngIf="!isLoading && !players.length">
+    <h2>Sin plantilla</h2>
+    <p class="empty">Los jugadores salen del draft. No se agregan usuarios de la app.</p>
+    <a routerLink="/draft">Ir al draft</a>
+  </article>
+
+  <article class="panel" *ngIf="!isLoading && players.length">
+    <h2>Plantilla</h2>
+    <div class="member" *ngFor="let player of players">
+      <img [src]="player.avatarUrl || '/images/default-avatar.png'" [alt]="player.name" />
+      <div>
+        <strong>{{ player.name }}</strong>
+        <span>{{ player.position || 'Jugador' }} · OVR {{ player.overall ?? '—' }}</span>
+      </div>
+    </div>
+    <a class="ghost-link" routerLink="/clubs">Editar alineacion</a>
+  </article>
+
+  <article class="panel" *ngIf="!isLoading && starters.length">
+    <h2>Titulares</h2>
+    <div class="member" *ngFor="let player of starters">
+      <img [src]="player.avatarUrl || '/images/default-avatar.png'" [alt]="player.name" />
+      <div>
+        <strong>{{ player.name }}</strong>
+        <span>Slot {{ player.slotIndex }} · {{ player.position || '—' }}</span>
+      </div>
+    </div>
+  </article>
+</section>

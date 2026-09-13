@@ -1,6 +1,5 @@
 <header class="navbar">
 
-  <!-- LEFT / MOBILE LOGO ONLY -->
   <div class="navbar-left">
     <div class="brand">
       <img
@@ -10,7 +9,6 @@
     </div>
   </div>
 
-  <!-- CENTER -->
   <nav class="navbar-center">
 
     <a routerLink="/dashboard" routerLinkActive="active">
@@ -26,6 +24,16 @@
     <a routerLink="/draft" routerLinkActive="active">
       <i class="fa-solid fa-list-ol"></i>
       <span>Draft</span>
+    </a>
+
+    <a routerLink="/transfers" routerLinkActive="active">
+      <i class="fa-solid fa-right-left"></i>
+      <span>Transfers</span>
+    </a>
+
+    <a routerLink="/teams" routerLinkActive="active">
+      <i class="fa-solid fa-people-group"></i>
+      <span>Teams</span>
     </a>
 
     <a routerLink="/seasons" routerLinkActive="active">
@@ -50,16 +58,11 @@
 
   </nav>
 
-  <!-- RIGHT -->
   <div class="navbar-right">
 
-    <!-- MESSAGES -->
     <app-message-notifications></app-message-notifications>
-
-    <!-- NOTIFICATIONS -->
     <app-notifications></app-notifications>
 
-    <!-- USER -->
     <div
       class="profile-box"
       [class.loading]="!me"
@@ -71,73 +74,45 @@
 
       <div class="profile-info">
         <strong>{{ me?.displayName || 'Loading...' }}</strong>
-
         <span>
           {{ me?.gamerTag?.trim() ? me?.gamerTag : (me?.email || 'Profile') }}
         </span>
       </div>
 
       <div class="online-dot" *ngIf="me"></div>
-
     </div>
 
-    <!-- USER MENU -->
     <div
       class="user-menu"
       *ngIf="showUserMenu"
       (click)="$event.stopPropagation()">
 
-      <button
-        type="button"
-        (click)="openProfileModal($event)">
+      <button type="button" (click)="openProfileModal($event)">
         <i class="fa-regular fa-user"></i>
         <span>Profile</span>
       </button>
 
-      <button
-        type="button"
-        (click)="logout()">
+      <button type="button" (click)="logout()">
         <i class="fa-solid fa-right-from-bracket"></i>
         <span>Sign out</span>
       </button>
-
     </div>
-
   </div>
-
 </header>
 
-<!-- PROFILE POPUP -->
 <div
   class="profile-modal-backdrop"
   *ngIf="showProfileModal"
   (click)="closeProfileModal()">
-
-  <div
-    class="profile-modal-clean"
-    (click)="$event.stopPropagation()">
-
-    <button
-      type="button"
-      class="modal-close"
-      (click)="closeProfileModal()">
+  <div class="profile-modal-clean" (click)="$event.stopPropagation()">
+    <button type="button" class="modal-close" (click)="closeProfileModal()">
       <i class="fa-solid fa-xmark"></i>
     </button>
-
-    <app-profile
-      (saved)="onProfileSaved()">
-    </app-profile>
-
+    <app-profile (saved)="onProfileSaved()"></app-profile>
   </div>
-
 </div>
 
-<!-- TOAST -->
-<div
-  class="toast-success"
-  *ngIf="showToast">
-
+<div class="toast-success" *ngIf="showToast">
   <i class="fa-solid fa-circle-check"></i>
   <span>{{ toastMessage }}</span>
-
 </div>
