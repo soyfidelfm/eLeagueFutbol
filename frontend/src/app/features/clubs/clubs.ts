@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { finalize, switchMap } from 'rxjs';
 
 import { ClubService } from '../../core/services/club.service';
@@ -21,6 +22,7 @@ type ClubPlayer = NonNullable<MyClubDto['players']>[number];
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     SquadLineupModalComponent,
     AppLoading
   ],
@@ -105,6 +107,10 @@ export class Clubs implements OnInit {
         icon: 'fa-regular fa-star'
       }
     ];
+  }
+
+  isStarter(playerId: string): boolean {
+    return this.startingPlayers.some(x => x.playerId === playerId);
   }
 
   loadMyClub(): void {
