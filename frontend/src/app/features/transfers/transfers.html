@@ -5,6 +5,12 @@
     <div>
       <p class="eyebrow">TRANSFER MARKET</p>
       <h1>{{ board?.myClubName || 'Transfers' }}</h1>
+      <p class="live-line" *ngIf="!seasonClosed">
+        <span class="live-dot" [class.refreshing]="isRefreshing"></span>
+        Live market
+        <span *ngIf="liveMessage"> · {{ liveMessage }}</span>
+      </p>
+      <p class="live-line closed" *ngIf="seasonClosed">Season closed — transfers locked</p>
     </div>
     <div class="budget">
       <span>Budget</span>
@@ -24,8 +30,8 @@
           <span>{{ offer.toClubName }} · €{{ offer.transferFee | number:'1.0-0' }}</span>
         </div>
         <div class="actions">
-          <button type="button" (click)="accept(offer)">Accept</button>
-          <button type="button" class="ghost" (click)="reject(offer)">Reject</button>
+          <button type="button" [disabled]="seasonClosed" (click)="accept(offer)">Accept</button>
+          <button type="button" class="ghost" [disabled]="seasonClosed" (click)="reject(offer)">Reject</button>
         </div>
       </div>
     </article>
@@ -38,7 +44,7 @@
           <strong>{{ offer.playerName }}</strong>
           <span>{{ offer.fromClubName }} · €{{ offer.transferFee | number:'1.0-0' }}</span>
         </div>
-        <button type="button" class="ghost" (click)="cancel(offer)">Cancel</button>
+        <button type="button" class="ghost" [disabled]="seasonClosed" (click)="cancel(offer)">Cancel</button>
       </div>
     </article>
   </div>
@@ -57,7 +63,7 @@
         <strong>{{ player.name }}</strong>
         <span>{{ player.position }} · {{ player.overall }} OVR · {{ player.ownerClubName }}</span>
       </div>
-      <div class="bid" *ngIf="!player.hasMyPendingOffer">
+      <div class="bid" *ngIf="!player.hasMyPendingOffer && !seasonClosed">
         <input type="number" [(ngModel)]="offerAmount[player.gamePlayerId]" [placeholder]="(player.marketValue || 0).toString()" />
         <button type="button" (click)="makeOffer(player)">Offer</button>
       </div>
