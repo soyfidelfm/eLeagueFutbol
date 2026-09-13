@@ -18,7 +18,7 @@
 
   </div>
 
-  <ng-container *ngIf="!isLoading && !errorMessage">
+  <ng-container *ngIf="!isLoading">
 
     <div class="page-header">
 
@@ -32,6 +32,16 @@
 
         <p>
           Select a week and manage all scheduled matches.
+        </p>
+
+        <p class="live-line" *ngIf="!seasonClosed">
+          <span class="live-dot" [class.refreshing]="isRefreshing"></span>
+          Live fixture
+          <span *ngIf="liveMessage"> · {{ liveMessage }}</span>
+        </p>
+
+        <p class="live-line closed" *ngIf="seasonClosed">
+          Season closed — results locked
         </p>
 
       </div>
@@ -62,6 +72,7 @@
           class="match-card match-of-week"
           *ngIf="matchOfTheWeek as match"
           [class.selected]="selectedMatch?.id === match.id"
+          [class.finished]="isFinished(match)"
           (click)="selectMatch(match)">
 
           <div class="match-week-badge">
@@ -94,27 +105,21 @@
 
             <small>{{ match.mode }}</small>
 
-            <strong
-              *ngIf="
-                match.homeScore === undefined ||
-                match.homeScore === null
-              ">
+            <strong *ngIf="!isFinished(match)">
 
               {{ match.time }}
 
             </strong>
 
-            <strong
-              *ngIf="
-                match.homeScore !== undefined &&
-                match.homeScore !== null
-              ">
+            <strong *ngIf="isFinished(match)">
 
               {{ match.homeScore }} - {{ match.awayScore }}
 
             </strong>
 
             <em>{{ match.date }}</em>
+
+            <em class="match-status">{{ match.status }}</em>
 
           </div>
 
@@ -142,6 +147,7 @@
           class="match-card"
           *ngFor="let match of regularMatches"
           [class.selected]="selectedMatch?.id === match.id"
+          [class.finished]="isFinished(match)"
           (click)="selectMatch(match)">
 
           <div class="team">
@@ -166,27 +172,21 @@
 
             <small>{{ match.mode }}</small>
 
-            <strong
-              *ngIf="
-                match.homeScore === undefined ||
-                match.homeScore === null
-              ">
+            <strong *ngIf="!isFinished(match)">
 
               {{ match.time }}
 
             </strong>
 
-            <strong
-              *ngIf="
-                match.homeScore !== undefined &&
-                match.homeScore !== null
-              ">
+            <strong *ngIf="isFinished(match)">
 
               {{ match.homeScore }} - {{ match.awayScore }}
 
             </strong>
 
             <em>{{ match.date }}</em>
+
+            <em class="match-status">{{ match.status }}</em>
 
           </div>
 
@@ -240,6 +240,8 @@
               {{ selectedMatch.arena }}
               -
               {{ selectedMatch.mode }}
+              ·
+              {{ selectedMatch.status }}
             </p>
 
           </div>
@@ -263,11 +265,7 @@
           <div class="vs">
 
             <ng-container
-              *ngIf="
-                selectedMatch.homeScore !== undefined &&
-                selectedMatch.homeScore !== null;
-                else vsText
-              ">
+              *ngIf="isFinished(selectedMatch); else vsText">
 
               {{ selectedMatch.homeScore }}
               -
@@ -292,6 +290,65 @@
             <span>{{ selectedMatch.away.club }}</span>
 
           </div>
+
+        </div>
+
+        <div class="result-card" *ngIf="canSubmitResult(selectedMatch)">
+
+          <h3>SUBMIT RESULT</h3>
+
+          <p>
+            Participants and admins can post the final score.
+            Rankings update when the match is finished.
+          </p>
+
+          <div class="result-inputs">
+
+            <label>
+              {{ selectedMatch.home.name }}
+              <input
+                type="number"
+                min="0"
+                [(ngModel)]="resultHomeScore"
+                [disabled]="isSubmittingResult">
+            </label>
+
+            <span>:</span>
+
+            <label>
+              {{ selectedMatch.away.name }}
+              <input
+                type="number"
+                min="0"
+                [(ngModel)]="resultAwayScore"
+                [disabled]="isSubmittingResult">
+            </label>
+
+          </div>
+
+          <button
+            type="button"
+            [disabled]="
+              resultHomeScore === null ||
+              resultAwayScore === null ||
+              isSubmittingResult
+            "
+            (click)="submitResult()">
+
+            <i
+              class="fa-solid"
+              [class.fa-spinner]="isSubmittingResult"
+              [class.fa-spin]="isSubmittingResult"
+              [class.fa-flag-checkered]="!isSubmittingResult">
+            </i>
+
+            {{
+              isSubmittingResult
+                ? 'Saving Result...'
+                : (isFinished(selectedMatch) ? 'Update Result' : 'Submit Result')
+            }}
+
+          </button>
 
         </div>
 
@@ -441,7 +498,7 @@
 
         </div>
 
-        <div class="upload-card">
+        <div class="upload-card" *ngIf="canSubmitResult(selectedMatch)">
 
           <div class="upload-icon">
 
