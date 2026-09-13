@@ -27,6 +27,12 @@
         <p>
           Compare clubs and track league standings across all seasons.
         </p>
+
+        <p class="live-line">
+          <span class="live-dot" [class.refreshing]="isRefreshing"></span>
+          Live table
+          <span *ngIf="liveMessage"> · {{ liveMessage }}</span>
+        </p>
       </div>
 
       <div class="page-header-actions">

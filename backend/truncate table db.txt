@@ -1,1 +1,0 @@
-TRUNCATE TABLE "Tournaments", "Teams", "Seasons", "TeamMembers", "SeasonRegistrations", "MatchPlayerStats", "NewsArticles", "ActivityFeeds", "PlayerRankings", "Notifications", "GamePlayers", "DraftOrders", "DraftPicks", "DraftSessions", "Messages", "Matches", "ClubLineups", "ClubLineupPlayers", "NotificationTokens" RESTART IDENTITY CASCADE;

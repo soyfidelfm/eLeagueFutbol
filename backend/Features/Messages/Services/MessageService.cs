@@ -219,21 +219,19 @@ public class MessageService : IMessageService
 		await _realtime.ReceiveMessageAsync(sender.UserId, senderDto);
 		await _realtime.NotificationCreatedAsync(receiver.UserId, notificationDto);
 
-		if (!_realtime.IsOnline(receiver.UserId))
-		{
-			await _notificationService.SendToUserAsync(
-				receiver.UserId,
-				"New message",
-				$"{sender.DisplayName}: {preview}",
-				new Dictionary<string, string>
-				{
-					{ "type", "message" },
-					{ "senderUserId", sender.UserId.ToString() },
-					{ "receiverUserId", receiver.UserId.ToString() },
-					{ "messageId", message.MessageId.ToString() },
-					{ "notificationId", notification.NotificationId.ToString() }
-				});
-		}
+		await _notificationService.SendToUserAsync(
+			receiver.UserId,
+			"New message",
+			$"{sender.DisplayName}: {preview}",
+			new Dictionary<string, string>
+			{
+				{ "type", "message" },
+				{ "url", notification.Url ?? "/messages" },
+				{ "senderUserId", sender.UserId.ToString() },
+				{ "receiverUserId", receiver.UserId.ToString() },
+				{ "messageId", message.MessageId.ToString() },
+				{ "notificationId", notification.NotificationId.ToString() }
+			});
 
 		return senderDto;
 	}
@@ -275,9 +273,9 @@ public class MessageService : IMessageService
 	}
 
 	public async Task SendSystemMessageAsync(
-	Guid receiverUserId,
-	string title,
-	string body)
+		Guid receiverUserId,
+		string title,
+		string body)
 	{
 		var receiver = await _context.Users
 			.FirstOrDefaultAsync(x =>
@@ -369,18 +367,16 @@ public class MessageService : IMessageService
 		await _realtime.ReceiveMessageAsync(receiver.UserId, messageDto);
 		await _realtime.NotificationCreatedAsync(receiver.UserId, notificationDto);
 
-		if (!_realtime.IsOnline(receiver.UserId))
-		{
-			await _notificationService.SendToUserAsync(
-				receiver.UserId,
-				title,
-				body,
-				new Dictionary<string, string>
-				{
-					{ "type", "draft_lottery" },
-					{ "receiverUserId", receiver.UserId.ToString() },
-					{ "notificationId", notification.NotificationId.ToString() }
-				});
-		}
+		await _notificationService.SendToUserAsync(
+			receiver.UserId,
+			title,
+			body,
+			new Dictionary<string, string>
+			{
+				{ "type", "draft_lottery" },
+				{ "url", "/draft" },
+				{ "receiverUserId", receiver.UserId.ToString() },
+				{ "notificationId", notification.NotificationId.ToString() }
+			});
 	}
 }

@@ -1,0 +1,21 @@
+.squad-panel {
+  margin-top: 22px;
+}
+
+.squad-panel .activity-icon img {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.empty-state a {
+  color: var(--neon-primary);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.empty-state a:hover {
+  text-decoration: underline;
+}

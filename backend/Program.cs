@@ -36,6 +36,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Services
 builder.Services.AddSingleton<PresenceTracker>();
 builder.Services.AddScoped<IAppRealtimeService, AppRealtimeService>();
+builder.Services.AddScoped<IAdminAccessService, AdminAccessService>();
 builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -50,7 +51,8 @@ builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<ISidebarService, SidebarService>();
 builder.Services.AddScoped<DraftService>();
 builder.Services.AddScoped<IDraftService, DraftRealtimeDecorator>();
-builder.Services.AddScoped<ITransferService, TransferService>();
+builder.Services.AddScoped<TransferService>();
+builder.Services.AddScoped<ITransferService, TransferRealtimeDecorator>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<INotificationInboxService, NotificationInboxService>();

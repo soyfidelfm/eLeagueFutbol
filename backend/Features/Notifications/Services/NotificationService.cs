@@ -1,4 +1,4 @@
-﻿namespace backend.Features.Notifications.Services;
+namespace backend.Features.Notifications.Services;
 
 using backend.Data;
 using backend.Entities.Notifications;
@@ -65,10 +65,10 @@ public class NotificationService : INotificationService
 	}
 
 	public async Task SendToUserAsync(
-	Guid userId,
-	string title,
-	string body,
-	Dictionary<string, string>? data = null)
+		Guid userId,
+		string title,
+		string body,
+		Dictionary<string, string>? data = null)
 	{
 		var tokens = await _context.NotificationTokens
 			.Where(x =>
@@ -87,6 +87,14 @@ public class NotificationService : INotificationService
 
 		var safeData = data ?? new Dictionary<string, string>();
 
+		if (!safeData.ContainsKey("title"))
+			safeData["title"] = title ?? string.Empty;
+
+		if (!safeData.ContainsKey("body"))
+			safeData["body"] = body ?? string.Empty;
+
+		safeData.TryGetValue("url", out var url);
+
 		foreach (var token in tokens)
 		{
 			try
@@ -101,7 +109,20 @@ public class NotificationService : INotificationService
 						Body = body ?? string.Empty
 					},
 
-					Data = safeData
+					Data = safeData,
+
+					Webpush = new WebpushConfig
+					{
+						FcmOptions = string.IsNullOrWhiteSpace(url)
+							? null
+							: new WebpushFcmOptions { Link = url },
+						Notification = new WebpushNotification
+						{
+							Title = title ?? string.Empty,
+							Body = body ?? string.Empty,
+							Icon = "/images/iOSicon.png"
+						}
+					}
 				};
 
 				await firebase.SendAsync(message);

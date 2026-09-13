@@ -1,3 +1,10 @@
+export type SeasonPhase =
+  | 'Registration'
+  | 'DraftReady'
+  | 'Drafting'
+  | 'Competition'
+  | 'Closed';
+
 export interface Season {
   seasonId: string;
 
@@ -14,6 +21,12 @@ export interface Season {
   maxPlayers: number;
 
   totalWeeks: number;
+
+  phase?: SeasonPhase;
+  registeredCount?: number;
+  hasDraft?: boolean;
+  draftActive?: boolean;
+  hasSchedule?: boolean;
 
   createdAtUTC: string;
   updatedAtUTC?: string | null;

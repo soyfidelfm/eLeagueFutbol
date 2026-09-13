@@ -60,9 +60,8 @@ export const routes: Routes = [
 
       {
         path: 'teams',
-        loadComponent: () =>
-          import('./features/teams/teams')
-            .then(m => m.Teams)
+        redirectTo: 'clubs',
+        pathMatch: 'full'
       },
 
       {

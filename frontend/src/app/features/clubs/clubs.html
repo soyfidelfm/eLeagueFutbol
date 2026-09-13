@@ -16,8 +16,8 @@
   <ng-container *ngIf="!isLoading && !errorMessage && club">
 
     <div class="clubs-back">
-      <i class="fa-solid fa-arrow-left"></i>
-      <span>Clubs Center</span>
+      <i class="fa-solid fa-shirt"></i>
+      <span>Mi plantilla</span>
     </div>
 
     <div class="club-hero">
@@ -50,12 +50,12 @@
       </div>
 
       <div class="club-info">
-        <span class="eyebrow">MY CLUB</span>
+        <span class="eyebrow">MI PLANTILLA</span>
 
         <h1>{{ club.name }}</h1>
 
         <p class="meta">
-          ID: {{ club.clubId }}
+          {{ players.length }} jugadores · formación {{ selectedFormation }}
         </p>
 
         <div class="club-tags">
@@ -66,7 +66,7 @@
 
           <span>
             <i class="fa-solid fa-users"></i>
-            {{ club.members }} Members
+            {{ players.length }} jugadores
           </span>
 
           <span *ngIf="club.division">
@@ -119,7 +119,7 @@
           </h2>
 
           <button type="button" (click)="openSquadModal()">
-            View Full Squad
+            Editar alineación
             <i class="fa-solid fa-arrow-right"></i>
           </button>
         </div>
@@ -150,7 +150,8 @@
         <ng-template #noPlayers>
           <div class="empty-state">
             <i class="fa-solid fa-users-slash"></i>
-            <span>No players found for this club.</span>
+            <span>Todavía no hay XI. Entra al draft o edita la alineación.</span>
+            <a routerLink="/draft">Ir al draft</a>
           </div>
         </ng-template>
 
@@ -181,11 +182,6 @@
             <i class="fa-solid fa-bolt"></i>
             Recent Activity
           </h2>
-
-          <button type="button">
-            View All
-            <i class="fa-solid fa-arrow-right"></i>
-          </button>
         </div>
 
         <ng-container *ngIf="activities.length > 0; else noActivities">
@@ -211,6 +207,50 @@
         </ng-template>
 
       </div>
+
+    </div>
+
+    <div class="panel squad-panel">
+
+      <div class="panel-header">
+        <h2>
+          <i class="fa-solid fa-shirt"></i>
+          Plantilla
+        </h2>
+
+        <button type="button" (click)="openSquadModal()">
+          Ver / editar XI
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <ng-container *ngIf="players.length > 0; else emptySquad">
+        <div class="activity-item" *ngFor="let player of players">
+          <div class="activity-icon">
+            <img
+              [src]="player.avatarUrl || '/images/avatar.png'"
+              alt=""
+              referrerpolicy="no-referrer"
+              (error)="onPlayerImageError($event)"
+            />
+          </div>
+
+          <div>
+            <h4>{{ player.name }}</h4>
+            <p>{{ player.position || 'Jugador' }} · OVR {{ player.overall ?? '—' }}</p>
+          </div>
+
+          <span>{{ isStarter(player.playerId) ? 'Titular' : 'Banquillo' }}</span>
+        </div>
+      </ng-container>
+
+      <ng-template #emptySquad>
+        <div class="empty-state">
+          <i class="fa-solid fa-users-slash"></i>
+          <span>Los jugadores salen del draft. No se agregan usuarios de la app.</span>
+          <a routerLink="/draft">Ir al draft</a>
+        </div>
+      </ng-template>
 
     </div>
 

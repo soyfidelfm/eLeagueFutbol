@@ -1,4 +1,4 @@
-﻿namespace backend.Entities.Identity;
+namespace backend.Entities.Identity;
 
 using backend.Entities.Clubs;
 using backend.Entities.Common;
@@ -6,7 +6,6 @@ using backend.Entities.Draft;
 using backend.Entities.GameData;
 using backend.Entities.Notifications;
 using backend.Entities.Stats;
-using backend.Entities.Teams;
 using backend.Entities.Tournaments;
 
 public class User : BaseEntity
@@ -37,14 +36,11 @@ public class User : BaseEntity
 
 	public string Role { get; set; } = string.Empty;
 
-	public ICollection<TeamMember> TeamMemberships { get; set; }
-		= new List<TeamMember>();
-
 	public ICollection<MatchPlayerStats> MatchStats { get; set; }
 		= new List<MatchPlayerStats>();
 
 	public ICollection<Match> HomeMatches { get; set; }
-= new List<Match>();
+		= new List<Match>();
 
 	public ICollection<Match> AwayMatches { get; set; }
 		= new List<Match>();
@@ -52,6 +48,6 @@ public class User : BaseEntity
 	public ICollection<DraftOrder> DraftOrders { get; set; } = [];
 	public ICollection<DraftPick> DraftPicks { get; set; } = [];
 	public ICollection<NotificationToken> NotificationTokens { get; set; }
-	= new List<NotificationToken>();
+		= new List<NotificationToken>();
 	public ICollection<UserClub> UserClubs { get; set; } = [];
 }

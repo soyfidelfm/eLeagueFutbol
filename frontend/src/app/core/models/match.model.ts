@@ -9,6 +9,7 @@ export interface MatchTeamStatsDto {
 }
 
 export interface MatchTeamDto {
+  userId?: string;
   clubId: string;
   name: string;
   club: string;
@@ -59,11 +60,6 @@ export interface Match {
   stage: string;
   score: string;
   status: string;
-}
-
-export interface UploadMatchResultDto {
-  homeScore: number;
-  awayScore: number;
 }
 
 export interface SaveManualMatchStatsRequest {

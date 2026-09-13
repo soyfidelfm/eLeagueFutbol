@@ -1,6 +1,12 @@
-﻿using backend.Features.Matches.Dtos;
+using backend.Data;
+using backend.Features.Matches.Dtos;
 using backend.Features.Matches.Services;
+using backend.Features.Realtime;
+using backend.Features.Users.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace backend.Controllers;
 
@@ -9,10 +15,20 @@ namespace backend.Controllers;
 public class MatchesController : ControllerBase
 {
 	private readonly IMatchService _matchService;
+	private readonly IAdminAccessService _adminAccess;
+	private readonly IAppRealtimeService _realtime;
+	private readonly AppDbContext _db;
 
-	public MatchesController(IMatchService matchService)
+	public MatchesController(
+		IMatchService matchService,
+		IAdminAccessService adminAccess,
+		IAppRealtimeService realtime,
+		AppDbContext db)
 	{
 		_matchService = matchService;
+		_adminAccess = adminAccess;
+		_realtime = realtime;
+		_db = db;
 	}
 
 	[HttpGet("weeks")]
@@ -45,17 +61,36 @@ public class MatchesController : ControllerBase
 		return Ok(match);
 	}
 
+	[Authorize]
 	[HttpPost("{matchId:guid}/result")]
 	public async Task<ActionResult<MatchResultDto>> UploadResult(
 		Guid matchId,
 		[FromBody] UploadMatchResultDto dto)
 	{
-		var result = await _matchService.UploadResultAsync(matchId, dto);
+		var auth0Id = GetAuth0Id();
 
-		if (result is null)
-			return NotFound();
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
 
-		return Ok(result);
+		try
+		{
+			await EnsureCanSubmitResultAsync(matchId, auth0Id);
+
+			if (dto.HomeScore < 0 || dto.AwayScore < 0)
+				return BadRequest(new { message = "Scores cannot be negative." });
+
+			var result = await _matchService.UploadResultAsync(matchId, dto);
+
+			if (result is null)
+				return NotFound();
+
+			await PublishMatchResultAsync(matchId);
+			return Ok(result);
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
 	}
 
 	[HttpPost("{matchId:guid}/stats-upload")]
@@ -72,15 +107,30 @@ public class MatchesController : ControllerBase
 		return Ok(result);
 	}
 
+	[Authorize]
 	[HttpPost("generate-schedule/{seasonId:guid}")]
 	public async Task<IActionResult> GenerateSchedule(Guid seasonId)
 	{
-		var generated = await _matchService.GenerateScheduleAsync(seasonId);
+		var auth0Id = GetAuth0Id();
 
-		if (!generated)
-			return BadRequest("Could not generate schedule.");
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
 
-		return Ok();
+		try
+		{
+			await _adminAccess.EnsureAdminAsync(auth0Id);
+
+			var generated = await _matchService.GenerateScheduleAsync(seasonId);
+
+			if (!generated)
+				return BadRequest(new { message = "Could not generate schedule." });
+
+			return Ok();
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
 	}
 
 	[HttpGet("{matchId:guid}/manual-stats")]
@@ -98,6 +148,7 @@ public class MatchesController : ControllerBase
 
 		return Ok(result);
 	}
+
 	[HttpGet("{matchId:guid}/player-options")]
 	public async Task<IActionResult> GetPlayerOptions(
 	Guid matchId)
@@ -116,25 +167,96 @@ public class MatchesController : ControllerBase
 		return Ok(result);
 	}
 
+	[Authorize]
 	[HttpPost("{matchId:guid}/manual-stats")]
 	public async Task<IActionResult> SaveManualStats(
 	Guid matchId,
 	[FromBody] SaveManualMatchStatsDto dto)
 	{
-		var result = await _matchService.SaveManualStatsAsync(
-			matchId,
-			dto);
+		var auth0Id = GetAuth0Id();
 
-		if (!result)
-			return NotFound(new
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
+
+		try
+		{
+			await EnsureCanSubmitResultAsync(matchId, auth0Id);
+
+			var result = await _matchService.SaveManualStatsAsync(
+				matchId,
+				dto);
+
+			if (!result)
+				return NotFound(new
+				{
+					message = "Match not found."
+				});
+
+			await _matchService.UploadResultAsync(matchId, new UploadMatchResultDto
 			{
-				message = "Match not found."
+				HomeScore = dto.HomeGoals,
+				AwayScore = dto.AwayGoals
 			});
 
-		return Ok(new
+			await PublishMatchResultAsync(matchId);
+
+			return Ok(new
+			{
+				message = "Match statistics saved successfully.",
+				matchId
+			});
+		}
+		catch (UnauthorizedAccessException ex)
 		{
-			message = "Match statistics saved successfully.",
-			matchId
-		});
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
+	}
+
+	private async Task EnsureCanSubmitResultAsync(Guid matchId, string auth0Id)
+	{
+		var user = await _db.Users
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == auth0Id &&
+				x.IsActive &&
+				!x.IsDeleted)
+			?? throw new UnauthorizedAccessException("User not found.");
+
+		var match = await _db.Matches
+			.AsNoTracking()
+			.Include(x => x.Tournament)
+				.ThenInclude(x => x.Season)
+			.FirstOrDefaultAsync(x => x.MatchId == matchId && !x.IsDeleted)
+			?? throw new UnauthorizedAccessException("Match not found.");
+
+		if (match.Tournament.Season is { IsActive: false })
+			throw new UnauthorizedAccessException("This season is closed.");
+
+		if (string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+			return;
+
+		if (user.UserId != match.HomeUserId && user.UserId != match.AwayUserId)
+			throw new UnauthorizedAccessException("Only the match participants or an admin can submit the result.");
+	}
+
+	private async Task PublishMatchResultAsync(Guid matchId)
+	{
+		var seasonId = await _db.Matches
+			.AsNoTracking()
+			.Where(x => x.MatchId == matchId)
+			.Select(x => x.Tournament.SeasonId)
+			.FirstOrDefaultAsync();
+
+		if (seasonId == Guid.Empty)
+			return;
+
+		await _realtime.PublishDraftEventAsync(seasonId, "matchResult");
+	}
+
+	private string? GetAuth0Id()
+	{
+		return User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+			?? User.FindFirst("sub")?.Value
+			?? User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
 	}
 }
