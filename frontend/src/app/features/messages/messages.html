@@ -66,17 +66,24 @@
 
           </div>
 
-          <div
-            class="empty-state"
-            *ngIf="filteredConversations.length === 0">
+          <app-empty-state
+            *ngIf="!isLoading && filteredConversations.length === 0 && !conversationSearchTerm.trim()"
+            [compact]="true"
+            icon="fa-solid fa-comments"
+            title="No conversations yet"
+            description="Start a message with another player.">
+            <button type="button" class="empty-action" (click)="startNewMessage()">
+              {{ 'New Message' | t }}
+            </button>
+          </app-empty-state>
 
-            <i class="fa-solid fa-comments"></i>
-
-            <strong>{{ 'No conversations yet' | t }}</strong>
-
-            <span>{{ 'Start a message with another player.' | t }}</span>
-
-          </div>
+          <app-empty-state
+            *ngIf="!isLoading && filteredConversations.length === 0 && conversationSearchTerm.trim()"
+            [compact]="true"
+            icon="fa-solid fa-magnifying-glass"
+            title="No conversations match your search"
+            description="Try another name.">
+          </app-empty-state>
 
         </ng-container>
 
@@ -147,17 +154,14 @@
 
           </div>
 
-          <div
-            class="empty-state chat-empty"
-            *ngIf="messages.length === 0">
-
-            <i class="fa-solid fa-paper-plane"></i>
-
-            <strong>{{ 'No messages yet' | t }}</strong>
-
-            <span>{{ 'Send the first message.' | t }}</span>
-
-          </div>
+          <app-empty-state
+            class="chat-empty"
+            *ngIf="!isLoadingConversation && messages.length === 0"
+            [compact]="true"
+            icon="fa-solid fa-paper-plane"
+            title="No messages yet"
+            description="Send the first message.">
+          </app-empty-state>
 
           <div class="typing-indicator" *ngIf="isOtherUserTyping">
             {{ selectedConversation?.displayName || ('User' | t) }} {{ 'is typing...' | t }}
@@ -199,16 +203,15 @@
 
       <section class="chat-card empty-desktop">
 
-        <i class="fa-solid fa-envelope-open-text"></i>
-
-        <h2>{{ 'Select a message' | t }}</h2>
-
-        <p>{{ 'Choose a conversation or start a new one.' | t }}</p>
-
-        <button type="button" (click)="startNewMessage()">
-          <i class="fa-solid fa-pen"></i>
-          {{ 'New Message' | t }}
-        </button>
+        <app-empty-state
+          icon="fa-solid fa-envelope-open-text"
+          title="Select a message"
+          description="Choose a conversation or start a new one.">
+          <button type="button" class="empty-action" (click)="startNewMessage()">
+            <i class="fa-solid fa-pen"></i>
+            {{ 'New Message' | t }}
+          </button>
+        </app-empty-state>
 
       </section>
 
@@ -284,29 +287,21 @@
 
           </div>
 
-          <div
-  class="empty-state"
-  *ngIf="!isSearchingUsers && userSearchTerm.trim().length < 4">
+          <app-empty-state
+            *ngIf="!isSearchingUsers && userSearchTerm.trim().length < 4"
+            [compact]="true"
+            icon="fa-solid fa-user-plus"
+            title="Search players"
+            description="Type at least 4 characters.">
+          </app-empty-state>
 
-  <i class="fa-solid fa-user-plus"></i>
-
-  <strong>{{ 'Search players' | t }}</strong>
-
-  <span>{{ 'Type at least 4 characters.' | t }}</span>
-
-</div>
-
-          <div
-            class="empty-state"
-            *ngIf="userSearchTerm.trim().length >= 2 && userResults.length === 0">
-
-            <i class="fa-solid fa-user-slash"></i>
-
-            <strong>{{ 'No players found' | t }}</strong>
-
-            <span>{{ 'Try another name, gamer tag, or club.' | t }}</span>
-
-          </div>
+          <app-empty-state
+            *ngIf="!isSearchingUsers && userSearchTerm.trim().length >= 4 && userResults.length === 0"
+            [compact]="true"
+            icon="fa-solid fa-user-slash"
+            title="No players found"
+            description="Try another name, gamer tag, or club.">
+          </app-empty-state>
 
         </ng-container>
 

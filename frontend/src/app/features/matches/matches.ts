@@ -40,6 +40,7 @@ import {
 } from './components/manual-match-stats-modal/manual-match-stats-modal';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-matches',
@@ -50,7 +51,7 @@ import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
     NeonDropdownComponent,
     AppLoading,
     ManualMatchStatsModal,
-    TranslatePipe, LocalizedDatePipe
+    TranslatePipe, LocalizedDatePipe, EmptyState
   ],
   templateUrl: './matches.html',
   styleUrl: './matches.scss',
