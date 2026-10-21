@@ -1,4 +1,4 @@
-﻿namespace backend.Features.Messages.Services;
+namespace backend.Features.Messages.Services;
 
 using backend.Features.Messages.Dtos;
 
