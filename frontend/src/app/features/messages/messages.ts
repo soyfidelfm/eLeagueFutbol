@@ -16,6 +16,7 @@ import {
 } from '../../core/models/message.model';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 interface MessageUserResult {
   userId: string;
@@ -27,7 +28,7 @@ interface MessageUserResult {
   selector: 'app-messages',
   standalone: true,
   imports: [CommonModule, FormsModule, AppLoading,
-    TranslatePipe, LocalizedDatePipe
+    TranslatePipe, LocalizedDatePipe, EmptyState
   ],
   templateUrl: './messages.html',
   styleUrl: './messages.scss',

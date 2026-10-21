@@ -8,10 +8,13 @@
   [showBar]="true">
 </app-loading>
 
-  <div *ngIf="!isLoading && errorMessage" class="error">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <span>{{ errorMessage | t }}</span>
-  </div>
+  <app-empty-state
+    *ngIf="!isLoading && errorMessage"
+    tone="error"
+    icon="fa-solid fa-triangle-exclamation"
+    title="Something went wrong"
+    [description]="errorMessage">
+  </app-empty-state>
 
   <ng-container *ngIf="!isLoading && !errorMessage">
 
@@ -110,13 +113,12 @@
 
       </div>
 
-      <div
+      <app-empty-state
         *ngIf="clubRankings.length === 0"
-        class="empty-state"
-      >
-        <i class="fa-solid fa-shield-halved"></i>
-        <span>{{ 'No clubs registered for this season.' | t }}</span>
-      </div>
+        icon="fa-solid fa-shield-halved"
+        title="No standings yet"
+        description="No clubs are registered for this season yet. The table fills in as clubs join and play.">
+      </app-empty-state>
 
       <div
         *ngIf="clubRankings.length > 0"

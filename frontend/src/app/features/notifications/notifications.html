@@ -36,12 +36,13 @@
       <span>{{ 'Loading...' | t }}</span>
     </div>
 
-    <div
-      class="notifications-empty"
-      *ngIf="!isLoading && notifications.length === 0">
-      <i class="fa-regular fa-bell"></i>
-      <span>{{ 'No notifications yet.' | t }}</span>
-    </div>
+    <app-empty-state
+      *ngIf="!isLoading && notifications.length === 0"
+      [compact]="true"
+      icon="fa-regular fa-bell"
+      title="No notifications yet"
+      description="Draft turns, offers and results will appear here.">
+    </app-empty-state>
 
     <div
       class="notification-list"

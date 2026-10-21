@@ -7,12 +7,13 @@ import { NotificationInboxService } from '../../core/services/notification-inbox
 import { Notification as AppNotification } from '../../core/models/notification.model';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
   imports: [CommonModule,
-    TranslatePipe, LocalizedDatePipe
+    TranslatePipe, LocalizedDatePipe, EmptyState
   ],
   templateUrl: './notifications.html',
   styleUrl: './notifications.scss'
