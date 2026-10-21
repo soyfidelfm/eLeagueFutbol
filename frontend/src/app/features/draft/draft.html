@@ -2,8 +2,8 @@
 
   <app-loading
   *ngIf="isLoading"
-  title="Loading Draft"
-  message="Loading draft order, available players and squad data..."
+  [title]="'Loading Draft' | t"
+  [message]="'Loading draft order, available players and squad data...' | t"
   [logo]="true"
   [showBar]="true">
 </app-loading>
@@ -15,60 +15,60 @@
       <i class="fa-solid fa-shuffle"></i>
 
       <span>
-        Draft Lottery Draw {{ lotteryDrawNumber }} of 3
+        {{ 'Draft Lottery Draw' | t }} {{ lotteryDrawNumber }} {{ 'of 3' | t }}
       </span>
 
     </div>
 
     <a class="back-link">
       <i class="fa-solid fa-arrow-left"></i>
-      Draft Center
+      {{ 'Draft Center' | t }}
     </a>
 
     <section class="draft-hero">
       <div class="hero-content">
         <span class="eyebrow">FC26 SEASON 1</span>
 
-        <h1>E-LEAGUE DRAFT</h1>
+        <h1>{{ 'E-LEAGUE DRAFT' | t }}</h1>
 
         <p>
-          Build the best squad. Pick smart before your turn expires.
+          {{ 'Build the best squad. Pick smart before your turn expires.' | t }}
         </p>
 
         <div class="hero-meta">
           <span>
             <i class="fa-solid fa-shuffle"></i>
-            Snake Draft
+            {{ 'Snake Draft' | t }}
           </span>
 
           <span>
             <i class="fa-solid fa-users"></i>
-            {{ totalTeams }} Teams
+            {{ totalTeams }} {{ 'Teams' | t }}
           </span>
 
           <span>
             <i class="fa-regular fa-circle-dot"></i>
-            {{ playersPerTeam }} Rounds
+            {{ playersPerTeam }} {{ 'Rounds' | t }}
           </span>
 
           <span>
             <i class="fa-regular fa-clock"></i>
-            Pick Timer
+            {{ 'Pick Timer' | t }}
           </span>
         </div>
       </div>
 
       <div class="hero-status">
         <div class="timer-card">
-          <span>Time remaining:</span>
+          <span>{{ 'Time remaining' | t }}:</span>
           <strong>{{ timerText }}</strong>
-          <small>Current pick timer</small>
+          <small>{{ 'Current pick timer' | t }}</small>
         </div>
 
         <div class="pick-card">
-          <span>Current pick:</span>
-          <strong>Round {{ currentRound }} · Pick {{ currentPickNumber }}</strong>
-          <small>Current: {{ currentClubName }}</small>
+          <span>{{ 'Current pick' | t }}:</span>
+          <strong>{{ 'Round' | t }} {{ currentRound }} · {{ 'Pick' | t }} {{ currentPickNumber }}</strong>
+          <small>{{ 'Current' | t }}: {{ currentClubName }}</small>
         </div>
 
         <button *ngIf="!isDraftActive" type="button" class="draft-start-btn"
@@ -81,10 +81,10 @@
 
           {{
           isLotteryRunning
-          ? 'Running Lottery...'
+          ? ('Running Lottery...' | t)
           : draftCenter?.draftOrder?.length
-          ? 'Start Draft'
-          : 'Start Draft Lottery'
+          ? ('Start Draft' | t)
+          : ('Start Draft Lottery' | t)
           }}
 
         </button>
@@ -92,7 +92,7 @@
         <button *ngIf="isDraftActive" type="button" disabled>
 
           <i class="fa-solid fa-check"></i>
-          Draft is active
+          {{ 'Draft is active' | t }}
 
         </button>
       </div>
@@ -107,8 +107,8 @@
 
         <div class="panel-header">
           <div>
-            <h2>Current Round Order</h2>
-            <p>Round {{ currentRound }} of {{ playersPerTeam }}</p>
+            <h2>{{ 'Current Round Order' | t }}</h2>
+            <p>{{ 'Round' | t }} {{ currentRound }} {{ 'of' | t }} {{ playersPerTeam }}</p>
           </div>
         </div>
 
@@ -130,14 +130,14 @@
             </span>
 
             <span class="current-badge" *ngIf="team.isCurrentPick">
-              Current Pick
+              {{ 'Current Pick' | t }}
             </span>
 
           </div>
         </div>
 
         <div class="round-divider">
-          Next Round Order
+          {{ 'Next Round Order' | t }}
         </div>
 
         <div class="draft-order-list reverse">
@@ -169,8 +169,8 @@
       <main class="panel players-panel">
         <div class="panel-header players-header">
           <div>
-            <h2>Available Players</h2>
-            <p>{{ filteredPlayers.length }} players found</p>
+            <h2>{{ 'Available Players' | t }}</h2>
+            <p>{{ filteredPlayers.length }} {{ 'players found' | t }}</p>
           </div>
 
           <button class="ghost-icon" type="button" (click)="loadPlayers()">
@@ -181,7 +181,7 @@
         <div class="search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
 
-          <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="loadPlayers()" placeholder="Search player..." />
+          <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="loadPlayers()" [placeholder]="'Search player...' | t" />
         </div>
         <div class="pool-dropdown" [class.open]="isPoolDropdownOpen">
 
@@ -190,7 +190,7 @@
     class="pool-dropdown-trigger"
     (click)="togglePoolDropdown()">
 
-    <span>{{ getPoolFilterLabel() }}</span>
+    <span>{{ getPoolFilterLabel() | t }}</span>
 
     <i
       class="fa-solid"
@@ -211,8 +211,8 @@
       <i class="fa-solid fa-shield-halved"></i>
 
       <span>
-        <strong>Club Players</strong>
-        <small>Players from clubs only</small>
+        <strong>{{ 'Club Players' | t }}</strong>
+        <small>{{ 'Players from clubs only' | t }}</small>
       </span>
 
     </button>
@@ -226,8 +226,8 @@
       <i class="fa-solid fa-users"></i>
 
       <span>
-        <strong>Club + Free Agents</strong>
-        <small>Include club players and free agents</small>
+        <strong>{{ 'Club + Free Agents' | t }}</strong>
+        <small>{{ 'Include club players and free agents' | t }}</small>
       </span>
 
     </button>
@@ -241,8 +241,8 @@
       <i class="fa-solid fa-user"></i>
 
       <span>
-        <strong>Free Agents Only</strong>
-        <small>Free agents without a club</small>
+        <strong>{{ 'Free Agents Only' | t }}</strong>
+        <small>{{ 'Free agents without a club' | t }}</small>
       </span>
 
     </button>
@@ -260,8 +260,8 @@
           </div>
 
           <div class="sort-box">
-            Sort:
-            <strong>Overall</strong>
+            {{ 'Sort' | t }}:
+            <strong>{{ 'Overall' | t }}</strong>
             <i class="fa-solid fa-chevron-down"></i>
           </div>
         </div>
@@ -272,7 +272,7 @@
 
             <img class="card-background"
               src="https://res.cloudinary.com/dwgojz5cu/image/upload/v1782954171/cardRegular_jdakxm.png"
-              alt="Player Card" />
+              [alt]="'Player Card' | t" />
 
             <div class="player-rating">
               {{ player.overall }}
@@ -341,7 +341,7 @@
         <ng-template #noPlayers>
           <div class="empty-state">
             <i class="fa-solid fa-user-slash"></i>
-            <span>No players found.</span>
+            <span>{{ 'No players found.' | t }}</span>
           </div>
         </ng-template>
 
@@ -353,7 +353,7 @@
           </button>
 
           <span class="active">{{ currentPage }}</span>
-          <span>of</span>
+          <span>{{ 'of' | t }}</span>
           <span>{{ totalPages }}</span>
 
           <button type="button" (click)="nextPage()">
@@ -367,17 +367,17 @@
       <aside class="panel squad-panel">
         <div class="panel-header">
           <div>
-            <h2>Your Squad</h2>
+            <h2>{{ 'Your Squad' | t }}</h2>
 
             <p>
-              {{ draftedCount }}/{{ squadSlots.length }} players
+              {{ draftedCount }}/{{ squadSlots.length }} {{ 'players' | t }}
             </p>
 
             <div class="budget-display">
               <i class="fa-solid fa-coins"></i>
 
               <div>
-                <small>Budget Remaining</small>
+                <small>{{ 'Budget Remaining' | t }}</small>
 
                 <strong>
                   ${{ currentBudget | number:'1.0-0' }}
@@ -405,7 +405,7 @@
         </div>
 
         <div class="position-summary">
-          <h3>Position Summary</h3>
+          <h3>{{ 'Position Summary' | t }}</h3>
 
           <div class="summary-row">
             <span>ST</span>
@@ -433,12 +433,12 @@
         </div>
 
         <div class="last-picks">
-          <h3>Last Picks</h3>
-          <p>Round {{ currentRound }}</p>
+          <h3>{{ 'Last Picks' | t }}</h3>
+          <p>{{ 'Round' | t }} {{ currentRound }}</p>
 
           <div class="last-pick-item" *ngFor="let pick of lastPicks">
 
-            <span>Pick {{ pick.pickNumber }}</span>
+            <span>{{ 'Pick' | t }} {{ pick.pickNumber }}</span>
             <strong>{{ pick.clubName }}</strong>
             <small>{{ pick.playerName }}</small>
             <em>{{ pick.overall }}</em>
@@ -451,7 +451,7 @@
   (click)="openDraftPicksModal()">
 
   <i class="fa-solid fa-list-check"></i>
-  View all picks
+  {{ 'View all picks' | t }}
 
 </button>
         </div>
@@ -459,35 +459,35 @@
     </section>
 
     <section class="draft-info panel">
-      <h2>Draft Information</h2>
+      <h2>{{ 'Draft Information' | t }}</h2>
 
       <div class="info-grid">
         <div class="info-card">
           <i class="fa-regular fa-calendar"></i>
-          <span>Draft Start</span>
-          <strong>Current Season</strong>
+          <span>{{ 'Draft Start' | t }}</span>
+          <strong>{{ 'Current Season' | t }}</strong>
           <small>FC26 Season 1</small>
         </div>
 
         <div class="info-card">
           <i class="fa-solid fa-list-ol"></i>
-          <span>Format</span>
-          <strong>Snake Draft</strong>
-          <small>Order reverses every round</small>
+          <span>{{ 'Format' | t }}</span>
+          <strong>{{ 'Snake Draft' | t }}</strong>
+          <small>{{ 'Order reverses every round' | t }}</small>
         </div>
 
         <div class="info-card">
           <i class="fa-solid fa-users"></i>
-          <span>Participants</span>
-          <strong>{{ totalTeams }} Teams</strong>
-          <small>Elite League</small>
+          <span>{{ 'Participants' | t }}</span>
+          <strong>{{ totalTeams }} {{ 'Teams' | t }}</strong>
+          <small>{{ 'Elite League' | t }}</small>
         </div>
 
         <div class="info-card">
           <i class="fa-regular fa-clock"></i>
-          <span>Pick Timer</span>
+          <span>{{ 'Pick Timer' | t }}</span>
           <strong>{{ timerText }}</strong>
-          <small>Time limit</small>
+          <small>{{ 'Time limit' | t }}</small>
         </div>
       </div>
     </section>
@@ -497,7 +497,7 @@
 </div>
 
 <div class="draft-toast" *ngIf="errorMessage">
-  {{ errorMessage }}
+  {{ errorMessage | t }}
 </div>
 
 <div
@@ -512,8 +512,8 @@
     <header class="draft-picks-modal-header">
 
       <div>
-        <h2>Draft Picks</h2>
-        <p>{{ allDraftPicks.length }} players selected</p>
+        <h2>{{ 'Draft Picks' | t }}</h2>
+        <p>{{ allDraftPicks.length }} {{ 'players selected' | t }}</p>
       </div>
 
       <button
@@ -528,14 +528,14 @@
     </header>
 
     <div class="draft-picks-loading" *ngIf="isLoadingDraftPicks">
-      Loading picks...
+      {{ 'Loading picks...' | t }}
     </div>
 
     <div
       class="draft-picks-empty"
       *ngIf="!isLoadingDraftPicks && allDraftPicks.length === 0">
 
-      No players have been picked yet.
+      {{ 'No players have been picked yet.' | t }}
 
     </div>
 
@@ -556,7 +556,7 @@
           <strong>{{ pick.playerName }}</strong>
 
           <span>
-            {{ pick.position }} · Round {{ pick.roundNumber }}
+            {{ pick.position }} · {{ 'Round' | t }} {{ pick.roundNumber }}
           </span>
 
         </div>

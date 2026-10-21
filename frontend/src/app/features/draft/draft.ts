@@ -16,6 +16,8 @@ import {
   DraftPlayerPoolFilter,
   DraftSquadPlayer
 } from '../../core/models/draft.model';
+import { TranslationService } from '../../core/i18n/translation.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 
 interface SquadSlot {
@@ -26,7 +28,9 @@ interface SquadSlot {
 @Component({
   selector: 'app-draft',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppLoading],
+  imports: [CommonModule, FormsModule, AppLoading,
+    TranslatePipe
+  ],
   templateUrl: './draft.html',
   styleUrl: './draft.scss'
 })
@@ -92,7 +96,8 @@ export class Draft implements OnInit, OnDestroy {
     private draftService: DraftService,
     private seasonService: SeasonService,
     private realtime: RealtimeService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private i18n: TranslationService
   ) { }
 
   ngOnInit(): void {
@@ -221,7 +226,7 @@ export class Draft implements OnInit, OnDestroy {
       return '';
     }
 
-    return `Draft Lottery Draw ${this.lotteryDrawNumber} of 3`;
+    return this.i18n.t('Draft Lottery Draw {n} of 3', { n: this.lotteryDrawNumber });
   }
 
   getPlayerImageUrl(player: DraftPlayer): string {
@@ -349,7 +354,7 @@ export class Draft implements OnInit, OnDestroy {
             this.startTimer(center.state.secondsRemaining);
             this.loadPlayers();
 
-            this.showToast('🚀 Draft started.');
+            this.showToast('🚀 ' + this.i18n.t('Draft started.'));
             this.cdr.detectChanges();
           },
           error: err => {
@@ -371,7 +376,7 @@ export class Draft implements OnInit, OnDestroy {
     this.isStartingDraft = true;
     this.lotteryDrawNumber = 1;
 
-    this.showToast('🎲 Starting draft lottery...');
+    this.showToast('🎲 ' + this.i18n.t('Starting draft lottery...'));
     this.runLotteryDraw(1);
   }
 
@@ -391,7 +396,7 @@ export class Draft implements OnInit, OnDestroy {
           this.cdr.detectChanges();
 
           if (drawNumber < 3) {
-            this.showToast(`🎲 Draft lottery draw ${drawNumber} of 3...`);
+            this.showToast('🎲 ' + this.i18n.t('Draft lottery draw {n} of 3...', { n: drawNumber }));
 
             this.lotteryTimeoutId = window.setTimeout(() => {
               this.runLotteryDraw(drawNumber + 1);
@@ -422,7 +427,7 @@ export class Draft implements OnInit, OnDestroy {
                 this.mapMySquadToSlots();
                 this.loadPlayers();
 
-                this.showToast('🏆 Final draft order saved. Ready to start.');
+                this.showToast('🏆 ' + this.i18n.t('Final draft order saved. Ready to start.'));
                 this.cdr.detectChanges();
               },
               error: err => {
@@ -503,7 +508,7 @@ export class Draft implements OnInit, OnDestroy {
   draftPlayer(player: DraftPlayer): void {
     if (!this.isMyTurn) {
       this.showToast(
-        `⏳ You're on deck. ${this.currentClubName} is currently on the clock.`
+        '⏳ ' + this.i18n.t('You\'re on deck. {club} is currently on the clock.', { club: this.currentClubName })
       );
       return;
     }
@@ -526,7 +531,7 @@ export class Draft implements OnInit, OnDestroy {
 
     if (playerValue > this.currentBudget) {
       this.showToast(
-        `❌ Not enough budget. ${player.name} costs €${playerValue.toLocaleString()} and your budget is €${this.currentBudget.toLocaleString()}.`
+        '❌ ' + this.i18n.t('Not enough budget. {player} costs €{cost} and your budget is €{budget}.', { player: player.name, cost: playerValue.toLocaleString(), budget: this.currentBudget.toLocaleString() })
       );
       return;
     }
@@ -555,7 +560,7 @@ export class Draft implements OnInit, OnDestroy {
 
           this.errorMessage =
             err?.error?.message ||
-            `Could not draft ${player.name}. Please try again.`;
+            this.i18n.t('Could not draft {player}. Please try again.', { player: player.name });
 
           this.cdr.detectChanges();
         }
@@ -574,17 +579,17 @@ export class Draft implements OnInit, OnDestroy {
     const type = (eventType ?? '').toLowerCase();
 
     if (type === 'pickmade' || type === 'pick') {
-      this.showToast('Nuevo pick en el draft');
+      this.showToast('New draft pick');
     } else if (type === 'started' || type === 'start') {
-      this.showToast('El draft inició');
+      this.showToast('The draft has started');
     } else if (type === 'turn' || type === 'turnchanged' || type === 'advanced') {
-      this.showToast('Cambio de turno en el draft');
+      this.showToast('Draft turn changed');
     } else if (type === 'skipped' || type === 'skip') {
-      this.showToast('Turno saltado por tiempo');
+      this.showToast('Turn skipped (time expired)');
     } else if (type === 'completed' || type === 'complete') {
-      this.showToast('Draft completado');
+      this.showToast('Draft completed');
     } else if (type === 'order' || type === 'lottery') {
-      this.showToast('El orden del draft se actualizó');
+      this.showToast('Draft order updated');
     }
 
     this.loadDraft();

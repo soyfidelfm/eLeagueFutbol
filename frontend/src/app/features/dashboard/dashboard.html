@@ -2,34 +2,34 @@
 
   <app-loading
   *ngIf="isLoading"
-  title="Loading Arena"
-  message="Syncing live matches, rankings and stats..."
+  [title]="'Loading Arena' | t"
+  [message]="'Syncing live matches, rankings and stats...' | t"
   [logo]="true"
   [showBar]="true">
 </app-loading>
 
   <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
-    {{ errorMessage }}
+    {{ errorMessage | t }}
   </div>
 
   <ng-container *ngIf="!errorMessage">
 
     <section class="season-join-banner" *ngIf="currentSeason">
       <div class="season-join-content">
-        <span class="eyebrow">REGISTRATION OPEN</span>
+        <span class="eyebrow">{{ 'REGISTRATION OPEN' | t }}</span>
 
-        <h2>Join {{ currentSeason.name }}</h2>
+        <h2>{{ 'Join' | t }} {{ currentSeason.name }}</h2>
 
-        <p>Register now to compete in the current season.</p>
+        <p>{{ 'Register now to compete in the current season.' | t }}</p>
       </div>
 
       <div class="season-join-actions">
         <button class="join-btn" *ngIf="!isRegistered" [disabled]="isRegistering" (click)="openRegisterModal()">
-          {{ isRegistering ? 'Joining...' : 'Join Season' }}
+          {{ isRegistering ? ('Joining...' | t) : ('Join Season' | t) }}
         </button>
 
         <button class="registered-btn" *ngIf="isRegistered" disabled>
-          Registered
+          {{ 'Registered' | t }}
         </button>
       </div>
     </section>
@@ -41,26 +41,26 @@
       ×
     </button>
 
-    <span class="eyebrow">SEASON REGISTRATION</span>
+    <span class="eyebrow">{{ 'SEASON REGISTRATION' | t }}</span>
 
-    <h2>Join {{ currentSeason?.name }}</h2>
+    <h2>{{ 'Join' | t }} {{ currentSeason?.name }}</h2>
 
-    <p>Confirm your registration to compete in this season.</p>
+    <p>{{ 'Confirm your registration to compete in this season.' | t }}</p>
 
     <div class="modal-summary">
 
       <div class="summary-row">
-        <span>Gamertag</span>
-        <strong>{{ me?.gamerTag || 'Not set' }}</strong>
+        <span>{{ 'Gamertag' | t }}</span>
+        <strong>{{ me?.gamerTag || ('Not set' | t) }}</strong>
       </div>
 
       <div class="summary-row">
-        <span>Team Name</span>
-        <strong>{{ me?.clubName || 'Not set' }}</strong>
+        <span>{{ 'Team Name' | t }}</span>
+        <strong>{{ me?.clubName || ('Not set' | t) }}</strong>
       </div>
 
       <div class="summary-row">
-        <span>Selected Club</span>
+        <span>{{ 'Selected Club' | t }}</span>
 
         <div class="club-summary" *ngIf="selectedClub; else clubFallback">
           <!-- <img
@@ -73,19 +73,19 @@
         </div>
 
         <ng-template #clubFallback>
-          <strong>{{ me?.clubName || 'Not set' }}</strong>
+          <strong>{{ me?.clubName || ('Not set' | t) }}</strong>
         </ng-template>
       </div>
 
     </div>
 
     <div class="modal-error" *ngIf="registerMessage">
-      {{ registerMessage }}
+      {{ registerMessage | t }}
     </div>
 
     <div class="modal-actions">
       <button class="cancel-btn" (click)="closeRegisterModal()">
-        Cancel
+        {{ 'Cancel' | t }}
       </button>
 
       <button
@@ -93,7 +93,7 @@
         [disabled]="isRegistering"
         (click)="confirmRegistration()"
       >
-        {{ isRegistering ? 'Registering...' : 'Confirm' }}
+        {{ isRegistering ? ('Registering...' | t) : ('Confirm' | t) }}
       </button>
     </div>
 
@@ -102,7 +102,7 @@
 
     <div class="kpi-strip">
       <div class="kpi-card" *ngFor="let kpi of kpis">
-        <span>{{ kpi.label }}</span>
+        <span>{{ kpi.label | t }}</span>
         <strong>{{ kpi.value }}</strong>
         <small>{{ kpi.sub }}</small>
       </div>
@@ -113,24 +113,24 @@
       <article class="panel leaderboard-panel">
         <div class="panel-header">
           <div>
-            <h2>ELITE LEADERBOARD</h2>
-            <span>TOP 100 PLAYERS</span>
+            <h2>{{ 'ELITE LEADERBOARD' | t }}</h2>
+            <span>{{ 'TOP 100 PLAYERS' | t }}</span>
           </div>
-          <button>View All</button>
+          <button>{{ 'View All' | t }}</button>
         </div>
 
         <div class="empty-panel" *ngIf="leaderboard.length === 0">
-          No leaderboard data yet.
+          {{ 'No leaderboard data yet.' | t }}
         </div>
 
         <div class="leaderboard-table" *ngIf="leaderboard.length > 0">
           <div class="table-row table-head">
-            <span>Rank</span>
-            <span>Player</span>
+            <span>{{ 'Rank' | t }}</span>
+            <span>{{ 'Player' | t }}</span>
             <span>PTS</span>
             <span>GD</span>
             <span>W/L</span>
-            <span>Form</span>
+            <span>{{ 'Form' | t }}</span>
           </div>
 
           <div class="table-row" *ngFor="let player of leaderboard" [class.gold]="player.rank === 1"
@@ -158,10 +158,10 @@
       <article class="panel match-week-panel" *ngIf="matchOfWeek">
         <div class="panel-header">
           <div>
-            <h2>MATCH OF THE WEEK</h2>
+            <h2>{{ 'MATCH OF THE WEEK' | t }}</h2>
             <span>{{ matchOfWeek.arena }} · {{ matchOfWeek.stage }}</span>
           </div>
-          <button>View Match</button>
+          <button>{{ 'View Match' | t }}</button>
         </div>
 
         <div class="match-week">
@@ -169,7 +169,7 @@
             <div class="rating">{{ matchOfWeek.home.rating }}</div>
             <img [src]="matchOfWeek.home.image || '/images/player1.png'" alt="player" />
             <h3>{{ matchOfWeek.home.name }}</h3>
-            <p>Rank #{{ matchOfWeek.home.rank }}</p>
+            <p>{{ 'Rank #' | t }}{{ matchOfWeek.home.rank }}</p>
             <strong>{{ matchOfWeek.home.streak }}</strong>
           </div>
 
@@ -184,7 +184,7 @@
             <div class="rating">{{ matchOfWeek.away.rating }}</div>
             <img [src]="matchOfWeek.away.image || '/images/player2.png'" alt="player" />
             <h3>{{ matchOfWeek.away.name }}</h3>
-            <p>Rank #{{ matchOfWeek.away.rank }}</p>
+            <p>{{ 'Rank #' | t }}{{ matchOfWeek.away.rank }}</p>
             <strong>{{ matchOfWeek.away.streak }}</strong>
           </div>
         </div>
@@ -193,27 +193,27 @@
       <article class="panel match-week-panel" *ngIf="!matchOfWeek">
         <div class="panel-header">
           <div>
-            <h2>MATCH OF THE WEEK</h2>
-            <span>NO FEATURED MATCH</span>
+            <h2>{{ 'MATCH OF THE WEEK' | t }}</h2>
+            <span>{{ 'NO FEATURED MATCH' | t }}</span>
           </div>
         </div>
 
         <div class="empty-panel large">
-          No featured match selected yet.
+          {{ 'No featured match selected yet.' | t }}
         </div>
       </article>
 
       <article class="panel active-panel">
         <div class="panel-header">
           <div>
-            <h2>ACTIVE MATCHES</h2>
-            <span>{{ matches.length }} ACTIVE / UPCOMING</span>
+            <h2>{{ 'ACTIVE MATCHES' | t }}</h2>
+            <span>{{ matches.length }} {{ 'ACTIVE / UPCOMING' | t }}</span>
           </div>
-          <button>View All</button>
+          <button>{{ 'View All' | t }}</button>
         </div>
 
         <div class="empty-panel" *ngIf="matches.length === 0">
-          No active matches yet.
+          {{ 'No active matches yet.' | t }}
         </div>
 
         <div class="active-list" *ngIf="matches.length > 0">
@@ -235,14 +235,14 @@
       <article class="panel upcoming-panel">
         <div class="panel-header">
           <div>
-            <h2>UPCOMING MATCHES</h2>
-            <span>NEXT FIXTURES</span>
+            <h2>{{ 'UPCOMING MATCHES' | t }}</h2>
+            <span>{{ 'NEXT FIXTURES' | t }}</span>
           </div>
-          <button>View All</button>
+          <button>{{ 'View All' | t }}</button>
         </div>
 
         <div class="empty-panel" *ngIf="upcomingMatches.length === 0">
-          No upcoming matches.
+          {{ 'No upcoming matches.' | t }}
         </div>
 
         <div class="upcoming-list" *ngIf="upcomingMatches.length > 0">
@@ -258,14 +258,14 @@
       <article class="panel news-panel">
         <div class="panel-header">
           <div>
-            <h2>LEAGUE NEWS</h2>
-            <span>LATEST UPDATES</span>
+            <h2>{{ 'LEAGUE NEWS' | t }}</h2>
+            <span>{{ 'LATEST UPDATES' | t }}</span>
           </div>
-          <button>View All</button>
+          <button>{{ 'View All' | t }}</button>
         </div>
 
         <div class="empty-panel" *ngIf="news.length === 0">
-          No league news yet.
+          {{ 'No league news yet.' | t }}
         </div>
 
         <div class="news-list" *ngIf="news.length > 0">
@@ -277,19 +277,19 @@
       </article>
 
       <article class="panel stats-panel">
-        <h2>MY STATS</h2>
+        <h2>{{ 'MY STATS' | t }}</h2>
 
         <div class="win-rate">
           <div class="circle">
             <strong>{{ myStats.winRate }}</strong>
-            <span>WIN RATE</span>
+            <span>{{ 'WIN RATE' | t }}</span>
           </div>
 
           <div class="stat-list">
-            <p>Goals <b>{{ myStats.goals }}</b></p>
-            <p>Assists <b>{{ myStats.assists }}</b></p>
-            <p>Clean Sheets <b>{{ myStats.cleanSheets }}</b></p>
-            <p>Avg Possession <b>{{ myStats.avgPossession }}</b></p>
+            <p>{{ 'Goals' | t }} <b>{{ myStats.goals }}</b></p>
+            <p>{{ 'Assists' | t }} <b>{{ myStats.assists }}</b></p>
+            <p>{{ 'Clean Sheets' | t }} <b>{{ myStats.cleanSheets }}</b></p>
+            <p>{{ 'Avg Possession' | t }} <b>{{ myStats.avgPossession }}</b></p>
           </div>
         </div>
       </article>
@@ -297,31 +297,31 @@
       <article class="panel stream-panel">
         <div class="panel-header">
           <div>
-            <h2>LIVE STREAM</h2>
-            <span>CHAMPIONS ARENA BROADCAST</span>
+            <h2>{{ 'LIVE STREAM' | t }}</h2>
+            <span>{{ 'CHAMPIONS ARENA BROADCAST' | t }}</span>
           </div>
-          <button>Watch Live</button>
+          <button>{{ 'Watch Live' | t }}</button>
         </div>
 
         <div class="stream-placeholder">
-          <img src="/images/live-stream-placeholder.jpg" alt="Live stream" />
+          <img src="/images/live-stream-placeholder.jpg" [alt]="'Live stream' | t" />
 
-          <div class="live-badge">LIVE</div>
+          <div class="live-badge">{{ 'LIVE' | t }}</div>
 
           <div class="stream-overlay">
             <h3>
-              {{ matchOfWeek?.home?.name || 'Home Team' }}
+              {{ matchOfWeek?.home?.name || ('Home Team' | t) }}
               vs
-              {{ matchOfWeek?.away?.name || 'Away Team' }}
+              {{ matchOfWeek?.away?.name || ('Away Team' | t) }}
             </h3>
 
             <p>
-              {{ matchOfWeek?.stage || 'Featured Match' }}
+              {{ matchOfWeek?.stage || ('Featured Match' | t) }}
               ·
-              {{ matchOfWeek?.arena || 'Champions Arena' }}
+              {{ matchOfWeek?.arena || ('Champions Arena' | t) }}
             </p>
 
-            <button>Watch Match</button>
+            <button>{{ 'Watch Match' | t }}</button>
           </div>
         </div>
       </article>
@@ -329,14 +329,14 @@
       <article class="panel activity-panel">
         <div class="panel-header">
           <div>
-            <h2>RECENT ACTIVITY</h2>
-            <span>LIVE UPDATES</span>
+            <h2>{{ 'RECENT ACTIVITY' | t }}</h2>
+            <span>{{ 'LIVE UPDATES' | t }}</span>
           </div>
-          <button>View All</button>
+          <button>{{ 'View All' | t }}</button>
         </div>
 
         <div class="empty-panel" *ngIf="activities.length === 0">
-          No activity yet.
+          {{ 'No activity yet.' | t }}
         </div>
 
         <div class="activity-list" *ngIf="activities.length > 0">
