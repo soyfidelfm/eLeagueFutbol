@@ -5,7 +5,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { firstValueFrom } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { MessageDto } from '../models/message.model';
+import { MessageDto, TypingEvent } from '../models/message.model';
 import { Notification } from '../models/notification.model';
 import {
   DraftRealtimeEvent,
@@ -43,7 +43,23 @@ export class RealtimeService implements OnDestroy {
   private readonly draftEventSubject = new Subject<DraftRealtimeEvent>();
   readonly draftEvents$ = this.draftEventSubject.asObservable();
 
+  private readonly typingSubject = new Subject<TypingEvent>();
+  readonly typing$ = this.typingSubject.asObservable();
+
   constructor(private auth: AuthService) {}
+
+  /** Tells the receiver that the current user is typing. The server resolves the sender from the token. */
+  async sendTyping(receiverUserId: string): Promise<void> {
+    if (!receiverUserId || !this.connection || this.connection.state !== HubConnectionState.Connected) {
+      return;
+    }
+
+    try {
+      await this.connection.invoke('Typing', receiverUserId);
+    } catch (err) {
+      console.error('Failed to send typing event:', err);
+    }
+  }
 
   setCurrentUserId(userId: string): void {
     this.currentUserId = userId;
@@ -162,6 +178,10 @@ export class RealtimeService implements OnDestroy {
 
     this.connection.on('OnlineUsers', (users: PresenceUser[]) => {
       this.onlineUsersSubject.next(users ?? []);
+    });
+
+    this.connection.on('UserTyping', (event: TypingEvent) => {
+      this.typingSubject.next(event);
     });
 
     this.connection.on('DraftEvent', (event: DraftRealtimeEvent) => {

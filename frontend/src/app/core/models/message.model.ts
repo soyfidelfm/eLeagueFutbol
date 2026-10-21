@@ -23,3 +23,12 @@ export interface ConversationDto {
   lastMessageAtUTC: string;
   unreadCount: number;
 }
+
+export interface MessagePageDto {
+  items: MessageDto[];
+  hasMore: boolean;
+}
+
+export interface TypingEvent {
+  senderUserId: string;
+}
