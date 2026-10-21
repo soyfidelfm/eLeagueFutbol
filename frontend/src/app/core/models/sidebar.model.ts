@@ -1,6 +1,5 @@
 export interface SidebarData {
   season: SidebarSeason | null;
-  cup: SidebarCup | null;
 }
 
 export interface SidebarSeason {
@@ -8,10 +7,5 @@ export interface SidebarSeason {
   name: string;
   totalClubs: number;
   totalMatches: number;
-  startsAtUtc: string | null;
-}
-
-export interface SidebarCup {
-  name: string;
   startsAtUtc: string | null;
 }
