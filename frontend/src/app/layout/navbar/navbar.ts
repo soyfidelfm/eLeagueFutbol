@@ -14,6 +14,9 @@ import { MessageService } from '../../core/services/message.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { NotificationInboxService } from '../../core/services/notification-inbox.service';
 import { RealtimeService } from '../../core/services/realtime.service';
+import { SettingsService } from '../../core/services/settings.service';
+import { TranslationService } from '../../core/i18n/translation.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 import { MeUserDto } from '../../core/models/user.model';
 
@@ -25,7 +28,8 @@ import { MeUserDto } from '../../core/models/user.model';
     RouterModule,
     Profile,
     Notifications,
-    MessageNotifications
+    MessageNotifications,
+    TranslatePipe
   ],
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss'
@@ -52,11 +56,16 @@ export class Navbar implements OnInit, OnDestroy {
     private notificationInboxService: NotificationInboxService,
     private realtime: RealtimeService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private settingsService: SettingsService,
+    private i18n: TranslationService
   ) {}
 
   ngOnInit(): void {
     this.loadMe();
+
+    // Reconcile language / time zone / toast preference with the backend after login.
+    this.settingsService.load().subscribe({ error: () => {} });
     this.loadUnreadMessagesCount();
     this.setupPushNotifications();
 
@@ -72,12 +81,17 @@ export class Navbar implements OnInit, OnDestroy {
 
     this.subscription.add(
       this.realtime.userOnline$.subscribe(user => {
-        this.toastMessage = `${user.displayName} se conectó`;
+        if (!this.settingsService.toastsEnabled) {
+          return;
+        }
+
+        const onlineMessage = this.i18n.t('{name} is online', { name: user.displayName });
+        this.toastMessage = onlineMessage;
         this.showToast = true;
         this.cdr.detectChanges();
 
         setTimeout(() => {
-          if (this.toastMessage === `${user.displayName} se conectó`) {
+          if (this.toastMessage === onlineMessage) {
             this.showToast = false;
             this.cdr.detectChanges();
           }
@@ -87,7 +101,7 @@ export class Navbar implements OnInit, OnDestroy {
 
     this.subscription.add(
       this.realtime.draftEvents$.subscribe(event => {
-        if (!event?.eventType) {
+        if (!event?.eventType || !this.settingsService.toastsEnabled) {
           return;
         }
 
@@ -111,50 +125,50 @@ export class Navbar implements OnInit, OnDestroy {
     const type = (eventType ?? '').toLowerCase();
 
     if (type === 'transferoffer') {
-      return 'Nueva oferta de transferencia';
+      return 'New transfer offer';
     }
 
     if (type === 'transfercompleted' || type === 'transferaccepted') {
-      return 'Transferencia completada';
+      return 'Transfer completed';
     }
 
     if (type === 'transferrejected') {
-      return 'Oferta de transferencia rechazada';
+      return 'Transfer offer rejected';
     }
 
     if (type === 'transfercancelled') {
-      return 'Oferta de transferencia cancelada';
+      return 'Transfer offer cancelled';
     }
 
     if (type === 'matchresult' || type.startsWith('match')) {
-      return 'Resultado de partido actualizado';
+      return 'Match result updated';
     }
 
     if (type === 'pickmade' || type === 'pick') {
-      return 'Nuevo pick en el draft';
+      return 'New draft pick';
     }
 
     if (type === 'started' || type === 'start') {
-      return 'El draft inició';
+      return 'The draft has started';
     }
 
     if (type === 'turn' || type === 'turnchanged' || type === 'advanced') {
-      return 'Cambio de turno en el draft';
+      return 'Draft turn changed';
     }
 
     if (type === 'skipped' || type === 'skip') {
-      return 'Turno saltado por tiempo';
+      return 'Turn skipped (time expired)';
     }
 
     if (type === 'completed' || type === 'complete') {
-      return 'Draft completado';
+      return 'Draft completed';
     }
 
     if (type.startsWith('transfer')) {
-      return 'El mercado de transfers se actualizó';
+      return 'Transfer market updated';
     }
 
-    return 'El draft se actualizó';
+    return 'Draft updated';
   }
 
   async setupPushNotifications(): Promise<void> {

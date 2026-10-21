@@ -13,42 +13,42 @@
 
     <a routerLink="/dashboard" routerLinkActive="active">
       <i class="fa-solid fa-house"></i>
-      <span>Dashboard</span>
+      <span>{{ 'Dashboard' | t }}</span>
     </a>
 
     <a routerLink="/matches" routerLinkActive="active">
       <i class="fa-solid fa-futbol"></i>
-      <span>Matches</span>
+      <span>{{ 'Matches' | t }}</span>
     </a>
 
     <a routerLink="/draft" routerLinkActive="active">
       <i class="fa-solid fa-list-ol"></i>
-      <span>Draft</span>
+      <span>{{ 'Draft' | t }}</span>
     </a>
 
     <a routerLink="/transfers" routerLinkActive="active">
       <i class="fa-solid fa-right-left"></i>
-      <span>Transfers</span>
+      <span>{{ 'Transfers' | t }}</span>
     </a>
 
     <a routerLink="/seasons" routerLinkActive="active">
       <i class="fa-solid fa-trophy"></i>
-      <span>Seasons & Tournaments</span>
+      <span>{{ 'Seasons & Tournaments' | t }}</span>
     </a>
 
     <a routerLink="/clubs" routerLinkActive="active">
       <i class="fa-solid fa-shirt"></i>
-      <span>Mi plantilla</span>
+      <span>{{ 'My squad' | t }}</span>
     </a>
 
     <a routerLink="/rankings" routerLinkActive="active">
       <i class="fa-solid fa-chart-line"></i>
-      <span>Rankings</span>
+      <span>{{ 'Rankings' | t }}</span>
     </a>
 
     <a routerLink="/stats" routerLinkActive="active">
       <i class="fa-solid fa-chart-simple"></i>
-      <span>Stats</span>
+      <span>{{ 'Stats' | t }}</span>
     </a>
 
   </nav>
@@ -68,9 +68,9 @@
         [alt]="me?.displayName || 'User'" />
 
       <div class="profile-info">
-        <strong>{{ me?.displayName || 'Loading...' }}</strong>
+        <strong>{{ me?.displayName || ('Loading...' | t) }}</strong>
         <span>
-          {{ me?.gamerTag?.trim() ? me?.gamerTag : (me?.email || 'Profile') }}
+          {{ me?.gamerTag?.trim() ? me?.gamerTag : (me?.email || ('Profile' | t)) }}
         </span>
       </div>
 
@@ -84,12 +84,17 @@
 
       <button type="button" (click)="openProfileModal($event)">
         <i class="fa-regular fa-user"></i>
-        <span>Profile</span>
+        <span>{{ 'Profile' | t }}</span>
       </button>
+
+      <a routerLink="/settings" (click)="showUserMenu = false">
+        <i class="fa-solid fa-gear"></i>
+        <span>{{ 'Settings' | t }}</span>
+      </a>
 
       <button type="button" (click)="logout()">
         <i class="fa-solid fa-right-from-bracket"></i>
-        <span>Sign out</span>
+        <span>{{ 'Sign out' | t }}</span>
       </button>
     </div>
   </div>
@@ -109,5 +114,5 @@
 
 <div class="toast-success" *ngIf="showToast">
   <i class="fa-solid fa-circle-check"></i>
-  <span>{{ toastMessage }}</span>
+  <span>{{ toastMessage | t }}</span>
 </div>
