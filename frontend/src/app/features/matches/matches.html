@@ -2,8 +2,8 @@
 
   <app-loading
     *ngIf="isLoading"
-    title="Loading Matches"
-    message="Loading match schedule, standings and weekly fixtures..."
+    [title]="'Loading Matches' | t"
+    [message]="'Loading match schedule, standings and weekly fixtures...' | t"
     [logo]="true"
     [showBar]="true">
   </app-loading>
@@ -14,7 +14,7 @@
 
     <i class="fa-solid fa-triangle-exclamation"></i>
 
-    <span>{{ errorMessage }}</span>
+    <span>{{ errorMessage | t }}</span>
 
   </div>
 
@@ -25,23 +25,23 @@
       <div class="page-header-content">
 
         <span class="page-eyebrow">
-          MATCH MANAGEMENT
+          {{ 'MATCH MANAGEMENT' | t }}
         </span>
 
-        <h1>Matches</h1>
+        <h1>{{ 'Matches' | t }}</h1>
 
         <p>
-          Select a week and manage all scheduled matches.
+          {{ 'Select a week and manage all scheduled matches.' | t }}
         </p>
 
         <p class="live-line" *ngIf="!seasonClosed">
           <span class="live-dot" [class.refreshing]="isRefreshing"></span>
-          Live fixture
-          <span *ngIf="liveMessage"> · {{ liveMessage }}</span>
+          {{ 'Live fixture' | t }}
+          <span *ngIf="liveMessage"> · {{ liveMessage | t }}</span>
         </p>
 
         <p class="live-line closed" *ngIf="seasonClosed">
-          Season closed — results locked
+          {{ 'Season closed — results locked' | t }}
         </p>
 
       </div>
@@ -51,8 +51,8 @@
         <div class="week-filter">
 
           <app-neon-dropdown
-            label="Week"
-            placeholder="Select week"
+            [label]="'Week' | t"
+            [placeholder]="'Select week' | t"
             [options]="weekOptions"
             [selectedValue]="selectedWeekValue"
             (selectedValueChange)="onWeekDropdownChange($event)">
@@ -68,13 +68,13 @@
 
       <div class="matches-list">
 
-        <div class="status-filter" role="group" aria-label="Filter matches">
+        <div class="status-filter" role="group" [aria-label]="'Filter matches' | t">
           <button
             type="button"
             *ngFor="let option of statusFilterOptions"
             [class.active]="statusFilter === option.value"
             (click)="setStatusFilter(option.value)">
-            {{ option.label }}
+            {{ option.label | t }}
           </button>
         </div>
 
@@ -89,7 +89,7 @@
 
             <i class="fa-solid fa-star"></i>
 
-            Match of the Week
+            {{ 'Match of the Week' | t }}
 
           </div>
 
@@ -218,15 +218,15 @@
 
           <i class="fa-regular fa-calendar-xmark"></i>
 
-          <h3>No matches found</h3>
+          <h3>{{ 'No matches found' | t }}</h3>
 
           <p>
             {{
               statusFilter === 'all'
-                ? 'There are no matches scheduled for this week.'
+                ? ('There are no matches scheduled for this week.' | t)
                 : (statusFilter === 'finished'
-                    ? 'No finished matches this week.'
-                    : 'No upcoming matches this week.')
+                    ? ('No finished matches this week.' | t)
+                    : ('No upcoming matches this week.' | t))
             }}
           </p>
 
@@ -242,7 +242,7 @@
 
           <div>
 
-            <h2>MATCH DETAILS</h2>
+            <h2>{{ 'MATCH DETAILS' | t }}</h2>
 
             <p>
               {{ selectedMatch.arena }}
@@ -300,18 +300,18 @@
         <div class="pending-result-card" *ngIf="pendingProposal as proposal">
 
           <ng-container *ngIf="proposal.canReview; else waitingForOpponent">
-            <h3>PENDING RESULT – REVIEW AND ACCEPT/REJECT</h3>
+            <h3>{{ 'PENDING RESULT – REVIEW AND ACCEPT/REJECT' | t }}</h3>
             <p>
-              Submitted by {{ proposal.submittedByName }}
-              · {{ proposal.createdAtUTC | date:'medium' }}
+              {{ 'Submitted by' | t }} {{ proposal.submittedByName }}
+              · {{ proposal.createdAtUTC | tdate:'medium' }}
             </p>
           </ng-container>
 
           <ng-template #waitingForOpponent>
-            <h3>PENDING RESULT</h3>
-            <p *ngIf="proposal.isMine">Waiting for opponent to accept.</p>
+            <h3>{{ 'PENDING RESULT' | t }}</h3>
+            <p *ngIf="proposal.isMine">{{ 'Waiting for opponent to accept.' | t }}</p>
             <p *ngIf="!proposal.isMine">
-              Submitted by {{ proposal.submittedByName }}. Waiting for review.
+              {{ 'Submitted by' | t }} {{ proposal.submittedByName }}. {{ 'Waiting for review.' | t }}
             </p>
           </ng-template>
 
@@ -322,16 +322,16 @@
           </div>
 
           <div class="pending-summary" *ngIf="proposal.summary as summary">
-            <div><span>Possession</span><strong>{{ summary.homePossession }}% - {{ summary.awayPossession }}%</strong></div>
-            <div><span>Shots</span><strong>{{ summary.homeShots }} - {{ summary.awayShots }}</strong></div>
+            <div><span>{{ 'Possession' | t }}</span><strong>{{ summary.homePossession }}% - {{ summary.awayPossession }}%</strong></div>
+            <div><span>{{ 'Shots' | t }}</span><strong>{{ summary.homeShots }} - {{ summary.awayShots }}</strong></div>
             <div><span>xG</span><strong>{{ summary.homeExpectedGoals }} - {{ summary.awayExpectedGoals }}</strong></div>
-            <div><span>Passes</span><strong>{{ summary.homePasses }} - {{ summary.awayPasses }}</strong></div>
+            <div><span>{{ 'Passes' | t }}</span><strong>{{ summary.homePasses }} - {{ summary.awayPasses }}</strong></div>
           </div>
 
           <div class="pending-players">
             <div>
               <h4>{{ selectedMatch.home.name }}</h4>
-              <small *ngIf="proposal.homePlayers.length === 0">No player stats detected.</small>
+              <small *ngIf="proposal.homePlayers.length === 0">{{ 'No player stats detected.' | t }}</small>
               <div class="pending-player" *ngFor="let player of proposal.homePlayers">
                 <span>{{ player.position }} {{ player.playerName }}</span>
                 <span>{{ player.rating }} · {{ player.goals }}G {{ player.assists }}A</span>
@@ -339,7 +339,7 @@
             </div>
             <div>
               <h4>{{ selectedMatch.away.name }}</h4>
-              <small *ngIf="proposal.awayPlayers.length === 0">No player stats detected.</small>
+              <small *ngIf="proposal.awayPlayers.length === 0">{{ 'No player stats detected.' | t }}</small>
               <div class="pending-player" *ngFor="let player of proposal.awayPlayers">
                 <span>{{ player.position }} {{ player.playerName }}</span>
                 <span>{{ player.rating }} · {{ player.goals }}G {{ player.assists }}A</span>
@@ -350,25 +350,24 @@
           <div class="pending-actions" *ngIf="proposal.canReview">
             <button type="button" class="accept" [disabled]="isReviewingProposal" (click)="acceptProposal()">
               <i class="fa-solid fa-check"></i>
-              Accept
+              {{ 'Accept' | t }}
             </button>
             <button type="button" class="reject" [disabled]="isReviewingProposal" (click)="rejectProposal()">
               <i class="fa-solid fa-xmark"></i>
-              Reject
+              {{ 'Reject' | t }}
             </button>
           </div>
 
         </div>
 
-        <p class="proposal-message" *ngIf="proposalMessage">{{ proposalMessage }}</p>
+        <p class="proposal-message" *ngIf="proposalMessage">{{ proposalMessage | t }}</p>
 
         <div class="result-card" *ngIf="canSubmitResult(selectedMatch)">
 
-          <h3>SUBMIT RESULT</h3>
+          <h3>{{ 'SUBMIT RESULT' | t }}</h3>
 
           <p>
-            Participants and admins can post the final score.
-            Rankings update when the match is finished.
+            {{ 'Participants and admins can post the final score. Rankings update when the match is finished.' | t }}
           </p>
 
           <div class="result-inputs">
@@ -413,8 +412,8 @@
 
             {{
               isSubmittingResult
-                ? 'Saving Result...'
-                : (isFinished(selectedMatch) ? 'Update Result' : 'Submit Result')
+                ? ('Saving Result...' | t)
+                : (isFinished(selectedMatch) ? ('Update Result' | t) : ('Submit Result' | t))
             }}
 
           </button>
@@ -427,7 +426,7 @@
 
             <i class="fa-solid fa-futbol"></i>
 
-            TOP SCORER
+            {{ 'TOP SCORER' | t }}
 
           </h4>
 
@@ -441,7 +440,7 @@
 
               <span>
                 {{ selectedMatch.home.stats.goals }}
-                Goals
+                {{ 'Goals' | t }}
               </span>
 
             </div>
@@ -454,7 +453,7 @@
 
               <span>
                 {{ selectedMatch.away.stats.goals }}
-                Goals
+                {{ 'Goals' | t }}
               </span>
 
             </div>
@@ -469,7 +468,7 @@
 
             <i class="fa-solid fa-share-nodes"></i>
 
-            TOP ASSISTS
+            {{ 'TOP ASSISTS' | t }}
 
           </h4>
 
@@ -483,7 +482,7 @@
 
               <span>
                 {{ selectedMatch.home.stats.assists }}
-                Assists
+                {{ 'Assists' | t }}
               </span>
 
             </div>
@@ -496,7 +495,7 @@
 
               <span>
                 {{ selectedMatch.away.stats.assists }}
-                Assists
+                {{ 'Assists' | t }}
               </span>
 
             </div>
@@ -511,7 +510,7 @@
 
             <i class="fa-solid fa-fire"></i>
 
-            LAST 5 RESULTS
+            {{ 'LAST 5 RESULTS' | t }}
 
           </h4>
 
@@ -535,7 +534,7 @@
 
               <strong>
                 {{ selectedMatch.home.stats.streak.length }}
-                Games
+                {{ 'Games' | t }}
               </strong>
 
             </div>
@@ -558,7 +557,7 @@
 
               <strong>
                 {{ selectedMatch.away.stats.streak.length }}
-                Games
+                {{ 'Games' | t }}
               </strong>
 
             </div>
@@ -577,11 +576,10 @@
 
           <div>
 
-            <h3>UPLOAD & REVIEW MATCH STATS</h3>
+            <h3>{{ 'UPLOAD & REVIEW MATCH STATS' | t }}</h3>
 
             <p>
-              Upload exactly 3 screenshots. OCR will read the
-              information and open the manual review popup before saving.
+              {{ 'Upload exactly 3 screenshots. OCR will read the information and open the manual review popup before saving.' | t }}
             </p>
 
           </div>
@@ -589,7 +587,7 @@
           <div class="upload-group">
 
             <label for="match-summary-image">
-              Match Summary
+              {{ 'Match Summary' | t }}
             </label>
 
             <input
@@ -600,7 +598,7 @@
               (change)="onSummarySelected($event)">
 
             <label for="home-performance-image">
-              Home Team Performance
+              {{ 'Home Team Performance' | t }}
             </label>
 
             <input
@@ -611,7 +609,7 @@
               (change)="onHomePerformanceSelected($event)">
 
             <label for="away-performance-image">
-              Away Team Performance
+              {{ 'Away Team Performance' | t }}
             </label>
 
             <input
@@ -642,8 +640,8 @@
 
             {{
               isUploadingResult
-                ? 'Reading Screenshots...'
-                : 'Read Stats & Review'
+                ? ('Reading Screenshots...' | t)
+                : ('Read Stats & Review' | t)
             }}
 
           </button>
@@ -670,8 +668,8 @@
 
             {{
               isSubmittingProposal
-                ? 'Submitting...'
-                : (pendingProposal ? 'Result Pending Review' : 'Submit for Opponent Approval')
+                ? ('Submitting...' | t)
+                : (pendingProposal ? ('Result Pending Review' | t) : ('Submit for Opponent Approval' | t))
             }}
 
           </button>
@@ -684,7 +682,7 @@
 
             <i class="fa-solid fa-keyboard"></i>
 
-            Enter Stats Manually
+            {{ 'Enter Stats Manually' | t }}
 
           </button>
 
@@ -694,7 +692,7 @@
 
               <i class="fa-solid fa-check"></i>
 
-              Match Summary selected
+              {{ 'Match Summary selected' | t }}
 
             </small>
 
@@ -702,7 +700,7 @@
 
               <i class="fa-solid fa-check"></i>
 
-              Home Team Performance selected
+              {{ 'Home Team Performance selected' | t }}
 
             </small>
 
@@ -710,7 +708,7 @@
 
               <i class="fa-solid fa-check"></i>
 
-              Away Team Performance selected
+              {{ 'Away Team Performance selected' | t }}
 
             </small>
 
@@ -720,8 +718,7 @@
 
             <i class="fa-regular fa-circle-question"></i>
 
-            Detected values will not be saved until you review and
-            confirm them in the manual popup.
+            {{ 'Detected values will not be saved until you review and confirm them in the manual popup.' | t }}
 
           </small>
 

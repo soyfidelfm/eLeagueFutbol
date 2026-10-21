@@ -38,6 +38,8 @@ import {
 import {
   ManualMatchStatsModal
 } from './components/manual-match-stats-modal/manual-match-stats-modal';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
 
 @Component({
   selector: 'app-matches',
@@ -47,7 +49,8 @@ import {
     FormsModule,
     NeonDropdownComponent,
     AppLoading,
-    ManualMatchStatsModal
+    ManualMatchStatsModal,
+    TranslatePipe, LocalizedDatePipe
   ],
   templateUrl: './matches.html',
   styleUrl: './matches.scss',
