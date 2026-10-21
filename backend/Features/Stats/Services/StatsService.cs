@@ -94,6 +94,45 @@ public class StatsService : IStatsService
 			})
 			.ToList();
 
+		// Real performance over last matches (aggregated)
+		var recentMatches = await _context.Matches
+			.AsNoTracking()
+			.Where(m => !m.IsDeleted && m.Status == "Finished")
+			.OrderByDescending(m => m.MatchDate ?? m.CreatedAt)
+			.Take(10)
+			.Select(m => new { m.MatchId, m.MatchDate, m.CreatedAt })
+			.ToListAsync();
+
+		var matchIds = recentMatches.Select(m => m.MatchId).ToList();
+
+		var matchStats = await _context.MatchPlayerStats
+			.AsNoTracking()
+			.Where(s => matchIds.Contains(s.MatchId) && !s.IsDeleted)
+			.GroupBy(s => s.MatchId)
+			.Select(g => new
+			{
+				MatchId = g.Key,
+				Goals = g.Sum(x => x.Goals),
+				Assists = g.Sum(x => x.Assists),
+				Rating = Math.Round(g.Average(x => x.Rating), 2)
+			})
+			.ToListAsync();
+
+		var performance = recentMatches
+			.OrderBy(m => m.MatchDate ?? m.CreatedAt)
+			.Select((m, index) =>
+			{
+				var stats = matchStats.FirstOrDefault(s => s.MatchId == m.MatchId);
+				return new PerformancePointDto
+				{
+					Label = $"M{index + 1}",
+					Goals = stats?.Goals ?? 0,
+					Assists = stats?.Assists ?? 0,
+					Rating = stats?.Rating ?? 0
+				};
+			})
+			.ToList();
+
 		return new StatsOverviewDto
 		{
 			Kpis =
@@ -130,6 +169,7 @@ public class StatsService : IStatsService
 				}
 			],
 			TopPlayers = topPlayers,
+			Performance = performance,
 			GoalsBreakdown = new GoalsBreakdownDto
 			{
 				TotalGoals = totalGoals,
