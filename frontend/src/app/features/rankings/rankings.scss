@@ -362,3 +362,67 @@ table {
     min-width: 820px;
   }
 }
+.ranking-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) repeat(2, minmax(160px, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+  margin: 18px 0;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.search-box label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.search-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.45);
+
+  i {
+    color: var(--neon-primary);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text-main);
+  }
+
+  &:focus-within {
+    box-shadow: var(--shadow-neon);
+  }
+}
+
+.clear-btn {
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--neon-primary);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--neon-soft);
+  }
+}

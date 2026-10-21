@@ -113,6 +113,31 @@
 
       </div>
 
+      <div class="ranking-filters" *ngIf="clubRankings.length > 0">
+        <div class="search-box">
+          <label>{{ 'Search' | t }}</label>
+          <div class="search-input">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" [(ngModel)]="searchTerm" [placeholder]="'Search club or player' | t" />
+          </div>
+        </div>
+        <app-neon-dropdown label="Club" [options]="clubOptions"
+          [selectedValue]="clubFilter" (selectedValueChange)="clubFilter = $event"></app-neon-dropdown>
+        <app-neon-dropdown label="Sort by" [options]="sortOptions"
+          [selectedValue]="sortBy" (selectedValueChange)="onSortChange($event)"></app-neon-dropdown>
+        <button type="button" class="clear-btn" *ngIf="hasActiveFilters" (click)="clearFilters()">
+          <i class="fa-solid fa-xmark"></i> {{ 'Clear filters' | t }}
+        </button>
+      </div>
+
+      <app-empty-state
+        *ngIf="clubRankings.length > 0 && filteredClubRankings.length === 0"
+        icon="fa-solid fa-filter-circle-xmark"
+        title="No clubs match your filters"
+        description="Try another club or player name, or clear the filters.">
+        <button type="button" class="clear-btn" (click)="clearFilters()">{{ 'Clear filters' | t }}</button>
+      </app-empty-state>
+
       <app-empty-state
         *ngIf="clubRankings.length === 0"
         icon="fa-solid fa-shield-halved"
@@ -121,7 +146,7 @@
       </app-empty-state>
 
       <div
-        *ngIf="clubRankings.length > 0"
+        *ngIf="filteredClubRankings.length > 0"
         class="table-wrap"
       >
 
@@ -145,7 +170,7 @@
 
           <tbody>
 
-            <tr *ngFor="let club of clubRankings">
+            <tr *ngFor="let club of filteredClubRankings">
 
               <td>
                 <span
