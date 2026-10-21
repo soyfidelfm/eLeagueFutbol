@@ -162,6 +162,15 @@ export class Matches implements OnInit, OnDestroy {
   weekOptions: NeonDropdownOption[] = [];
 
   matches: MatchView[] = [];
+
+  /** Client-side filter applied to the selected week's matches. */
+  statusFilter: 'all' | 'upcoming' | 'finished' = 'all';
+
+  readonly statusFilterOptions: { value: 'all' | 'upcoming' | 'finished'; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'upcoming', label: 'Upcoming' },
+    { value: 'finished', label: 'Finished' }
+  ];
   selectedMatch: MatchView | null = null;
 
   selectedResultFiles: File[] = [];
@@ -207,7 +216,7 @@ export class Matches implements OnInit, OnDestroy {
           return;
         }
 
-        this.liveMessage = 'Resultado actualizado';
+        this.liveMessage = 'Result updated';
         this.loadMatches(false);
       })
     );
@@ -434,7 +443,7 @@ export class Matches implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.liveMessage = 'Resultado guardado';
+          this.liveMessage = 'Result saved';
           this.loadMatches(false);
         },
         error: error => {
@@ -607,7 +616,7 @@ export class Matches implements OnInit, OnDestroy {
 
   onManualStatsSaved(): void {
     this.manualStatsMatch = null;
-    this.liveMessage = 'Estadísticas guardadas';
+    this.liveMessage = 'Stats saved';
     this.loadMatches(false);
   }
 
@@ -615,18 +624,47 @@ export class Matches implements OnInit, OnDestroy {
     return this.selectedWeek.toString();
   }
 
+  setStatusFilter(filter: 'all' | 'upcoming' | 'finished'): void {
+    this.statusFilter = filter;
+    this.cdr.detectChanges();
+  }
+
   get filteredMatches(): MatchView[] {
+    if (this.statusFilter === 'finished') {
+      return this.matches.filter(x => this.isFinished(x));
+    }
+
+    if (this.statusFilter === 'upcoming') {
+      return this.matches.filter(x => {
+        const status = (x.status ?? '').toLowerCase();
+        return status !== 'finished' && status !== 'cancelled';
+      });
+    }
+
     return this.matches;
   }
 
   get matchOfTheWeek(): MatchView | null {
+    const list = this.filteredMatches;
+
     return (
-      this.matches.find(
+      list.find(
         x => x.isMatchOfTheWeek
       ) ??
-      this.matches[0] ??
+      list[0] ??
       null
     );
+  }
+
+  /** First letter of a team name, used when the logo is missing. */
+  teamInitial(name?: string | null): string {
+    return (name ?? '').trim().charAt(0).toUpperCase() || '?';
+  }
+
+  /** Falls back to the placeholder when a logo URL fails to load. */
+  onLogoError(team: { logo?: string | null }): void {
+    team.logo = '';
+    this.cdr.detectChanges();
   }
 
   get regularMatches(): MatchView[] {
@@ -634,10 +672,10 @@ export class Matches implements OnInit, OnDestroy {
       this.matchOfTheWeek;
 
     if (!matchOfTheWeek) {
-      return this.matches;
+      return this.filteredMatches;
     }
 
-    return this.matches.filter(
+    return this.filteredMatches.filter(
       x => x.id !== matchOfTheWeek.id
     );
   }

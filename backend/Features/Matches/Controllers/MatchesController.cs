@@ -1,7 +1,6 @@
 using backend.Data;
 using backend.Features.Matches.Dtos;
 using backend.Features.Matches.Services;
-using backend.Features.Realtime;
 using backend.Features.Users.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,18 +15,15 @@ public class MatchesController : ControllerBase
 {
 	private readonly IMatchService _matchService;
 	private readonly IAdminAccessService _adminAccess;
-	private readonly IAppRealtimeService _realtime;
 	private readonly AppDbContext _db;
 
 	public MatchesController(
 		IMatchService matchService,
 		IAdminAccessService adminAccess,
-		IAppRealtimeService realtime,
 		AppDbContext db)
 	{
 		_matchService = matchService;
 		_adminAccess = adminAccess;
-		_realtime = realtime;
 		_db = db;
 	}
 
@@ -84,7 +80,7 @@ public class MatchesController : ControllerBase
 			if (result is null)
 				return NotFound();
 
-			await PublishMatchResultAsync(matchId);
+			// matchResult is published once inside MatchService.UploadResultAsync.
 			return Ok(result);
 		}
 		catch (UnauthorizedAccessException ex)
@@ -93,18 +89,33 @@ public class MatchesController : ControllerBase
 		}
 	}
 
+	[Authorize]
 	[HttpPost("{matchId:guid}/stats-upload")]
 	[Consumes("multipart/form-data")]
 	public async Task<ActionResult<MatchStatsUploadResultDto>> UploadStatsImage(
 		Guid matchId,
 		[FromForm] UploadMatchStatsImageDto dto)
 	{
-		var result = await _matchService.UploadStatsImageAsync(matchId, dto);
+		var auth0Id = GetAuth0Id();
 
-		if (result is null)
-			return NotFound();
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
 
-		return Ok(result);
+		try
+		{
+			await EnsureCanSubmitResultAsync(matchId, auth0Id);
+
+			var result = await _matchService.UploadStatsImageAsync(matchId, dto);
+
+			if (result is null)
+				return NotFound();
+
+			return Ok(result);
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
 	}
 
 	[Authorize]
@@ -198,7 +209,7 @@ public class MatchesController : ControllerBase
 				AwayScore = dto.AwayGoals
 			});
 
-			await PublishMatchResultAsync(matchId);
+			// UploadResultAsync publishes matchResult; no extra publish here.
 
 			return Ok(new
 			{
@@ -237,20 +248,6 @@ public class MatchesController : ControllerBase
 
 		if (user.UserId != match.HomeUserId && user.UserId != match.AwayUserId)
 			throw new UnauthorizedAccessException("Only the match participants or an admin can submit the result.");
-	}
-
-	private async Task PublishMatchResultAsync(Guid matchId)
-	{
-		var seasonId = await _db.Matches
-			.AsNoTracking()
-			.Where(x => x.MatchId == matchId)
-			.Select(x => x.Tournament.SeasonId)
-			.FirstOrDefaultAsync();
-
-		if (seasonId == Guid.Empty)
-			return;
-
-		await _realtime.PublishDraftEventAsync(seasonId, "matchResult");
 	}
 
 	private string? GetAuth0Id()

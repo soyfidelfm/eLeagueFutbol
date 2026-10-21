@@ -68,6 +68,16 @@
 
       <div class="matches-list">
 
+        <div class="status-filter" role="group" aria-label="Filter matches">
+          <button
+            type="button"
+            *ngFor="let option of statusFilterOptions"
+            [class.active]="statusFilter === option.value"
+            (click)="setStatusFilter(option.value)">
+            {{ option.label }}
+          </button>
+        </div>
+
         <article
           class="match-card match-of-week"
           *ngIf="matchOfTheWeek as match"
@@ -93,9 +103,7 @@
 
             </div>
 
-            <img
-              [src]="match.home.logo"
-              alt="Home logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: match.home, alt: 'Home logo' }"></ng-container>
 
           </div>
 
@@ -125,9 +133,7 @@
 
           <div class="team away">
 
-            <img
-              [src]="match.away.logo"
-              alt="Away logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: match.away, alt: 'Away logo' }"></ng-container>
 
             <div>
 
@@ -160,9 +166,7 @@
 
             </div>
 
-            <img
-              [src]="match.home.logo"
-              alt="Home logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: match.home, alt: 'Home logo' }"></ng-container>
 
           </div>
 
@@ -192,9 +196,7 @@
 
           <div class="team away">
 
-            <img
-              [src]="match.away.logo"
-              alt="Away logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: match.away, alt: 'Away logo' }"></ng-container>
 
             <div>
 
@@ -219,7 +221,13 @@
           <h3>No matches found</h3>
 
           <p>
-            There are no matches scheduled for this week.
+            {{
+              statusFilter === 'all'
+                ? 'There are no matches scheduled for this week.'
+                : (statusFilter === 'finished'
+                    ? 'No finished matches this week.'
+                    : 'No upcoming matches this week.')
+            }}
           </p>
 
         </div>
@@ -252,9 +260,7 @@
 
           <div class="versus-team">
 
-            <img
-              [src]="selectedMatch.home.logo"
-              alt="Home logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: selectedMatch.home, alt: 'Home logo' }"></ng-container>
 
             <h3>{{ selectedMatch.home.name }}</h3>
 
@@ -281,9 +287,7 @@
 
           <div class="versus-team">
 
-            <img
-              [src]="selectedMatch.away.logo"
-              alt="Away logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: selectedMatch.away, alt: 'Away logo' }"></ng-container>
 
             <h3>{{ selectedMatch.away.name }}</h3>
 
@@ -442,7 +446,7 @@
 
             <i class="fa-solid fa-fire"></i>
 
-            WIN STREAK
+            LAST 5 RESULTS
 
           </h4>
 
@@ -635,6 +639,20 @@
     </div>
 
   </ng-container>
+
+  <ng-template #teamLogo let-team let-alt="alt">
+    <img
+      *ngIf="team?.logo; else logoPlaceholder"
+      [src]="team.logo"
+      [alt]="alt"
+      (error)="onLogoError(team)">
+
+    <ng-template #logoPlaceholder>
+      <span class="logo-placeholder" [attr.aria-label]="alt" role="img">
+        {{ teamInitial(team?.name) }}
+      </span>
+    </ng-template>
+  </ng-template>
 
 </section>
 

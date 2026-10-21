@@ -756,3 +756,61 @@
     height: 78px;
   }
 }
+
+/* =========================================
+   LOGO PLACEHOLDER + STATUS FILTER
+========================================= */
+
+.logo-placeholder {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 255, 136, .35);
+  background: rgba(0, 255, 136, .08);
+  color: var(--neon-primary, #00ff88);
+  font-size: 28px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.versus-team .logo-placeholder {
+  width: 96px;
+  height: 96px;
+  font-size: 38px;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .team .logo-placeholder {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+}
+
+.status-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+
+  button {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .03);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+
+    &.active {
+      border-color: var(--neon-primary, #00ff88);
+      color: var(--neon-primary, #00ff88);
+      background: rgba(0, 255, 136, .08);
+    }
+  }
+}
