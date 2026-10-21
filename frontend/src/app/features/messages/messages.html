@@ -4,8 +4,8 @@
 
     <app-loading
   *ngIf="isLoading"
-  title="Loading Messages"
-  message="Syncing conversations and notifications..."
+  [title]="'Loading Messages' | t"
+  [message]="'Syncing conversations and notifications...' | t"
   [logo]="true"
   [showBar]="true">
 </app-loading>
@@ -14,8 +14,8 @@
 
       <header class="inbox-header">
         <div>
-          <span>INBOX</span>
-          <h1>Messages</h1>
+          <span>{{ 'INBOX' | t }}</span>
+          <h1>{{ 'Messages' | t }}</h1>
         </div>
 
         <button type="button" (click)="startNewMessage()">
@@ -28,7 +28,7 @@
 
         <input
           type="text"
-          placeholder="Search conversations..."
+          [placeholder]="'Search conversations...' | t"
           [(ngModel)]="conversationSearchTerm">
       </div>
 
@@ -57,7 +57,7 @@
             </div>
 
             <span class="time">
-              {{ item.lastMessageAtUTC | date:'shortTime' }}
+              {{ item.lastMessageAtUTC | tdate:'shortTime' }}
             </span>
 
             <span class="unread-badge" *ngIf="item.unreadCount > 0">
@@ -72,9 +72,9 @@
 
             <i class="fa-solid fa-comments"></i>
 
-            <strong>No conversations yet</strong>
+            <strong>{{ 'No conversations yet' | t }}</strong>
 
-            <span>Start a message with another player.</span>
+            <span>{{ 'Start a message with another player.' | t }}</span>
 
           </div>
 
@@ -108,8 +108,8 @@
 
         <div>
           <strong>{{ selectedConversation?.displayName }}</strong>
-          <span *ngIf="isUserOnline(selectedUserId)" class="online-label">Online</span>
-          <span *ngIf="!isUserOnline(selectedUserId)">Private message</span>
+          <span *ngIf="isUserOnline(selectedUserId)" class="online-label">{{ 'Online' | t }}</span>
+          <span *ngIf="!isUserOnline(selectedUserId)">{{ 'Private message' | t }}</span>
         </div>
 
       </header>
@@ -118,8 +118,8 @@
 
         <app-loading
   *ngIf="isLoadingConversation"
-  title="Loading Conversation"
-  message="Retrieving messages..."
+  [title]="'Loading Conversation' | t"
+  [message]="'Retrieving messages...' | t"
   [small]="true"
   [logo]="false"
   [showBar]="false">
@@ -129,7 +129,7 @@
 
           <div class="older-loading" *ngIf="isLoadingOlder">
             <i class="fa-solid fa-spinner fa-spin"></i>
-            Loading older messages...
+            {{ 'Loading older messages...' | t }}
           </div>
 
           <div
@@ -141,7 +141,7 @@
               <p>{{ message.text }}</p>
 
               <span>
-                {{ message.sentAtUTC | date:'shortTime' }}
+                {{ message.sentAtUTC | tdate:'shortTime' }}
               </span>
             </div>
 
@@ -153,14 +153,14 @@
 
             <i class="fa-solid fa-paper-plane"></i>
 
-            <strong>No messages yet</strong>
+            <strong>{{ 'No messages yet' | t }}</strong>
 
-            <span>Send the first message.</span>
+            <span>{{ 'Send the first message.' | t }}</span>
 
           </div>
 
           <div class="typing-indicator" *ngIf="isOtherUserTyping">
-            {{ selectedConversation?.displayName || 'User' }} is typing...
+            {{ selectedConversation?.displayName || ('User' | t) }} {{ 'is typing...' | t }}
           </div>
 
         </ng-container>
@@ -171,7 +171,7 @@
 
         <textarea
           rows="1"
-          placeholder="Write a message..."
+          [placeholder]="'Write a message...' | t"
           [(ngModel)]="newMessageText"
           (input)="onComposerInput()"
           (keydown.enter)="sendOnEnter($event)">
@@ -201,13 +201,13 @@
 
         <i class="fa-solid fa-envelope-open-text"></i>
 
-        <h2>Select a message</h2>
+        <h2>{{ 'Select a message' | t }}</h2>
 
-        <p>Choose a conversation or start a new one.</p>
+        <p>{{ 'Choose a conversation or start a new one.' | t }}</p>
 
         <button type="button" (click)="startNewMessage()">
           <i class="fa-solid fa-pen"></i>
-          New Message
+          {{ 'New Message' | t }}
         </button>
 
       </section>
@@ -234,16 +234,16 @@
 
       </button>
 
-      <span>NEW MESSAGE</span>
+      <span>{{ 'NEW MESSAGE' | t }}</span>
 
-      <h2>Choose Player</h2>
+      <h2>{{ 'Choose Player' | t }}</h2>
 
       <div class="search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
 
         <input
           type="text"
-          placeholder="Search player..."
+          [placeholder]="'Search player...' | t"
           [(ngModel)]="userSearchTerm"
           (input)="searchUsers()">
       </div>
@@ -252,8 +252,8 @@
 
         <app-loading
   *ngIf="isSearchingUsers"
-  title="Searching Players"
-  message="Finding league users..."
+  [title]="'Searching Players' | t"
+  [message]="'Finding league users...' | t"
   [small]="true"
   [logo]="false"
   [showBar]="false">
@@ -277,7 +277,7 @@
 
             <div>
               <strong>{{ user.displayName }}</strong>
-              <small>{{ isUserOnline(user.userId) ? 'Online' : 'Start private message' }}</small>
+              <small>{{ isUserOnline(user.userId) ? ('Online' | t) : ('Start private message' | t) }}</small>
             </div>
 
             <i class="fa-solid fa-arrow-right"></i>
@@ -290,9 +290,9 @@
 
   <i class="fa-solid fa-user-plus"></i>
 
-  <strong>Search players</strong>
+  <strong>{{ 'Search players' | t }}</strong>
 
-  <span>Type at least 4 characters.</span>
+  <span>{{ 'Type at least 4 characters.' | t }}</span>
 
 </div>
 
@@ -302,9 +302,9 @@
 
             <i class="fa-solid fa-user-slash"></i>
 
-            <strong>No players found</strong>
+            <strong>{{ 'No players found' | t }}</strong>
 
-            <span>Try another name, gamer tag, or club.</span>
+            <span>{{ 'Try another name, gamer tag, or club.' | t }}</span>
 
           </div>
 

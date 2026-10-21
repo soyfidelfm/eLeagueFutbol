@@ -5,11 +5,14 @@ import { Subscription, take } from 'rxjs';
 
 import { MessageService } from '../../core/services/message.service';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-message-notifications',
   standalone: true,
-  imports: [CommonModule, RouterModule, AppLoading],
+  imports: [CommonModule, RouterModule, AppLoading,
+    TranslatePipe
+  ],
   templateUrl: './message-notifications.html',
   styleUrl: './message-notifications.scss'
 })

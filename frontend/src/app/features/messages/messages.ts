@@ -14,6 +14,8 @@ import {
   MessageDto,
   SendMessageDto
 } from '../../core/models/message.model';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
 
 interface MessageUserResult {
   userId: string;
@@ -24,7 +26,9 @@ interface MessageUserResult {
 @Component({
   selector: 'app-messages',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppLoading],
+  imports: [CommonModule, FormsModule, AppLoading,
+    TranslatePipe, LocalizedDatePipe
+  ],
   templateUrl: './messages.html',
   styleUrl: './messages.scss',
   styles: [`
