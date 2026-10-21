@@ -78,40 +78,19 @@
           <span><i class="dot wins"></i> Rating</span>
         </div>
 
-        <div class="chart-placeholder line-chart" *ngIf="stats.performance.length > 0; else noPerformance">
-          <svg viewBox="0 0 600 240" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="greenArea" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#00ff88" stop-opacity="0.35" />
-                <stop offset="100%" stop-color="#00ff88" stop-opacity="0" />
-              </linearGradient>
-            </defs>
+        <div class="chart-placeholder" *ngIf="stats.performance.length > 0; else noPerformance">
+          <div class="perf-chart" [style.--perf-count]="stats.performance.length">
+            <div class="perf-col" *ngFor="let point of stats.performance"
+                 [title]="point.label + ': ' + point.goals + ' goals, ' + point.assists + ' assists, rating ' + point.rating">
+              <span class="perf-rating">{{ point.rating | number:'1.1-1' }}</span>
+              <div class="perf-bars">
+                <div class="perf-bar goals" [style.height.%]="barHeight(point.goals)"></div>
+                <div class="perf-bar assists" [style.height.%]="barHeight(point.assists)"></div>
+              </div>
+            </div>
+          </div>
 
-            <!-- Simple dynamic bars / lines from real data -->
-            <g *ngFor="let point of stats.performance; let i = index">
-              <rect
-                [attr.x]="20 + i * 55"
-                [attr.y]="220 - (point.goals * 12)"
-                width="12"
-                [attr.height]="point.goals * 12"
-                fill="#00ff88"
-                opacity="0.8" />
-              <rect
-                [attr.x]="34 + i * 55"
-                [attr.y]="220 - (point.assists * 12)"
-                width="12"
-                [attr.height]="point.assists * 12"
-                fill="#18bfff"
-                opacity="0.8" />
-              <circle
-                [attr.cx]="40 + i * 55"
-                [attr.cy]="200 - (point.rating * 15)"
-                r="4"
-                fill="#8b5cf6" />
-            </g>
-          </svg>
-
-          <div class="chart-labels">
+          <div class="perf-labels" [style.--perf-count]="stats.performance.length">
             <span *ngFor="let point of stats.performance">{{ point.label }}</span>
           </div>
         </div>

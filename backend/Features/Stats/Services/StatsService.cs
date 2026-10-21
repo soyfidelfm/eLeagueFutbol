@@ -1,5 +1,6 @@
-﻿using backend.Application.Stats.DTOs;
+using backend.Application.Stats.DTOs;
 using backend.Data;
+using backend.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Application.Stats;
@@ -97,10 +98,10 @@ public class StatsService : IStatsService
 		// Real performance over last matches (aggregated)
 		var recentMatches = await _context.Matches
 			.AsNoTracking()
-			.Where(m => !m.IsDeleted && m.Status == "Finished")
-			.OrderByDescending(m => m.MatchDate ?? m.CreatedAt)
+			.Where(m => !m.IsDeleted && m.Status == MatchStatus.Finished)
+			.OrderByDescending(m => m.MatchDate)
 			.Take(10)
-			.Select(m => new { m.MatchId, m.MatchDate, m.CreatedAt })
+			.Select(m => new { m.MatchId, m.MatchDate })
 			.ToListAsync();
 
 		var matchIds = recentMatches.Select(m => m.MatchId).ToList();
@@ -119,13 +120,13 @@ public class StatsService : IStatsService
 			.ToListAsync();
 
 		var performance = recentMatches
-			.OrderBy(m => m.MatchDate ?? m.CreatedAt)
+			.OrderBy(m => m.MatchDate)
 			.Select((m, index) =>
 			{
 				var stats = matchStats.FirstOrDefault(s => s.MatchId == m.MatchId);
 				return new PerformancePointDto
 				{
-					Label = $"M{index + 1}",
+					Label = m.MatchDate.ToString("dd/MM"),
 					Goals = stats?.Goals ?? 0,
 					Assists = stats?.Assists ?? 0,
 					Rating = stats?.Rating ?? 0
