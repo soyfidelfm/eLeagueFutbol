@@ -88,7 +88,7 @@ public class TransferService : ITransferService
 
 		foreach (var offer in offers)
 		{
-			offfer.IsIncoming = myClub is not null && offer.FromUserClubId == myClub.UserClubId;
+			offer.IsIncoming = myClub is not null && offer.FromUserClubId == myClub.UserClubId;
 		}
 
 		return new TransferBoardDto
