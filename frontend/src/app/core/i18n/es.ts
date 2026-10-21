@@ -1,5 +1,24 @@
 // Spanish dictionary. Keys are the English source strings used in templates/TS.
 export const ES: Record<string, string> = {
+  // Global search
+  "Global search": "Búsqueda global",
+  "Search players, clubs or matches...": "Buscar jugadores, clubes o partidos...",
+  "Searching...": "Buscando...",
+  "Clear": "Limpiar",
+  "Esc": "Esc",
+  "Type at least 2 characters. Try a gamer tag, a club name or a week (e.g. week 3).": "Escribe al menos 2 caracteres. Prueba con un gamer tag, el nombre de un club o una semana (p. ej. semana 3).",
+  "Search failed": "La búsqueda falló",
+  "Could not complete the search. Please try again.": "No se pudo completar la búsqueda. Inténtalo de nuevo.",
+  "No results": "Sin resultados",
+  "No players, clubs or matches match your search.": "Ningún jugador, club o partido coincide con tu búsqueda.",
+  "You": "Tú",
+  "Clubs": "Clubes",
+  "My club": "Mi club",
+  "vs": "vs",
+  "Week {n}": "Semana {n}",
+  "to navigate": "para moverte",
+  "to open": "para abrir",
+  "to close": "para cerrar",
   // Transfers / Rankings filters
   "All statuses": "Todos los estados",
   "Available": "Disponible",
