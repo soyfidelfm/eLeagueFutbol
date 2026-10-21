@@ -90,7 +90,8 @@ builder.Services.AddCors(options =>
 				"https://www.eleaguefutbol.com"
 			)
 			.AllowAnyHeader()
-			.AllowAnyMethod();
+			.AllowAnyMethod()
+			.AllowCredentials();
 	});
 });
 

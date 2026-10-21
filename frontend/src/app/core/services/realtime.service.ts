@@ -20,6 +20,7 @@ export class RealtimeService implements OnDestroy {
   private connection?: HubConnection;
   private starting?: Promise<void>;
   private currentUserId = '';
+  private lastSeasonId: string | null = null;
 
   private readonly onlineUsersSubject = new BehaviorSubject<PresenceUser[]>([]);
   readonly onlineUsers$ = this.onlineUsersSubject.asObservable();
@@ -71,6 +72,10 @@ export class RealtimeService implements OnDestroy {
   }
 
   async joinSeason(seasonId: string): Promise<void> {
+    if (seasonId) {
+      this.lastSeasonId = seasonId;
+    }
+
     if (!seasonId || !this.connection || this.connection.state !== HubConnectionState.Connected) {
       return;
     }
@@ -79,6 +84,10 @@ export class RealtimeService implements OnDestroy {
   }
 
   async leaveSeason(seasonId: string): Promise<void> {
+    if (seasonId && this.lastSeasonId === seasonId) {
+      this.lastSeasonId = null;
+    }
+
     if (!seasonId || !this.connection || this.connection.state !== HubConnectionState.Connected) {
       return;
     }
@@ -160,6 +169,18 @@ export class RealtimeService implements OnDestroy {
       window.dispatchEvent(
         new CustomEvent('eleague-draft-event', { detail: event })
       );
+    });
+
+    this.connection.onreconnected(async () => {
+      if (!this.lastSeasonId || !this.connection) {
+        return;
+      }
+
+      try {
+        await this.connection.invoke('JoinSeason', this.lastSeasonId);
+      } catch (err) {
+        console.error('Failed to rejoin season after reconnect:', err);
+      }
     });
 
     await this.connection.start();
