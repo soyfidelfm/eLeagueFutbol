@@ -15,15 +15,18 @@ public class MatchesController : ControllerBase
 {
 	private readonly IMatchService _matchService;
 	private readonly IAdminAccessService _adminAccess;
+	private readonly IPendingMatchResultService _pendingResults;
 	private readonly AppDbContext _db;
 
 	public MatchesController(
 		IMatchService matchService,
 		IAdminAccessService adminAccess,
+		IPendingMatchResultService pendingResults,
 		AppDbContext db)
 	{
 		_matchService = matchService;
 		_adminAccess = adminAccess;
+		_pendingResults = pendingResults;
 		_db = db;
 	}
 
@@ -220,6 +223,80 @@ public class MatchesController : ControllerBase
 		catch (UnauthorizedAccessException ex)
 		{
 			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
+	}
+
+	// ===== Pending OCR result proposals =====
+
+	/// <summary>Submit 3 screenshots; OCR runs and the result is stored as Pending (nothing saved to the match).</summary>
+	[Authorize]
+	[HttpPost("{matchId:guid}/result-proposals")]
+	[Consumes("multipart/form-data")]
+	public Task<IActionResult> SubmitResultProposal(
+		Guid matchId,
+		[FromForm] SubmitMatchResultProposalDto dto)
+	{
+		return HandleProposalAsync(async auth0Id =>
+			Ok(await _pendingResults.SubmitAsync(matchId, auth0Id, dto)));
+	}
+
+	/// <summary>Current pending proposal for the match, or 204 when there is none.</summary>
+	[Authorize]
+	[HttpGet("{matchId:guid}/result-proposals/pending")]
+	public Task<IActionResult> GetPendingResultProposal(Guid matchId)
+	{
+		return HandleProposalAsync(async auth0Id =>
+		{
+			var pending = await _pendingResults.GetPendingAsync(matchId, auth0Id);
+			return pending is null ? NoContent() : Ok(pending);
+		});
+	}
+
+	[Authorize]
+	[HttpPost("{matchId:guid}/result-proposals/{proposalId:guid}/accept")]
+	public Task<IActionResult> AcceptResultProposal(Guid matchId, Guid proposalId)
+	{
+		return HandleProposalAsync(async auth0Id =>
+			Ok(await _pendingResults.AcceptAsync(matchId, proposalId, auth0Id)));
+	}
+
+	[Authorize]
+	[HttpPost("{matchId:guid}/result-proposals/{proposalId:guid}/reject")]
+	public Task<IActionResult> RejectResultProposal(Guid matchId, Guid proposalId)
+	{
+		return HandleProposalAsync(async auth0Id =>
+		{
+			await _pendingResults.RejectAsync(matchId, proposalId, auth0Id);
+			return NoContent();
+		});
+	}
+
+	private async Task<IActionResult> HandleProposalAsync(Func<string, Task<IActionResult>> action)
+	{
+		var auth0Id = GetAuth0Id();
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
+
+		try
+		{
+			return await action(auth0Id);
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(new { message = ex.Message });
+		}
+		catch (InvalidOperationException ex)
+		{
+			return Conflict(new { message = ex.Message });
+		}
+		catch (ArgumentException ex)
+		{
+			return BadRequest(new { message = ex.Message });
 		}
 	}
 

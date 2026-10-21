@@ -677,6 +677,53 @@ public class MatchService : IMatchService
 		public ScheduleTeam Away { get; set; } = null!;
 	}
 
+	public async Task ApplyOcrStatsAsync(
+		Guid matchId,
+		string summaryJson,
+		string homePerformanceJson,
+		string awayPerformanceJson)
+	{
+		var payloads = new Dictionary<MatchStatsUploadType, string>
+		{
+			[MatchStatsUploadType.MatchSummary] = summaryJson,
+			[MatchStatsUploadType.HomeTeamPerformance] = homePerformanceJson,
+			[MatchStatsUploadType.AwayTeamPerformance] = awayPerformanceJson
+		};
+
+		var existing = await _context.MatchStatsUploads
+			.Where(x => x.MatchId == matchId)
+			.ToListAsync();
+
+		foreach (var (type, json) in payloads)
+		{
+			var upload = existing.FirstOrDefault(x => x.Type == type);
+
+			if (upload is null)
+			{
+				_context.MatchStatsUploads.Add(new MatchStatsUpload
+				{
+					MatchStatsUploadId = Guid.NewGuid(),
+					MatchId = matchId,
+					UploadedByUserId = Guid.Empty,
+					Type = type,
+					ImageUrl = string.Empty,
+					RawJson = json,
+					IsProcessed = false,
+					CreatedAtUTC = DateTime.UtcNow
+				});
+			}
+			else
+			{
+				upload.RawJson = json;
+				upload.IsProcessed = false;
+				upload.UpdatedAtUTC = DateTime.UtcNow;
+			}
+		}
+
+		await _context.SaveChangesAsync();
+		await ProcessUploadedStatsAsync(matchId);
+	}
+
 	private async Task ProcessUploadedStatsAsync(Guid matchId)
 	{
 		var match = await _context.Matches
