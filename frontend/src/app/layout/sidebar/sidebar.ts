@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { filter, Subscription, timer } from 'rxjs';
+import { filter, Subscription } from 'rxjs';
 
 import { SidebarService } from '../../core/services/sidebar.service';
 import { SidebarData } from '../../core/models/sidebar.model';
@@ -23,12 +23,7 @@ export class Sidebar implements OnInit, OnDestroy {
 
   sidebarData: SidebarData | null = null;
 
-  days = '00';
-  hours = '00';
-  minutes = '00';
-
   private subscriptions = new Subscription();
-  private countdownStarted = false;
 
   constructor(
     private router: Router,
@@ -59,17 +54,7 @@ export class Sidebar implements OnInit, OnDestroy {
     this.sidebarService.getSidebarData()
       .subscribe({
         next: response => {
-          console.log('SIDEBAR DATA:', response);
-
           this.sidebarData = response;
-
-          this.updateCountdown();
-
-          if (!this.countdownStarted) {
-            this.startCountdown();
-            this.countdownStarted = true;
-          }
-
           this.cdr.detectChanges();
         },
         error: error => {
@@ -77,57 +62,6 @@ export class Sidebar implements OnInit, OnDestroy {
         }
       });
   }
-
-  private startCountdown(): void {
-    this.subscriptions.add(
-      timer(60000, 60000).subscribe(() => {
-        this.updateCountdown();
-        this.cdr.detectChanges();
-      })
-    );
-  }
-
-  private updateCountdown(): void {
-  const startsAtUtc =
-  this.sidebarData?.cup?.startsAtUtc ??
-  this.sidebarData?.season?.startsAtUtc;
-
-  if (!startsAtUtc) {
-    this.days = '00';
-    this.hours = '00';
-    this.minutes = '00';
-    return;
-  }
-
-  const startTime = new Date(startsAtUtc).getTime();
-
-  if (Number.isNaN(startTime)) {
-    this.days = '00';
-    this.hours = '00';
-    this.minutes = '00';
-    return;
-  }
-
-  const now = Date.now();
-  const difference = startTime - now;
-
-  if (difference <= 0) {
-    this.days = '00';
-    this.hours = '00';
-    this.minutes = '00';
-    return;
-  }
-
-  const totalMinutes = Math.floor(difference / 1000 / 60);
-
-  const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = totalMinutes % 60;
-
-  this.days = days.toString().padStart(2, '0');
-  this.hours = hours.toString().padStart(2, '0');
-  this.minutes = minutes.toString().padStart(2, '0');
-}
 
   private setCurrentSection(url: string): void {
     const cleanUrl = url.split('?')[0];
@@ -144,11 +78,6 @@ export class Sidebar implements OnInit, OnDestroy {
 
     if (cleanUrl.startsWith('/seasons')) {
       this.currentSection = 'seasons';
-      return;
-    }
-
-    if (cleanUrl.startsWith('/arena')) {
-      this.currentSection = 'arena';
       return;
     }
 
