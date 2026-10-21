@@ -7,6 +7,7 @@ import { firstValueFrom, Subscription, take } from 'rxjs';
 import { Profile } from '../../features/profile/profile';
 import { Notifications } from '../../features/notifications/notifications';
 import { MessageNotifications } from '../../features/message-notifications/message-notifications';
+import { GlobalSearch } from '../../features/global-search/global-search';
 
 import { UserService } from '../../core/services/user.service';
 import { SeasonService } from '../../core/services/season.service';
@@ -29,6 +30,7 @@ import { MeUserDto } from '../../core/models/user.model';
     Profile,
     Notifications,
     MessageNotifications,
+    GlobalSearch,
     TranslatePipe
   ],
   templateUrl: './navbar.html',

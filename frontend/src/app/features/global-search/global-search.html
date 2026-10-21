@@ -1,0 +1,148 @@
+<button
+  type="button"
+  class="icon-btn gs-trigger"
+  (click)="open()"
+  [attr.aria-label]="'Search' | t"
+  [title]="('Search' | t) + ' (Ctrl+K)'">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+
+<div class="gs-backdrop" *ngIf="isOpen" (click)="close()">
+  <div
+    class="gs-panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Global search' | t"
+    (click)="$event.stopPropagation()">
+
+    <div class="gs-input-row">
+      <i class="fa-solid fa-magnifying-glass gs-input-icon" aria-hidden="true"></i>
+      <input
+        #searchInput
+        type="search"
+        autocomplete="off"
+        spellcheck="false"
+        [placeholder]="'Search players, clubs or matches...' | t"
+        [attr.aria-label]="'Search players, clubs or matches...' | t"
+        [(ngModel)]="query"
+        (ngModelChange)="onQueryChange($event)" />
+
+      <span class="gs-spinner" *ngIf="isLoading" [attr.aria-label]="'Searching...' | t"></span>
+
+      <button type="button" class="gs-clear" *ngIf="query && !isLoading" (click)="clear()" [attr.aria-label]="'Clear' | t">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <button type="button" class="gs-esc" (click)="close()">{{ 'Esc' | t }}</button>
+    </div>
+
+    <div class="gs-body">
+
+      <p class="gs-hint" *ngIf="tooShort">
+        {{ 'Type at least 2 characters. Try a gamer tag, a club name or a week (e.g. week 3).' | t }}
+      </p>
+
+      <p class="gs-hint gs-loading" *ngIf="!tooShort && isLoading && !searched">
+        {{ 'Searching...' | t }}
+      </p>
+
+      <app-empty-state
+        *ngIf="!tooShort && !isLoading && hasError"
+        [compact]="true"
+        tone="error"
+        icon="fa-solid fa-triangle-exclamation"
+        title="Search failed"
+        description="Could not complete the search. Please try again.">
+      </app-empty-state>
+
+      <app-empty-state
+        *ngIf="!tooShort && !isLoading && searched && !hasError && !hasResults"
+        [compact]="true"
+        icon="fa-solid fa-magnifying-glass"
+        title="No results"
+        description="No players, clubs or matches match your search.">
+      </app-empty-state>
+
+      <ng-container *ngIf="!tooShort && hasResults">
+
+        <section class="gs-group" *ngIf="results.players.length">
+          <h5>{{ 'Players' | t }}</h5>
+          <button
+            type="button"
+            class="gs-item"
+            *ngFor="let p of results.players; let i = index"
+            [class.active]="activeIndex === indexOf('player', i)"
+            (mouseenter)="activeIndex = indexOf('player', i)"
+            (click)="select({ kind: 'player', item: p })">
+            <span class="gs-avatar">
+              <img *ngIf="p.avatarUrl" [src]="p.avatarUrl" alt="" (error)="onImgError($event)" />
+              <span>{{ initial(p.displayName) }}</span>
+            </span>
+            <span class="gs-text">
+              <strong>{{ p.displayName || p.gamerTag }}</strong>
+              <small>
+                <ng-container *ngIf="p.gamerTag">{{ p.gamerTag }}</ng-container>
+                <ng-container *ngIf="p.gamerTag && p.clubName"> · </ng-container>
+                <ng-container *ngIf="p.clubName">{{ p.clubName }}</ng-container>
+              </small>
+            </span>
+            <span class="gs-tag" *ngIf="p.isMe">{{ 'You' | t }}</span>
+            <i class="fa-solid" [class.fa-user]="p.isMe" [class.fa-comment]="!p.isMe" aria-hidden="true"></i>
+          </button>
+        </section>
+
+        <section class="gs-group" *ngIf="results.clubs.length">
+          <h5>{{ 'Clubs' | t }}</h5>
+          <button
+            type="button"
+            class="gs-item"
+            *ngFor="let c of results.clubs; let i = index"
+            [class.active]="activeIndex === indexOf('club', i)"
+            (mouseenter)="activeIndex = indexOf('club', i)"
+            (click)="select({ kind: 'club', item: c })">
+            <span class="gs-avatar square">
+              <img *ngIf="c.logoUrl" [src]="c.logoUrl" alt="" (error)="onImgError($event)" />
+              <span>{{ initial(c.name) }}</span>
+            </span>
+            <span class="gs-text">
+              <strong>{{ c.name }}</strong>
+              <small>{{ c.ownerName }}</small>
+            </span>
+            <span class="gs-tag" *ngIf="c.isMine">{{ 'My club' | t }}</span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </section>
+
+        <section class="gs-group" *ngIf="results.matches.length">
+          <h5>{{ 'Matches' | t }}</h5>
+          <button
+            type="button"
+            class="gs-item"
+            *ngFor="let m of results.matches; let i = index"
+            [class.active]="activeIndex === indexOf('match', i)"
+            (mouseenter)="activeIndex = indexOf('match', i)"
+            (click)="select({ kind: 'match', item: m })">
+            <span class="gs-avatar square"><i class="fa-solid fa-futbol"></i></span>
+            <span class="gs-text">
+              <strong>
+                {{ m.homeName }}
+                <span class="gs-score" *ngIf="isFinished(m); else vs">{{ m.homeScore }} - {{ m.awayScore }}</span>
+                <ng-template #vs><span class="gs-vs">{{ 'vs' | t }}</span></ng-template>
+                {{ m.awayName }}
+              </strong>
+              <small>{{ 'Week {n}' | t: { n: m.weekNumber } }} · {{ m.matchDate | tdate: 'mediumDate' }}</small>
+            </span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </section>
+
+      </ng-container>
+    </div>
+
+    <footer class="gs-footer">
+      <span><kbd>↑</kbd><kbd>↓</kbd> {{ 'to navigate' | t }}</span>
+      <span><kbd>Enter</kbd> {{ 'to open' | t }}</span>
+      <span><kbd>Esc</kbd> {{ 'to close' | t }}</span>
+    </footer>
+  </div>
+</div>
