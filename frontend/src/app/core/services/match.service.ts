@@ -10,7 +10,8 @@ import {
   MatchWeekDto,
   UploadMatchResultDto,
   MatchResultDto,
-  SaveManualMatchStatsRequest,  
+  SaveManualMatchStatsRequest,
+  PendingMatchResult,
 
 } from '../models/match.model';
 import {
@@ -78,6 +79,45 @@ export class MatchService extends ApiService {
     return super.post<MatchResultDto>(
       `${API_ENDPOINTS.matches}/${matchId}/result`,
       dto
+    );
+  }
+
+  /** Upload the 3 screenshots; OCR runs and the result waits for the opponent's approval. */
+  submitResultProposal(
+    matchId: string,
+    summaryImage: File,
+    homePerformanceImage: File,
+    awayPerformanceImage: File
+  ): Observable<PendingMatchResult> {
+    const form = new FormData();
+    form.append('SummaryImage', summaryImage);
+    form.append('HomePerformanceImage', homePerformanceImage);
+    form.append('AwayPerformanceImage', awayPerformanceImage);
+
+    return super.post<PendingMatchResult>(
+      `${API_ENDPOINTS.matches}/${matchId}/result-proposals`,
+      form
+    );
+  }
+
+  /** Returns null when the match has no pending proposal (204). */
+  getPendingResultProposal(matchId: string): Observable<PendingMatchResult | null> {
+    return super.get<PendingMatchResult | null>(
+      `${API_ENDPOINTS.matches}/${matchId}/result-proposals/pending`
+    );
+  }
+
+  acceptResultProposal(matchId: string, proposalId: string): Observable<MatchResultDto> {
+    return super.post<MatchResultDto>(
+      `${API_ENDPOINTS.matches}/${matchId}/result-proposals/${proposalId}/accept`,
+      {}
+    );
+  }
+
+  rejectResultProposal(matchId: string, proposalId: string): Observable<void> {
+    return super.post<void>(
+      `${API_ENDPOINTS.matches}/${matchId}/result-proposals/${proposalId}/reject`,
+      {}
     );
   }
 
