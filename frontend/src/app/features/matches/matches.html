@@ -297,6 +297,71 @@
 
         </div>
 
+        <div class="pending-result-card" *ngIf="pendingProposal as proposal">
+
+          <ng-container *ngIf="proposal.canReview; else waitingForOpponent">
+            <h3>PENDING RESULT – REVIEW AND ACCEPT/REJECT</h3>
+            <p>
+              Submitted by {{ proposal.submittedByName }}
+              · {{ proposal.createdAtUTC | date:'medium' }}
+            </p>
+          </ng-container>
+
+          <ng-template #waitingForOpponent>
+            <h3>PENDING RESULT</h3>
+            <p *ngIf="proposal.isMine">Waiting for opponent to accept.</p>
+            <p *ngIf="!proposal.isMine">
+              Submitted by {{ proposal.submittedByName }}. Waiting for review.
+            </p>
+          </ng-template>
+
+          <div class="pending-score">
+            <span>{{ selectedMatch.home.name }}</span>
+            <strong>{{ proposal.homeScore }} - {{ proposal.awayScore }}</strong>
+            <span>{{ selectedMatch.away.name }}</span>
+          </div>
+
+          <div class="pending-summary" *ngIf="proposal.summary as summary">
+            <div><span>Possession</span><strong>{{ summary.homePossession }}% - {{ summary.awayPossession }}%</strong></div>
+            <div><span>Shots</span><strong>{{ summary.homeShots }} - {{ summary.awayShots }}</strong></div>
+            <div><span>xG</span><strong>{{ summary.homeExpectedGoals }} - {{ summary.awayExpectedGoals }}</strong></div>
+            <div><span>Passes</span><strong>{{ summary.homePasses }} - {{ summary.awayPasses }}</strong></div>
+          </div>
+
+          <div class="pending-players">
+            <div>
+              <h4>{{ selectedMatch.home.name }}</h4>
+              <small *ngIf="proposal.homePlayers.length === 0">No player stats detected.</small>
+              <div class="pending-player" *ngFor="let player of proposal.homePlayers">
+                <span>{{ player.position }} {{ player.playerName }}</span>
+                <span>{{ player.rating }} · {{ player.goals }}G {{ player.assists }}A</span>
+              </div>
+            </div>
+            <div>
+              <h4>{{ selectedMatch.away.name }}</h4>
+              <small *ngIf="proposal.awayPlayers.length === 0">No player stats detected.</small>
+              <div class="pending-player" *ngFor="let player of proposal.awayPlayers">
+                <span>{{ player.position }} {{ player.playerName }}</span>
+                <span>{{ player.rating }} · {{ player.goals }}G {{ player.assists }}A</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pending-actions" *ngIf="proposal.canReview">
+            <button type="button" class="accept" [disabled]="isReviewingProposal" (click)="acceptProposal()">
+              <i class="fa-solid fa-check"></i>
+              Accept
+            </button>
+            <button type="button" class="reject" [disabled]="isReviewingProposal" (click)="rejectProposal()">
+              <i class="fa-solid fa-xmark"></i>
+              Reject
+            </button>
+          </div>
+
+        </div>
+
+        <p class="proposal-message" *ngIf="proposalMessage">{{ proposalMessage }}</p>
+
         <div class="result-card" *ngIf="canSubmitResult(selectedMatch)">
 
           <h3>SUBMIT RESULT</h3>
@@ -579,6 +644,34 @@
               isUploadingResult
                 ? 'Reading Screenshots...'
                 : 'Read Stats & Review'
+            }}
+
+          </button>
+
+          <button
+            type="button"
+            class="approval-button"
+            [disabled]="
+              !summaryFile ||
+              !homePerformanceFile ||
+              !awayPerformanceFile ||
+              isUploadingResult ||
+              isSubmittingProposal ||
+              !!pendingProposal
+            "
+            (click)="submitForApproval()">
+
+            <i
+              class="fa-solid"
+              [class.fa-spinner]="isSubmittingProposal"
+              [class.fa-spin]="isSubmittingProposal"
+              [class.fa-user-check]="!isSubmittingProposal">
+            </i>
+
+            {{
+              isSubmittingProposal
+                ? 'Submitting...'
+                : (pendingProposal ? 'Result Pending Review' : 'Submit for Opponent Approval')
             }}
 
           </button>

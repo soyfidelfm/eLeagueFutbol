@@ -6,7 +6,7 @@ import {
   OnInit
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subscription, finalize, forkJoin, take } from 'rxjs';
+import { Observable, Subscription, finalize, forkJoin, take } from 'rxjs';
 
 import { MatchService } from '../../core/services/match.service';
 import { SeasonService } from '../../core/services/season.service';
@@ -18,7 +18,8 @@ import { AppLoading } from '../../shared/components/app-loading/app-loading';
 
 import {
   MatchDto,
-  MatchWeekDto
+  MatchWeekDto,
+  PendingMatchResult
 } from '../../core/models/match.model';
 
 import { MatchView } from '../../core/models/match-view.model';
@@ -182,6 +183,12 @@ export class Matches implements OnInit, OnDestroy {
   resultAwayScore: number | null = null;
 
   currentUserId = '';
+
+  pendingProposal: PendingMatchResult | null = null;
+  isLoadingPending = false;
+  isSubmittingProposal = false;
+  isReviewingProposal = false;
+  proposalMessage = '';
   isAdmin = false;
 
   private subscription = new Subscription();
@@ -218,6 +225,7 @@ export class Matches implements OnInit, OnDestroy {
 
         this.liveMessage = 'Result updated';
         this.loadMatches(false);
+        this.loadPendingProposal();
       })
     );
   }
@@ -347,8 +355,14 @@ export class Matches implements OnInit, OnDestroy {
             this.matches[0] ??
             null;
 
+          const changedMatch = this.selectedMatch?.id !== preserved?.id;
+
           this.selectedMatch = preserved;
           this.syncResultInputs(preserved);
+
+          if (changedMatch || !this.pendingProposal) {
+            this.loadPendingProposal();
+          }
 
           this.cdr.detectChanges();
         },
@@ -373,6 +387,132 @@ export class Matches implements OnInit, OnDestroy {
     this.selectedMatch = match;
     this.syncResultInputs(match);
     this.clearUploadState();
+    this.loadPendingProposal();
+  }
+
+  /** Loads the pending OCR proposal (if any) for the selected match. */
+  loadPendingProposal(): void {
+    const matchId = this.selectedMatch?.id;
+
+    this.proposalMessage = '';
+
+    if (!matchId) {
+      this.pendingProposal = null;
+      return;
+    }
+
+    this.isLoadingPending = true;
+
+    this.matchService.getPendingResultProposal(matchId)
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.isLoadingPending = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: proposal => {
+          if (this.selectedMatch?.id !== matchId) {
+            return;
+          }
+
+          this.pendingProposal = proposal ?? null;
+        },
+        error: () => {
+          if (this.selectedMatch?.id === matchId) {
+            this.pendingProposal = null;
+          }
+        }
+      });
+  }
+
+  /** Uploads the 3 screenshots as a proposal that the opponent must accept. */
+  submitForApproval(): void {
+    const match = this.selectedMatch;
+
+    if (!match || !this.summaryFile || !this.homePerformanceFile || !this.awayPerformanceFile) {
+      this.errorMessage = 'Select all three screenshots first.';
+      return;
+    }
+
+    if (this.pendingProposal || this.isSubmittingProposal) {
+      return;
+    }
+
+    this.isSubmittingProposal = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.matchService.submitResultProposal(
+      match.id,
+      this.summaryFile,
+      this.homePerformanceFile,
+      this.awayPerformanceFile
+    )
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.isSubmittingProposal = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: proposal => {
+          this.pendingProposal = proposal;
+          this.clearUploadState();
+          this.proposalMessage = 'Result submitted. Waiting for opponent to accept.';
+        },
+        error: err => {
+          this.errorMessage = err?.error?.message || 'Could not submit the result.';
+          this.loadPendingProposal();
+        }
+      });
+  }
+
+  acceptProposal(): void {
+    this.reviewProposal(true);
+  }
+
+  rejectProposal(): void {
+    this.reviewProposal(false);
+  }
+
+  private reviewProposal(accept: boolean): void {
+    const match = this.selectedMatch;
+    const proposal = this.pendingProposal;
+
+    if (!match || !proposal || !proposal.canReview || this.isReviewingProposal) {
+      return;
+    }
+
+    this.isReviewingProposal = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    const request: Observable<unknown> = accept
+      ? this.matchService.acceptResultProposal(match.id, proposal.pendingMatchResultId)
+      : this.matchService.rejectResultProposal(match.id, proposal.pendingMatchResultId);
+
+    request
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.isReviewingProposal = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.pendingProposal = null;
+          this.proposalMessage = accept ? 'Result accepted.' : 'Result rejected.';
+          this.loadMatches(false);
+        },
+        error: err => {
+          this.errorMessage = err?.error?.message || 'Could not review the result.';
+          this.loadPendingProposal();
+        }
+      });
   }
 
   isFinished(match?: MatchView | null): boolean {
