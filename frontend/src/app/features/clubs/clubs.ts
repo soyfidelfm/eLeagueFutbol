@@ -17,6 +17,7 @@ import {
 import { TranslationService } from '../../core/i18n/translation.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 type ClubPlayer = NonNullable<MyClubDto['players']>[number];
 
@@ -28,7 +29,7 @@ type ClubPlayer = NonNullable<MyClubDto['players']>[number];
     RouterLink,
     SquadLineupModalComponent,
     AppLoading,
-    TranslatePipe, LocalizedDatePipe
+    TranslatePipe, LocalizedDatePipe, EmptyState
   ],
   templateUrl: './clubs.html',
   styleUrls: ['./clubs.scss', './clubs-squad.scss']

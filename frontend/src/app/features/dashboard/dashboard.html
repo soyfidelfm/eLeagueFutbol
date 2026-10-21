@@ -8,9 +8,13 @@
   [showBar]="true">
 </app-loading>
 
-  <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
-    {{ errorMessage | t }}
-  </div>
+  <app-empty-state
+    *ngIf="!isLoading && errorMessage"
+    tone="error"
+    icon="fa-solid fa-triangle-exclamation"
+    title="Something went wrong"
+    [description]="errorMessage">
+  </app-empty-state>
 
   <ng-container *ngIf="!errorMessage">
 
@@ -100,7 +104,15 @@
   </div>
 </div>
 
-    <div class="kpi-strip">
+    <app-empty-state
+      *ngIf="!isLoading && kpis.length === 0"
+      [compact]="true"
+      icon="fa-solid fa-gauge-high"
+      title="No KPIs yet"
+      description="Your season numbers will appear after your first match.">
+    </app-empty-state>
+
+    <div class="kpi-strip" *ngIf="kpis.length > 0">
       <div class="kpi-card" *ngFor="let kpi of kpis">
         <span>{{ kpi.label | t }}</span>
         <strong>{{ kpi.value }}</strong>
@@ -119,9 +131,13 @@
           <button>{{ 'View All' | t }}</button>
         </div>
 
-        <div class="empty-panel" *ngIf="leaderboard.length === 0">
-          {{ 'No leaderboard data yet.' | t }}
-        </div>
+        <app-empty-state
+          *ngIf="!isLoading && leaderboard.length === 0"
+          [compact]="true"
+          icon="fa-solid fa-trophy"
+          title="No leaderboard data yet"
+          description="Standings appear once matches are played.">
+        </app-empty-state>
 
         <div class="leaderboard-table" *ngIf="leaderboard.length > 0">
           <div class="table-row table-head">
@@ -198,9 +214,11 @@
           </div>
         </div>
 
-        <div class="empty-panel large">
-          {{ 'No featured match selected yet.' | t }}
-        </div>
+        <app-empty-state
+          icon="fa-solid fa-star"
+          title="No featured match yet"
+          description="The match of the week will be highlighted here.">
+        </app-empty-state>
       </article>
 
       <article class="panel active-panel">
@@ -212,9 +230,13 @@
           <button>{{ 'View All' | t }}</button>
         </div>
 
-        <div class="empty-panel" *ngIf="matches.length === 0">
-          {{ 'No active matches yet.' | t }}
-        </div>
+        <app-empty-state
+          *ngIf="!isLoading && matches.length === 0"
+          [compact]="true"
+          icon="fa-solid fa-futbol"
+          title="No active matches"
+          description="Live and in-progress matches will show here.">
+        </app-empty-state>
 
         <div class="active-list" *ngIf="matches.length > 0">
           <div class="active-match" *ngFor="let match of matches">
@@ -241,9 +263,13 @@
           <button>{{ 'View All' | t }}</button>
         </div>
 
-        <div class="empty-panel" *ngIf="upcomingMatches.length === 0">
-          {{ 'No upcoming matches.' | t }}
-        </div>
+        <app-empty-state
+          *ngIf="!isLoading && upcomingMatches.length === 0"
+          [compact]="true"
+          icon="fa-regular fa-calendar"
+          title="No upcoming matches"
+          description="New fixtures will appear once the schedule is generated.">
+        </app-empty-state>
 
         <div class="upcoming-list" *ngIf="upcomingMatches.length > 0">
           <div class="upcoming-match" *ngFor="let match of upcomingMatches">
@@ -264,9 +290,13 @@
           <button>{{ 'View All' | t }}</button>
         </div>
 
-        <div class="empty-panel" *ngIf="news.length === 0">
-          {{ 'No league news yet.' | t }}
-        </div>
+        <app-empty-state
+          *ngIf="!isLoading && news.length === 0"
+          [compact]="true"
+          icon="fa-regular fa-newspaper"
+          title="No league news yet"
+          description="Results and league updates will be posted here.">
+        </app-empty-state>
 
         <div class="news-list" *ngIf="news.length > 0">
           <div class="news-item" *ngFor="let item of news">
@@ -335,9 +365,13 @@
           <button>{{ 'View All' | t }}</button>
         </div>
 
-        <div class="empty-panel" *ngIf="activities.length === 0">
-          {{ 'No activity yet.' | t }}
-        </div>
+        <app-empty-state
+          *ngIf="!isLoading && activities.length === 0"
+          [compact]="true"
+          icon="fa-solid fa-bolt"
+          title="No activity yet"
+          description="Draft picks, transfers and results will show up here.">
+        </app-empty-state>
 
         <div class="activity-list" *ngIf="activities.length > 0">
           <div class="activity-item" *ngFor="let activity of activities">

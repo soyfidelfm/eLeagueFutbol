@@ -8,10 +8,21 @@
   [showBar]="true">
 </app-loading>
 
-  <div *ngIf="!isLoading && errorMessage" class="error">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <span>{{ errorMessage | t }}</span>
-  </div>
+  <app-empty-state
+    *ngIf="!isLoading && errorMessage"
+    tone="error"
+    icon="fa-solid fa-triangle-exclamation"
+    title="Something went wrong"
+    [description]="errorMessage">
+  </app-empty-state>
+
+  <app-empty-state
+    *ngIf="!isLoading && !errorMessage && !club"
+    icon="fa-solid fa-shield-halved"
+    title="No club yet"
+    description="Register for the current season from the dashboard to get your club.">
+    <a routerLink="/dashboard" class="empty-action">{{ 'Go to dashboard' | t }}</a>
+  </app-empty-state>
 
   <ng-container *ngIf="!isLoading && !errorMessage && club">
 
@@ -148,11 +159,13 @@
         </div>
 
         <ng-template #noPlayers>
-          <div class="empty-state">
-            <i class="fa-solid fa-users-slash"></i>
-            <span>{{ 'No starting XI yet. Join the draft or edit the lineup.' | t }}</span>
-            <a routerLink="/draft">{{ 'Go to draft' | t }}</a>
-          </div>
+          <app-empty-state
+            [compact]="true"
+            icon="fa-solid fa-users-slash"
+            title="No starting XI yet"
+            description="Join the draft or edit the lineup.">
+            <a routerLink="/draft" class="empty-action">{{ 'Go to draft' | t }}</a>
+          </app-empty-state>
         </ng-template>
 
         <div class="formation-footer">
@@ -200,10 +213,12 @@
         </ng-container>
 
         <ng-template #noActivities>
-          <div class="empty-state">
-            <i class="fa-solid fa-bolt"></i>
-            <span>{{ 'No recent activity yet.' | t }}</span>
-          </div>
+          <app-empty-state
+            [compact]="true"
+            icon="fa-solid fa-bolt"
+            title="No recent activity yet"
+            description="Picks, transfers and results for your club will show up here.">
+          </app-empty-state>
         </ng-template>
 
       </div>
@@ -245,11 +260,12 @@
       </ng-container>
 
       <ng-template #emptySquad>
-        <div class="empty-state">
-          <i class="fa-solid fa-users-slash"></i>
-          <span>{{ 'Players come from the draft. App users are not added.' | t }}</span>
-          <a routerLink="/draft">{{ 'Go to draft' | t }}</a>
-        </div>
+        <app-empty-state
+          icon="fa-solid fa-users-slash"
+          title="No players in your squad"
+          description="Players come from the draft. App users are not added.">
+          <a routerLink="/draft" class="empty-action">{{ 'Go to draft' | t }}</a>
+        </app-empty-state>
       </ng-template>
 
     </div>

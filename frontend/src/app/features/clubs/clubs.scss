@@ -1265,3 +1265,15 @@
     }
   }
 }
+.empty-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #00ffaa;
+  border: 1px solid rgba(0, 255, 170, 0.45);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-weight: 700;
+  font-size: 12px;
+  text-decoration: none;
+}
