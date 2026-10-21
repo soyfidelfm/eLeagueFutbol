@@ -179,3 +179,53 @@ button.ghost {
     align-items: stretch;
   }
 }
+
+.market-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+  margin: 12px 0 8px;
+}
+
+.price-range label {
+  display: block;
+  margin-bottom: 6px;
+  color: #8ea0b5;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #8ea0b5;
+
+  input {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 255, 170, 0.25);
+    background: rgba(8, 14, 24, 0.9);
+    color: #f4f7fb;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: #00ffaa;
+    box-shadow: 0 0 10px rgba(0, 255, 170, 0.3);
+  }
+}
+
+.clear-btn {
+  white-space: nowrap;
+}
+
+.result-count {
+  margin: 4px 0 10px;
+  color: #8ea0b5;
+  font-size: 12px;
+}

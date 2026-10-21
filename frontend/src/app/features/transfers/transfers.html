@@ -74,16 +74,43 @@
       <input [(ngModel)]="searchTerm" [placeholder]="'Search player, club or position' | t" />
     </div>
 
+    <div class="market-filters" *ngIf="board.market.length">
+      <app-neon-dropdown label="Position" [options]="positionOptions"
+        [selectedValue]="positionFilter" (selectedValueChange)="positionFilter = $event"></app-neon-dropdown>
+      <app-neon-dropdown label="Club" [options]="clubOptions"
+        [selectedValue]="clubFilter" (selectedValueChange)="clubFilter = $event"></app-neon-dropdown>
+      <app-neon-dropdown label="Status" [options]="statusOptions"
+        [selectedValue]="statusFilter" (selectedValueChange)="statusFilter = $event"></app-neon-dropdown>
+      <div class="price-range">
+        <label>{{ 'Price range' | t }}</label>
+        <div class="price-inputs">
+          <input type="number" min="0" [(ngModel)]="minPrice" [placeholder]="'Min' | t" />
+          <span>–</span>
+          <input type="number" min="0" [(ngModel)]="maxPrice" [placeholder]="'Max' | t" />
+        </div>
+      </div>
+      <app-neon-dropdown label="Sort by" [options]="sortOptions"
+        [selectedValue]="sortBy" (selectedValueChange)="onSortChange($event)"></app-neon-dropdown>
+      <button type="button" class="ghost clear-btn" *ngIf="hasActiveFilters" (click)="clearFilters()">
+        <i class="fa-solid fa-xmark"></i> {{ 'Clear filters' | t }}
+      </button>
+    </div>
+
+    <p class="result-count" *ngIf="board.market.length">
+      {{ '{n} of {total} players' | t:{ n: filteredMarket.length, total: board.market.length } }}
+    </p>
+
     <app-empty-state
-      *ngIf="!filteredMarket.length && searchTerm.trim()"
+      *ngIf="!filteredMarket.length && board.market.length"
       [compact]="true"
-      icon="fa-solid fa-magnifying-glass"
-      title="No players match your search"
-      description="Try another player name, club or position.">
+      icon="fa-solid fa-filter-circle-xmark"
+      title="No players match your filters"
+      description="Try changing or clearing the filters to see more players.">
+      <button type="button" class="ghost" (click)="clearFilters()">{{ 'Clear filters' | t }}</button>
     </app-empty-state>
 
     <app-empty-state
-      *ngIf="!filteredMarket.length && !searchTerm.trim()"
+      *ngIf="!board.market.length"
       [compact]="true"
       icon="fa-solid fa-store"
       title="No players on the market yet"
