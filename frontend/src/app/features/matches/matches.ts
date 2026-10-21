@@ -6,6 +6,7 @@ import {
   OnInit
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Observable, Subscription, finalize, forkJoin, take } from 'rxjs';
 
 import { MatchService } from '../../core/services/match.service';
@@ -205,8 +206,14 @@ export class Matches implements OnInit, OnDestroy {
     private readonly userService: UserService,
     private readonly realtime: RealtimeService,
     private readonly confirmDialog: ConfirmDialogService,
+    private readonly route: ActivatedRoute,
     private readonly cdr: ChangeDetectorRef
   ) {}
+
+  /** Deep link from global search: ?seasonId=&week=&matchId= */
+  private requestedSeasonId: string | null = null;
+  private requestedWeek: number | null = null;
+  private requestedMatchId: string | null = null;
 
   ngOnInit(): void {
     this.userService.getMe().pipe(take(1)).subscribe({
@@ -217,7 +224,22 @@ export class Matches implements OnInit, OnDestroy {
       }
     });
 
-    this.loadCurrentSeason();
+    this.subscription.add(
+      this.route.queryParamMap.subscribe(params => {
+        const week = Number(params.get('week'));
+
+        this.requestedSeasonId = params.get('seasonId')?.trim() || null;
+        this.requestedWeek = Number.isFinite(week) && week > 0 ? week : null;
+        this.requestedMatchId = params.get('matchId')?.trim() || null;
+
+        if (this.requestedMatchId) {
+          // Make sure the linked match is not hidden by the status filter.
+          this.statusFilter = 'all';
+        }
+
+        this.loadCurrentSeason();
+      })
+    );
 
     this.subscription.add(
       this.realtime.draftEvents$.subscribe(event => {
@@ -256,6 +278,9 @@ export class Matches implements OnInit, OnDestroy {
     this.seasonService.getAll().subscribe({
       next: seasons => {
         const currentSeason =
+          (this.requestedSeasonId
+            ? seasons.find(x => x.seasonId === this.requestedSeasonId)
+            : undefined) ??
           seasons.find(x => x.isCurrent) ??
           seasons[0];
 
@@ -264,6 +289,10 @@ export class Matches implements OnInit, OnDestroy {
           this.isLoading = false;
           this.cdr.detectChanges();
           return;
+        }
+
+        if (this.selectedSeasonId && this.selectedSeasonId !== currentSeason.seasonId) {
+          void this.realtime.leaveSeason(this.selectedSeasonId);
         }
 
         this.selectedSeasonId =
@@ -307,8 +336,14 @@ export class Matches implements OnInit, OnDestroy {
             return;
           }
 
+          const requestedWeek = weeks.find(
+            week => Number(week.value) === this.requestedWeek
+          );
+
           this.selectedWeek =
-            Number(weeks[0].value);
+            Number((requestedWeek ?? weeks[0]).value);
+
+          this.requestedWeek = null;
 
           this.loadMatches(true);
         },
@@ -355,7 +390,14 @@ export class Matches implements OnInit, OnDestroy {
             this.mapMatch(match)
           );
 
+          const requestedMatch = this.requestedMatchId
+            ? this.matches.find(x => x.id === this.requestedMatchId)
+            : undefined;
+
+          this.requestedMatchId = null;
+
           const preserved =
+            requestedMatch ??
             this.matches.find(x => x.id === selectedId) ??
             this.matchOfTheWeek ??
             this.matches[0] ??
@@ -371,6 +413,14 @@ export class Matches implements OnInit, OnDestroy {
           }
 
           this.cdr.detectChanges();
+
+          if (requestedMatch) {
+            setTimeout(() =>
+              document
+                .querySelector('.match-card.selected')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            );
+          }
         },
         error: () => {
           this.errorMessage =

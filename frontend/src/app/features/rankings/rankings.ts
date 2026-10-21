@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Subscription, finalize, forkJoin } from 'rxjs';
 
 import { RankingService } from '../../core/services/ranking.service';
@@ -129,11 +130,22 @@ export class Rankings implements OnInit, OnDestroy {
     private rankingService: RankingService,
     private seasonService: SeasonService,
     private realtime: RealtimeService,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) { }
 
+  /** Deep link from global search: ?seasonId=&clubId= */
+  private requestedSeasonId: string | null = null;
+  private requestedClubId: string | null = null;
+
   ngOnInit(): void {
-    this.loadInitialData();
+    this.subscription.add(
+      this.route.queryParamMap.subscribe(params => {
+        this.requestedSeasonId = params.get('seasonId')?.trim() || null;
+        this.requestedClubId = params.get('clubId')?.trim() || null;
+        this.loadInitialData();
+      })
+    );
 
     this.subscription.add(
       this.realtime.draftEvents$.subscribe(event => {
@@ -165,7 +177,7 @@ export class Rankings implements OnInit, OnDestroy {
 
     forkJoin({
       seasons: this.seasonService.getAll(),
-      rankings: this.rankingService.getRankings()
+      rankings: this.rankingService.getRankings(this.requestedSeasonId)
     }).subscribe({
       next: ({ seasons, rankings }) => {
         this.seasons = seasons ?? [];
@@ -178,6 +190,11 @@ export class Rankings implements OnInit, OnDestroy {
 
         this.clubRankings = rankings?.clubRankings ?? [];
           this.playerRankings = rankings?.playerRankings ?? [];
+
+        if (this.requestedClubId && this.clubRankings.some(c => c.clubId === this.requestedClubId)) {
+          this.clubFilter = this.requestedClubId;
+        }
+
         void this.joinSelectedSeason();
 
         this.isLoading = false;
