@@ -31,6 +31,13 @@ export const routes: Routes = [
       },
 
       {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./features/notification-center/notification-center')
+            .then(m => m.NotificationCenter)
+      },
+
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings')

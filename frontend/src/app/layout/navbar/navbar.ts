@@ -99,6 +99,27 @@ export class Navbar implements OnInit, OnDestroy {
       })
     );
 
+    // New inbox notifications: the center/badge always update; the toast respects the user's setting.
+    this.subscription.add(
+      this.realtime.notifications$.subscribe(notification => {
+        if (!notification?.title || !this.settingsService.toastsEnabled) {
+          return;
+        }
+
+        const message = notification.title;
+        this.toastMessage = message;
+        this.showToast = true;
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
+          if (this.toastMessage === message) {
+            this.showToast = false;
+            this.cdr.detectChanges();
+          }
+        }, 3500);
+      })
+    );
+
     this.subscription.add(
       this.realtime.draftEvents$.subscribe(event => {
         if (!event?.eventType || !this.settingsService.toastsEnabled) {

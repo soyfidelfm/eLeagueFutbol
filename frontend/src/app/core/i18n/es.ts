@@ -1,5 +1,23 @@
 // Spanish dictionary. Keys are the English source strings used in templates/TS.
 export const ES: Record<string, string> = {
+  // Notification center
+  "View all": "Ver todo",
+  "{n} unread": "{n} sin leer",
+  "Filter notifications": "Filtrar notificaciones",
+  "Unread": "Sin leer",
+  "Loading notifications...": "Cargando notificaciones...",
+  "Try again": "Reintentar",
+  "You're all caught up": "Estás al día",
+  "No unread notifications. New ones will appear here instantly.": "No hay notificaciones sin leer. Las nuevas aparecerán aquí al instante.",
+  "Show all notifications": "Mostrar todas las notificaciones",
+  "Mark as read": "Marcar como leída",
+  "Load more": "Cargar más",
+  "Could not load notifications.": "No se pudieron cargar las notificaciones.",
+  "Could not mark notifications as read.": "No se pudieron marcar las notificaciones como leídas.",
+  "just now": "justo ahora",
+  "{n} min ago": "hace {n} min",
+  "{n} h ago": "hace {n} h",
+  "{n} d ago": "hace {n} d",
   // Onboarding tour
   "A competitive FC league: register your club, draft a squad and play weekly matches.": "Una liga competitiva de FC: registra tu club, arma tu plantilla en el draft y juega partidos cada semana.",
   "A lottery sets the order, then it runs as a snake draft: the order reverses every round.": "Un sorteo define el orden y luego es un draft serpiente: el orden se invierte cada ronda.",
