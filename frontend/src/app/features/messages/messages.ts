@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { finalize, forkJoin, Subscription } from 'rxjs';
@@ -79,6 +79,20 @@ interface MessageUserResult {
 })
 export class Messages implements OnInit, OnDestroy {
 
+  private static readonly PAGE_SIZE = 15;
+  private static readonly TYPING_SEND_INTERVAL_MS = 2500;
+  private static readonly TYPING_HIDE_AFTER_MS = 3000;
+  private static readonly LOAD_OLDER_THRESHOLD_PX = 80;
+
+  @ViewChild('chatBody') chatBody?: ElementRef<HTMLElement>;
+
+  hasMoreMessages = false;
+  isLoadingOlder = false;
+
+  isOtherUserTyping = false;
+  private typingHideTimer?: ReturnType<typeof setTimeout>;
+  private lastTypingSentAt = 0;
+
   isLoading = false;
   isLoadingConversation = false;
   isSending = false;
@@ -99,7 +113,6 @@ export class Messages implements OnInit, OnDestroy {
   isSearchingUsers = false;
   userResults: MessageUserResult[] = [];
 
-  private messageListener?: EventListener;
   private subscription = new Subscription();
   private pendingQueryUserId = '';
 
@@ -113,21 +126,6 @@ export class Messages implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadConversations();
-
-    this.messageListener = () => {
-      this.loadConversations();
-
-      if (this.selectedUserId) {
-        this.loadConversation(this.selectedUserId);
-      }
-
-      this.cdr.detectChanges();
-    };
-
-    window.addEventListener(
-      'eleague-message-received',
-      this.messageListener
-    );
 
     this.subscription.add(
       this.route.queryParamMap.subscribe(params => {
@@ -161,6 +159,12 @@ export class Messages implements OnInit, OnDestroy {
     );
 
     this.subscription.add(
+      this.realtime.typing$.subscribe(event => {
+        this.handleTyping(event?.senderUserId);
+      })
+    );
+
+    this.subscription.add(
       this.realtime.onlineUsers$.subscribe(() => {
         this.cdr.detectChanges();
       })
@@ -181,13 +185,7 @@ export class Messages implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
-
-    if (this.messageListener) {
-      window.removeEventListener(
-        'eleague-message-received',
-        this.messageListener
-      );
-    }
+    this.clearTypingIndicator();
   }
 
   isUserOnline(userId?: string | null): boolean {
@@ -259,6 +257,9 @@ export class Messages implements OnInit, OnDestroy {
     this.selectedConversation = item;
     this.selectedUserId = item.userId;
     this.messages = [];
+    this.hasMoreMessages = false;
+    this.isLoadingOlder = false;
+    this.clearTypingIndicator();
     this.errorMessage = '';
 
     item.unreadCount = 0;
@@ -272,7 +273,7 @@ export class Messages implements OnInit, OnDestroy {
     this.isLoadingConversation = true;
     this.cdr.detectChanges();
 
-    const sub = this.messageService.getConversation(userId)
+    const sub = this.messageService.getConversation(userId, null, Messages.PAGE_SIZE)
       .pipe(
         finalize(() => {
           this.isLoadingConversation = false;
@@ -281,7 +282,13 @@ export class Messages implements OnInit, OnDestroy {
       )
       .subscribe({
         next: response => {
-          this.messages = response ?? [];
+          if (this.selectedUserId !== userId) {
+            return;
+          }
+
+          this.messages = response?.items ?? [];
+          this.hasMoreMessages = !!response?.hasMore;
+          this.scrollToBottom();
 
           const unreadMessages = this.messages.filter(x =>
             !x.isMine &&
@@ -364,11 +371,13 @@ export class Messages implements OnInit, OnDestroy {
           this.appendMessage(message);
 
           this.newMessageText = '';
+          this.lastTypingSentAt = 0;
 
           this.upsertConversationAfterSend(message);
           this.loadConversations();
 
           this.cdr.detectChanges();
+          this.scrollToBottom();
         },
         error: error => {
           this.errorMessage =
@@ -465,6 +474,9 @@ export class Messages implements OnInit, OnDestroy {
     };
 
     this.messages = [];
+    this.hasMoreMessages = false;
+    this.isLoadingOlder = false;
+    this.clearTypingIndicator();
     this.newMessageText = '';
     this.errorMessage = '';
 
@@ -504,6 +516,135 @@ export class Messages implements OnInit, OnDestroy {
     this.loadConversation(userId);
   }
 
+  /** Scroll handler for the chat body: loads older messages when near the top. */
+  onChatScroll(): void {
+    const el = this.chatBody?.nativeElement;
+
+    if (!el || el.scrollTop > Messages.LOAD_OLDER_THRESHOLD_PX) {
+      return;
+    }
+
+    this.loadOlderMessages();
+  }
+
+  /** Throttled typing signal sent while the user writes in the composer. */
+  onComposerInput(): void {
+    if (!this.selectedUserId || !this.newMessageText.trim()) {
+      return;
+    }
+
+    const now = Date.now();
+
+    if (now - this.lastTypingSentAt < Messages.TYPING_SEND_INTERVAL_MS) {
+      return;
+    }
+
+    this.lastTypingSentAt = now;
+    void this.realtime.sendTyping(this.selectedUserId);
+  }
+
+  private loadOlderMessages(): void {
+    if (
+      !this.selectedUserId ||
+      !this.hasMoreMessages ||
+      this.isLoadingOlder ||
+      this.isLoadingConversation ||
+      this.messages.length === 0
+    ) {
+      return;
+    }
+
+    const userId = this.selectedUserId;
+    const oldestId = this.messages[0].messageId;
+    const el = this.chatBody?.nativeElement;
+    const previousHeight = el?.scrollHeight ?? 0;
+    const previousTop = el?.scrollTop ?? 0;
+
+    this.isLoadingOlder = true;
+    this.cdr.detectChanges();
+
+    const sub = this.messageService.getConversation(userId, oldestId, Messages.PAGE_SIZE)
+      .pipe(
+        finalize(() => {
+          this.isLoadingOlder = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: response => {
+          if (this.selectedUserId !== userId) {
+            return;
+          }
+
+          const known = new Set(this.messages.map(x => x.messageId));
+          const older = (response?.items ?? []).filter(x => !known.has(x.messageId));
+
+          this.hasMoreMessages = !!response?.hasMore && older.length > 0;
+          this.messages = [...older, ...this.messages];
+          this.cdr.detectChanges();
+
+          // Keep the same message under the viewport after prepending.
+          const body = this.chatBody?.nativeElement;
+
+          if (body) {
+            body.scrollTop = body.scrollHeight - previousHeight + previousTop;
+          }
+        },
+        error: error => {
+          console.error('Error loading older messages:', error);
+        }
+      });
+
+    this.subscription.add(sub);
+  }
+
+  private handleTyping(senderUserId?: string): void {
+    if (!senderUserId || senderUserId !== this.selectedUserId) {
+      return;
+    }
+
+    const el = this.chatBody?.nativeElement;
+    const wasNearBottom = !!el && el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+
+    this.isOtherUserTyping = true;
+
+    if (this.typingHideTimer) {
+      clearTimeout(this.typingHideTimer);
+    }
+
+    this.typingHideTimer = setTimeout(() => {
+      this.isOtherUserTyping = false;
+      this.typingHideTimer = undefined;
+      this.cdr.detectChanges();
+    }, Messages.TYPING_HIDE_AFTER_MS);
+
+    this.cdr.detectChanges();
+
+    if (wasNearBottom) {
+      this.scrollToBottom();
+    }
+  }
+
+  private clearTypingIndicator(): void {
+    if (this.typingHideTimer) {
+      clearTimeout(this.typingHideTimer);
+      this.typingHideTimer = undefined;
+    }
+
+    this.isOtherUserTyping = false;
+  }
+
+  private scrollToBottom(): void {
+    // Wait for the view to render the new messages before measuring.
+    setTimeout(() => {
+      const el = this.chatBody?.nativeElement;
+
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+  }
+
   private handleLiveMessage(message: MessageDto): void {
     const otherUserId = message.isMine
       ? message.receiverUserId
@@ -511,6 +652,13 @@ export class Messages implements OnInit, OnDestroy {
 
     if (this.selectedUserId && otherUserId === this.selectedUserId) {
       this.appendMessage(message);
+
+      if (!message.isMine) {
+        this.clearTypingIndicator();
+      }
+
+      this.cdr.detectChanges();
+      this.scrollToBottom();
 
       if (!message.isMine && !message.isRead) {
         this.messageService.markAsRead(message.messageId).subscribe({

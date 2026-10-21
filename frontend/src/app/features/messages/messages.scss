@@ -1139,3 +1139,27 @@
     overflow-y: auto;
   }
 }
+
+/* =========================================
+   PAGINATION + TYPING
+========================================= */
+
+.older-loading {
+  align-self: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+
+  i {
+    margin-right: 6px;
+  }
+}
+
+.typing-indicator {
+  align-self: flex-start;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 700;
+  padding: 2px 4px;
+}

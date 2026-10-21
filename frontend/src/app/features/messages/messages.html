@@ -108,13 +108,13 @@
 
         <div>
           <strong>{{ selectedConversation?.displayName }}</strong>
-          <span *ngIf="isUserOnline(selectedUserId)" class="online-label">En línea</span>
+          <span *ngIf="isUserOnline(selectedUserId)" class="online-label">Online</span>
           <span *ngIf="!isUserOnline(selectedUserId)">Private message</span>
         </div>
 
       </header>
 
-      <div class="chat-body">
+      <div class="chat-body" #chatBody (scroll)="onChatScroll()">
 
         <app-loading
   *ngIf="isLoadingConversation"
@@ -126,6 +126,11 @@
 </app-loading>
 
         <ng-container *ngIf="!isLoadingConversation">
+
+          <div class="older-loading" *ngIf="isLoadingOlder">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Loading older messages...
+          </div>
 
           <div
             class="message-row"
@@ -154,6 +159,10 @@
 
           </div>
 
+          <div class="typing-indicator" *ngIf="isOtherUserTyping">
+            {{ selectedConversation?.displayName || 'User' }} is typing...
+          </div>
+
         </ng-container>
 
       </div>
@@ -164,6 +173,7 @@
           rows="1"
           placeholder="Write a message..."
           [(ngModel)]="newMessageText"
+          (input)="onComposerInput()"
           (keydown.enter)="sendOnEnter($event)">
         </textarea>
 
@@ -267,7 +277,7 @@
 
             <div>
               <strong>{{ user.displayName }}</strong>
-              <small>{{ isUserOnline(user.userId) ? 'En línea' : 'Start private message' }}</small>
+              <small>{{ isUserOnline(user.userId) ? 'Online' : 'Start private message' }}</small>
             </div>
 
             <i class="fa-solid fa-arrow-right"></i>
