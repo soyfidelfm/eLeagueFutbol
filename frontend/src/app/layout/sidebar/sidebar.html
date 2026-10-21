@@ -11,26 +11,26 @@
     <div class="season-card">
 
       <span class="season-label">
-        {{ sidebarData?.season?.label || 'CURRENT SEASON' }}
+        {{ sidebarData?.season?.label || ('CURRENT SEASON' | t) }}
       </span>
 
-      <h3>{{ sidebarData?.season?.name || 'No Season' }}</h3>
+      <h3>{{ sidebarData?.season?.name || ('No Season' | t) }}</h3>
 
       <div class="season-rank">
         <span>{{ sidebarData?.season?.totalClubs || 0 }}</span>
       </div>
 
-      <small>REGISTERED CLUBS</small>
+      <small>{{ 'REGISTERED CLUBS' | t }}</small>
 
       <div class="season-stats">
         <div>
           <strong>{{ sidebarData?.season?.totalMatches || 0 }}</strong>
-          <span>MATCHES</span>
+          <span>{{ 'MATCHES' | t }}</span>
         </div>
       </div>
 
       <button routerLink="/seasons" [queryParams]="{ view: 'current' }">
-        View Season
+        {{ 'View Season' | t }}
       </button>
 
     </div>
