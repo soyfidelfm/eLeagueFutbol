@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 export interface NeonDropdownOption {
   label: string;
@@ -9,7 +10,9 @@ export interface NeonDropdownOption {
 @Component({
   selector: 'app-neon-dropdown',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,
+    TranslatePipe
+  ],
   templateUrl: './neon-dropdown.html',
   styleUrl: './neon-dropdown.scss'
 })

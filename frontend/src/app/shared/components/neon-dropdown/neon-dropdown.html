@@ -1,11 +1,11 @@
 <div class="neon-dropdown">
   <label *ngIf="label" class="dropdown-label">
-    {{ label }}
+    {{ label | t }}
   </label>
 
   <button type="button" class="dropdown-trigger" (click)="toggle()">
     <span>
-      {{ selectedOption?.label || placeholder }}
+      {{ (selectedOption?.label || placeholder) | t }}
     </span>
 
     <span class="chevron" [class.open]="isOpen">⌄</span>
@@ -19,7 +19,7 @@
       [class.active]="option.value === selectedValue"
       (click)="select(option)"
     >
-      {{ option.label }}
+      {{ option.label | t }}
     </button>
   </div>
 </div>
