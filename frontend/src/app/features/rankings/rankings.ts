@@ -11,12 +11,13 @@ import { ClubRankingDto } from '../../core/models/ranking.model';
 import { Season } from '../../core/models/season.model';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-rankings',
   standalone: true,
   imports: [CommonModule, FormsModule, AppLoading,
-    TranslatePipe
+    TranslatePipe, EmptyState
   ],
   templateUrl: './rankings.html',
   styleUrl: './rankings.scss',

@@ -18,6 +18,7 @@ import { AppLoading } from '../../shared/components/app-loading/app-loading';
 import { TranslationService } from '../../core/i18n/translation.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-season',
@@ -26,7 +27,7 @@ import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
     CommonModule,
     FormsModule,
     AppLoading,
-    TranslatePipe, LocalizedDatePipe
+    TranslatePipe, LocalizedDatePipe, EmptyState
   ],
   templateUrl: './seasons.html',
   styleUrl: './seasons.scss'

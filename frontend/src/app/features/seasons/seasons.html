@@ -8,9 +8,13 @@
   [showBar]="true">
 </app-loading>
 
-  <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
-    {{ errorMessage | t }}
-  </div>
+  <app-empty-state
+    *ngIf="!isLoading && errorMessage"
+    tone="error"
+    icon="fa-solid fa-triangle-exclamation"
+    title="Something went wrong"
+    [description]="errorMessage">
+  </app-empty-state>
 
   <ng-container *ngIf="!isLoading && !errorMessage">
 
@@ -40,12 +44,15 @@
 
     <ng-container *ngIf="view === 'current'">
 
-      <div
-        class="empty-state"
+      <app-empty-state
         *ngIf="!currentSeason"
-      >
-        {{ 'No current season found.' | t }}
-      </div>
+        icon="fa-solid fa-trophy"
+        title="No current season"
+        description="There is no active season right now. Check back soon.">
+        <button type="button" class="empty-action" *ngIf="isAdmin" (click)="openCreate()">
+          {{ 'Create Season' | t }}
+        </button>
+      </app-empty-state>
 
       <div
         class="season-panel"
@@ -351,13 +358,16 @@
 
     <ng-container *ngIf="view === 'list'">
 
-      <div
-        class="empty-state"
+      <app-empty-state
         id="season-list"
         *ngIf="seasons.length === 0"
-      >
-        {{ 'No seasons found.' | t }}
-      </div>
+        icon="fa-regular fa-calendar-xmark"
+        title="No seasons found"
+        description="Seasons created by an admin will be listed here.">
+        <button type="button" class="empty-action" *ngIf="isAdmin" (click)="openCreate()">
+          {{ 'Create Season' | t }}
+        </button>
+      </app-empty-state>
 
       <div
         class="season-table-card"
