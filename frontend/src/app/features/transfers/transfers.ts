@@ -1,3 +1,4 @@
+import { tap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -8,6 +9,7 @@ import { SeasonService } from '../../core/services/season.service';
 import { RealtimeService } from '../../core/services/realtime.service';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
 import { TransferBoard, TransferMarketPlayer, TransferOffer } from '../../core/models/transfer.model';
+import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
@@ -34,6 +36,7 @@ export class Transfers implements OnInit, OnDestroy {
   private subscription = new Subscription();
 
   constructor(
+    private confirmDialog: ConfirmDialogService,
     private transfers: TransferService,
     private seasons: SeasonService,
     private realtime: RealtimeService,
@@ -177,22 +180,40 @@ export class Transfers implements OnInit, OnDestroy {
   }
 
   reject(offer: TransferOffer): void {
-    this.transfers.rejectOffer(offer.transferRecordId).subscribe({
-      next: () => this.loadBoard(false),
-      error: err => {
-        this.errorMessage = err?.error?.message || 'Could not reject offer.';
-        this.cdr.detectChanges();
-      }
+    void this.confirmDialog.confirm({
+      title: 'Reject offer for {player}?',
+      description: '{club} will be notified that you rejected the offer.',
+      params: { player: offer.playerName, club: offer.toClubName },
+      confirmLabel: 'Reject offer',
+      cancelLabel: 'Keep it',
+      action: () => this.transfers.rejectOffer(offer.transferRecordId).pipe(
+        tap({
+          next: () => this.loadBoard(false),
+          error: err => {
+            this.errorMessage = err?.error?.message || 'Could not reject offer.';
+            this.cdr.detectChanges();
+          }
+        })
+      )
     });
   }
 
   cancel(offer: TransferOffer): void {
-    this.transfers.cancelOffer(offer.transferRecordId).subscribe({
-      next: () => this.loadBoard(false),
-      error: err => {
-        this.errorMessage = err?.error?.message || 'Could not cancel offer.';
-        this.cdr.detectChanges();
-      }
+    void this.confirmDialog.confirm({
+      title: 'Cancel your offer for {player}?',
+      description: 'The offer will be withdrawn. You can make a new one later.',
+      params: { player: offer.playerName, club: offer.fromClubName },
+      confirmLabel: 'Cancel offer',
+      cancelLabel: 'Keep it',
+      action: () => this.transfers.cancelOffer(offer.transferRecordId).pipe(
+        tap({
+          next: () => this.loadBoard(false),
+          error: err => {
+            this.errorMessage = err?.error?.message || 'Could not cancel offer.';
+            this.cdr.detectChanges();
+          }
+        })
+      )
     });
   }
 

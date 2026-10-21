@@ -38,6 +38,7 @@ import {
 import {
   ManualMatchStatsModal
 } from './components/manual-match-stats-modal/manual-match-stats-modal';
+import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
@@ -203,6 +204,7 @@ export class Matches implements OnInit, OnDestroy {
     private readonly matchStatsService: MatchStatsService,
     private readonly userService: UserService,
     private readonly realtime: RealtimeService,
+    private readonly confirmDialog: ConfirmDialogService,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
@@ -478,8 +480,20 @@ export class Matches implements OnInit, OnDestroy {
     this.reviewProposal(true);
   }
 
-  rejectProposal(): void {
-    this.reviewProposal(false);
+  async rejectProposal(): Promise<void> {
+    if (!this.pendingProposal?.canReview || this.isReviewingProposal) {
+      return;
+    }
+
+    const ok = await this.confirmDialog.confirm({
+      title: 'Reject this result?',
+      description: 'The proposed score and stats will be discarded and the uploader will need to submit again.',
+      confirmLabel: 'Reject result'
+    });
+
+    if (ok) {
+      this.reviewProposal(false);
+    }
   }
 
   private reviewProposal(accept: boolean): void {

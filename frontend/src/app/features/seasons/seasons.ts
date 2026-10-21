@@ -15,6 +15,7 @@ import { SeasonService } from '../../core/services/season.service';
 import { MatchService } from '../../core/services/match.service';
 import { UserService } from '../../core/services/user.service';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
+import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
 import { TranslationService } from '../../core/i18n/translation.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
@@ -64,7 +65,8 @@ export class Seasons implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private i18n: TranslationService
+    private i18n: TranslationService,
+    private confirmDialog: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
@@ -266,12 +268,20 @@ export class Seasons implements OnInit {
     });
   }
 
-  generateSchedule(season: Season): void {
+  async generateSchedule(season: Season): Promise<void> {
     if (!this.isAdmin || !season?.seasonId) {
       return;
     }
 
-    if (!confirm(this.i18n.t('Generate schedule for {name}?', { name: season.name }))) {
+    const ok = await this.confirmDialog.confirm({
+      title: 'Generate schedule for {name}?',
+      description: 'Matches will be created for every week of this season.',
+      params: { name: season.name },
+      confirmLabel: 'Generate',
+      danger: false
+    });
+
+    if (!ok) {
       return;
     }
 
@@ -281,8 +291,13 @@ export class Seasons implements OnInit {
     );
   }
 
-  closeRegistration(season: Season): void {
-    if (!this.confirmAdmin(season, this.i18n.t('Close registration for {name}?', { name: season.name }))) {
+  async closeRegistration(season: Season): Promise<void> {
+    if (!(await this.confirmAdmin(season, {
+      title: 'Close registration for {name}?',
+      description: 'Players will no longer be able to join this season.',
+      confirmLabel: 'Close registration',
+      danger: true
+    }))) {
       return;
     }
 
@@ -292,8 +307,13 @@ export class Seasons implements OnInit {
     );
   }
 
-  openRegistration(season: Season): void {
-    if (!this.confirmAdmin(season, this.i18n.t('Open registration for {name}?', { name: season.name }))) {
+  async openRegistration(season: Season): Promise<void> {
+    if (!(await this.confirmAdmin(season, {
+      title: 'Open registration for {name}?',
+      description: 'Players will be able to join this season.',
+      confirmLabel: 'Open registration',
+      danger: false
+    }))) {
       return;
     }
 
@@ -303,8 +323,13 @@ export class Seasons implements OnInit {
     );
   }
 
-  setCurrent(season: Season): void {
-    if (!this.confirmAdmin(season, this.i18n.t('Set {name} as the current season?', { name: season.name }))) {
+  async setCurrent(season: Season): Promise<void> {
+    if (!(await this.confirmAdmin(season, {
+      title: 'Set {name} as the current season?',
+      description: 'Only one season can be current. Others will be unmarked.',
+      confirmLabel: 'Make current',
+      danger: false
+    }))) {
       return;
     }
 
@@ -314,8 +339,13 @@ export class Seasons implements OnInit {
     );
   }
 
-  closeSeason(season: Season): void {
-    if (!this.confirmAdmin(season, this.i18n.t('Close {name}? Pending transfer offers will be cancelled.', { name: season.name }))) {
+  async closeSeason(season: Season): Promise<void> {
+    if (!(await this.confirmAdmin(season, {
+      title: 'Close {name}?',
+      description: 'Pending transfer offers will be cancelled and results will be locked. This cannot be undone.',
+      confirmLabel: 'Close season',
+      danger: true
+    }))) {
       return;
     }
 
@@ -325,8 +355,13 @@ export class Seasons implements OnInit {
     );
   }
 
-  activateSeason(season: Season): void {
-    if (!this.confirmAdmin(season, this.i18n.t('Activate {name}?', { name: season.name }))) {
+  async activateSeason(season: Season): Promise<void> {
+    if (!(await this.confirmAdmin(season, {
+      title: 'Activate {name}?',
+      description: 'The season will be visible across the platform.',
+      confirmLabel: 'Activate',
+      danger: false
+    }))) {
       return;
     }
 
@@ -336,12 +371,18 @@ export class Seasons implements OnInit {
     );
   }
 
-  delete(seasonId: string): void {
+  async delete(seasonId: string): Promise<void> {
     if (!this.isAdmin) {
       return;
     }
 
-    if (!confirm(this.i18n.t('Are you sure you want to delete this season?'))) return;
+    const ok = await this.confirmDialog.confirm({
+      title: 'Delete this season?',
+      description: 'The season and its configuration will be removed. This cannot be undone.',
+      confirmLabel: 'Delete'
+    });
+
+    if (!ok) return;
 
     this.seasonService.remove(seasonId).subscribe({
       next: () => this.loadSeasons(),
@@ -369,12 +410,15 @@ export class Seasons implements OnInit {
     };
   }
 
-  private confirmAdmin(season: Season | null, message: string): boolean {
+  private confirmAdmin(
+    season: Season | null,
+    options: { title: string; description: string; confirmLabel: string; danger: boolean }
+  ): Promise<boolean> {
     if (!this.isAdmin || !season?.seasonId) {
-      return false;
+      return Promise.resolve(false);
     }
 
-    return confirm(this.i18n.t(message));
+    return this.confirmDialog.confirm({ ...options, params: { name: season.name } });
   }
 
   private runAction(request$: Observable<unknown>, successMessage: string): void {
