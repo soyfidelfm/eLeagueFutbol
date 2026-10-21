@@ -1,0 +1,22 @@
+:host { display: block; width: 100%; }
+.empty-state-box {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 8px; padding: 32px 20px; border-radius: 16px;
+  background: linear-gradient(160deg, rgba(14, 20, 33, .7), rgba(8, 12, 22, .7));
+  border: 1px dashed rgba(0, 255, 170, .22); color: #f4f7fb;
+}
+.icon-wrap {
+  width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(0, 255, 170, .08); border: 1px solid rgba(0, 255, 170, .3);
+  box-shadow: 0 0 18px rgba(0, 255, 170, .15); color: #00ffaa; font-size: 22px; margin-bottom: 4px;
+}
+h4 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: .02em; }
+p { margin: 0; max-width: 420px; font-size: 13px; line-height: 1.45; color: #8ea0b5; }
+.actions:empty { display: none; }
+.actions { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.compact { padding: 18px 14px; gap: 6px; }
+.compact .icon-wrap { width: 40px; height: 40px; font-size: 16px; }
+.compact h4 { font-size: 14px; }
+.compact p { font-size: 12px; }
+.error { border-color: rgba(255, 80, 80, .35); }
+.error .icon-wrap { color: #ff7b7b; background: rgba(255, 80, 80, .08); border-color: rgba(255, 80, 80, .35); box-shadow: 0 0 18px rgba(255, 80, 80, .15); }
