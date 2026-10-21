@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { ApiService } from '../services/api.service.ts';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
+import { getAppTimeZone } from '../i18n/timezone';
 
 import {
   MatchDto,
@@ -41,8 +42,10 @@ export class MatchService extends ApiService {
     seasonId: string,
     weekNumber: number
   ): Observable<MatchDto[]> {
+    // Backend formats matchDate/matchTime in the user's settings time zone.
     const params = new HttpParams()
-      .set('seasonId', seasonId);
+      .set('seasonId', seasonId)
+      .set('timeZone', getAppTimeZone());
 
     return super.get<MatchDto[]>(
       `${API_ENDPOINTS.matches}/week/${weekNumber}`,
@@ -54,7 +57,8 @@ export class MatchService extends ApiService {
     matchId: string
   ): Observable<MatchDto> {
     return super.get<MatchDto>(
-      `${API_ENDPOINTS.matches}/${matchId}`
+      `${API_ENDPOINTS.matches}/${matchId}`,
+      new HttpParams().set('timeZone', getAppTimeZone())
     );
   }
 

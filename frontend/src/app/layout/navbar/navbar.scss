@@ -260,7 +260,8 @@
   border-top: 1px solid rgba(0, 255, 136, 0.22);
 }
 
-.user-menu button {
+.user-menu button,
+.user-menu a {
   width: 100%;
   display: flex;
   align-items: center;
@@ -277,12 +278,14 @@
   transition: .2s ease;
 }
 
-.user-menu button i {
+.user-menu button i,
+.user-menu a i {
   width: 18px;
   color: var(--neon-primary);
 }
 
-.user-menu button:hover {
+.user-menu button:hover,
+.user-menu a:hover {
   background: rgba(0, 255, 136, 0.12);
   color: var(--neon-primary);
 }
@@ -595,4 +598,8 @@
     width: 38px;
     height: 38px;
   }
+}
+.user-menu a {
+  text-decoration: none;
+  box-sizing: border-box;
 }
