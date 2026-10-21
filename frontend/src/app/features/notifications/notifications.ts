@@ -5,11 +5,15 @@ import { finalize, Subscription } from 'rxjs';
 
 import { NotificationInboxService } from '../../core/services/notification-inbox.service';
 import { Notification as AppNotification } from '../../core/models/notification.model';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,
+    TranslatePipe, LocalizedDatePipe
+  ],
   templateUrl: './notifications.html',
   styleUrl: './notifications.scss'
 })

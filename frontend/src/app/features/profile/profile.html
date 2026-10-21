@@ -3,34 +3,34 @@
 
     <div class="profile-header">
       <div class="profile-title">
-        <span class="eyebrow">PLAYER SETTINGS</span>
+        <span class="eyebrow">{{ 'PLAYER SETTINGS' | t }}</span>
 
-        <h2>My Profile</h2>
+        <h2>{{ 'My Profile' | t }}</h2>
 
         <p class="subtitle">
-          Customize your eLeagueFutbol identity.
+          {{ 'Customize your eLeagueFutbol identity.' | t }}
         </p>
       </div>
 
       <div class="avatar-preview" *ngIf="form.avatarUrl">
-        <img [src]="form.avatarUrl" alt="Avatar" />
+        <img [src]="form.avatarUrl" [alt]="'Avatar' | t" />
         <span class="avatar-status"></span>
       </div>
     </div>
 
     <div *ngIf="isLoading" class="message">
       <i class="fa-solid fa-circle-notch fa-spin"></i>
-      <span>Loading profile...</span>
+      <span>{{ 'Loading profile...' | t }}</span>
     </div>
 
     <div *ngIf="!isLoading && errorMessage" class="error">
       <i class="fa-solid fa-triangle-exclamation"></i>
-      <span>{{ errorMessage }}</span>
+      <span>{{ errorMessage | t }}</span>
     </div>
 
     <div *ngIf="!isLoading && successMessage" class="success">
       <i class="fa-solid fa-circle-check"></i>
-      <span>{{ successMessage }}</span>
+      <span>{{ successMessage | t }}</span>
     </div>
 
     <form *ngIf="!isLoading && user" (ngSubmit)="save()">
@@ -38,7 +38,7 @@
       <label>
         <span>
           <i class="fa-regular fa-user"></i>
-          Display Name
+          {{ 'Display Name' | t }}
         </span>
 
         <input
@@ -46,7 +46,7 @@
           name="displayName"
           [(ngModel)]="form.displayName"
           autocomplete="name"
-          placeholder="Enter your player name" />
+          [placeholder]="'Enter your player name' | t" />
       </label>
 
       <div class="avatar-upload-section full-width">
@@ -55,7 +55,7 @@
           <img
             *ngIf="form.avatarUrl"
             [src]="form.avatarUrl"
-            alt="Avatar" />
+            [alt]="'Avatar' | t" />
 
           <div *ngIf="!form.avatarUrl" class="avatar-placeholder">
             <i class="fa-regular fa-user"></i>
@@ -82,7 +82,7 @@
           </i>
 
           <span>
-            {{ isUploadingAvatar ? 'Uploading Avatar...' : 'Change Avatar' }}
+            {{ isUploadingAvatar ? ('Uploading Avatar...' | t) : ('Change Avatar' | t) }}
           </span>
         </button>
 
@@ -93,7 +93,7 @@
         <label>
           <span>
             <i class="fa-solid fa-trophy"></i>
-            League
+            {{ 'League' | t }}
           </span>
 
           <mat-form-field class="profile-select" appearance="outline">
@@ -105,7 +105,7 @@
               [(ngModel)]="leagueSearchText"
               (ngModelChange)="filterLeagues()"
               [matAutocomplete]="leagueAuto"
-              placeholder="Search league" />
+              [placeholder]="'Search league' | t" />
 
             <mat-autocomplete
               #leagueAuto="matAutocomplete"
@@ -124,7 +124,7 @@
         <label>
           <span>
             <i class="fa-solid fa-shield-halved"></i>
-            Team
+            {{ 'Team' | t }}
           </span>
 
           <mat-form-field class="profile-select" appearance="outline">
@@ -137,7 +137,7 @@
               (ngModelChange)="filterTeams()"
               [matAutocomplete]="teamAuto"
               [disabled]="!selectedLeague"
-              placeholder="Search team" />
+              [placeholder]="'Search team' | t" />
 
             <mat-autocomplete
               #teamAuto="matAutocomplete"
@@ -159,7 +159,7 @@
       <label>
         <span>
           <i class="fa-solid fa-futbol"></i>
-          Club Name
+          {{ 'Club Name' | t }}
         </span>
 
         <input
@@ -167,13 +167,13 @@
           name="clubName"
           [(ngModel)]="form.clubName"
           autocomplete="off"
-          placeholder="Enter your club name" />
+          [placeholder]="'Enter your club name' | t" />
       </label>
 
       <label>
         <span>
           <i class="fa-solid fa-gamepad"></i>
-          PS ID / Gamertag
+          {{ 'PS ID / Gamertag' | t }}
         </span>
 
         <input
@@ -181,7 +181,7 @@
           name="gamerTag"
           [(ngModel)]="form.gamerTag"
           autocomplete="off"
-          placeholder="Enter your PS ID or Gamertag" />
+          [placeholder]="'Enter your PS ID or Gamertag' | t" />
       </label>
 
       <button
@@ -195,7 +195,7 @@
         </i>
 
         <span>
-          {{ isSaving ? 'Saving profile...' : 'Save Changes' }}
+          {{ isSaving ? ('Saving profile...' | t) : ('Save Changes' | t) }}
         </span>
       </button>
 

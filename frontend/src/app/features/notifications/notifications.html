@@ -19,28 +19,28 @@
 
     <div class="notifications-header">
       <div>
-        <h3>Notifications</h3>
-        <span>{{ unreadCount }} unread</span>
+        <h3>{{ 'Notifications' | t }}</h3>
+        <span>{{ unreadCount }} {{ 'unread' | t }}</span>
       </div>
 
       <button
         type="button"
         *ngIf="unreadCount > 0"
         (click)="markAllAsRead($event)">
-        Mark all read
+        {{ 'Mark all read' | t }}
       </button>
     </div>
 
     <div class="notifications-loading" *ngIf="isLoading">
       <i class="fa-solid fa-spinner fa-spin"></i>
-      <span>Loading...</span>
+      <span>{{ 'Loading...' | t }}</span>
     </div>
 
     <div
       class="notifications-empty"
       *ngIf="!isLoading && notifications.length === 0">
       <i class="fa-regular fa-bell"></i>
-      <span>No notifications yet.</span>
+      <span>{{ 'No notifications yet.' | t }}</span>
     </div>
 
     <div
@@ -71,7 +71,7 @@
           <p>{{ item.message }}</p>
 
           <small>
-            {{ item.createdAtUTC | date:'short' }}
+            {{ item.createdAtUTC | tdate:'short' }}
           </small>
         </div>
       </button>
