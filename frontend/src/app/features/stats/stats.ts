@@ -7,12 +7,13 @@ import { StatsService } from '../../core/services/stats.service';
 import { StatsOverview } from '../../core/models/stats-overview.model';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-stats',
   standalone: true,
   imports: [CommonModule, RouterLink, AppLoading,
-    TranslatePipe
+    TranslatePipe, EmptyState
   ],
   templateUrl: './stats.html',
   styleUrl: './stats.scss',

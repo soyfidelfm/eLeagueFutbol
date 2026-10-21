@@ -8,10 +8,20 @@
   [showBar]="true">
 </app-loading>
 
-  <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <span>{{ errorMessage | t }}</span>
-  </div>
+  <app-empty-state
+    *ngIf="!isLoading && errorMessage"
+    tone="error"
+    icon="fa-solid fa-triangle-exclamation"
+    title="Something went wrong"
+    [description]="errorMessage">
+  </app-empty-state>
+
+  <app-empty-state
+    *ngIf="!isLoading && !errorMessage && !stats"
+    icon="fa-solid fa-chart-simple"
+    title="No stats yet"
+    description="Stats appear here once matches are played and results are saved.">
+  </app-empty-state>
 
   <ng-container *ngIf="!isLoading && !errorMessage && stats">
 
@@ -44,7 +54,15 @@
       <button [class.active]="selectedTab === 'league'" (click)="setTab('league')">{{ 'League Leaders' | t }}</button>
     </div>
 
-    <div class="stats-kpis">
+    <app-empty-state
+      *ngIf="!stats.kpis.length"
+      [compact]="true"
+      icon="fa-solid fa-gauge-high"
+      title="No KPIs yet"
+      description="Key numbers will show up after your first finished match.">
+    </app-empty-state>
+
+    <div class="stats-kpis" *ngIf="stats.kpis.length">
       <div class="kpi-card" *ngFor="let kpi of stats.kpis">
         <div class="kpi-icon">
           <i [class]="kpi.icon"></i>
@@ -96,7 +114,12 @@
         </div>
 
         <ng-template #noPerformance>
-          <div class="empty-panel">{{ 'No match performance data yet.' | t }}</div>
+          <app-empty-state
+            [compact]="true"
+            icon="fa-solid fa-chart-line"
+            title="No performance data yet"
+            description="Your last 10 finished matches will be charted here.">
+          </app-empty-state>
         </ng-template>
       </div>
 
@@ -115,6 +138,14 @@
             <span>{{ 'Assists' | t }}</span>
             <span>{{ 'Rating' | t }}</span>
           </div>
+
+          <app-empty-state
+            *ngIf="!stats.topPlayers.length"
+            [compact]="true"
+            icon="fa-solid fa-user-group"
+            title="No players ranked yet"
+            description="Top players appear once match stats are recorded.">
+          </app-empty-state>
 
           <div class="table-row" *ngFor="let player of stats.topPlayers">
             <span>{{ player.rank }}</span>
@@ -156,6 +187,14 @@
             <span>{{ 'Assists' | t }}</span>
             <span>{{ 'Rating' | t }}</span>
           </div>
+
+          <app-empty-state
+            *ngIf="!stats.topPlayers.length"
+            [compact]="true"
+            icon="fa-solid fa-user-group"
+            title="No players ranked yet"
+            description="Top players appear once match stats are recorded.">
+          </app-empty-state>
 
           <div class="table-row" *ngFor="let player of stats.topPlayers">
             <span>{{ player.rank }}</span>

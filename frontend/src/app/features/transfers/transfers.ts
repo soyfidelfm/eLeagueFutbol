@@ -9,12 +9,13 @@ import { RealtimeService } from '../../core/services/realtime.service';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
 import { TransferBoard, TransferMarketPlayer, TransferOffer } from '../../core/models/transfer.model';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-transfers',
   standalone: true,
   imports: [CommonModule, FormsModule, AppLoading,
-    TranslatePipe
+    TranslatePipe, EmptyState
   ],
   templateUrl: './transfers.html',
   styleUrl: './transfers.scss'

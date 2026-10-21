@@ -18,12 +18,25 @@
     </div>
   </header>
 
-  <p class="error" *ngIf="errorMessage">{{ errorMessage | t }}</p>
+  <app-empty-state
+    *ngIf="!isLoading && errorMessage"
+    tone="error"
+    [compact]="!!board"
+    icon="fa-solid fa-triangle-exclamation"
+    title="Something went wrong"
+    [description]="errorMessage">
+  </app-empty-state>
 
   <div class="grid" *ngIf="!isLoading && board">
     <article class="panel">
       <h2>{{ 'Incoming offers' | t }}</h2>
-      <p *ngIf="!board.incomingOffers.length" class="empty">{{ 'No incoming offers.' | t }}</p>
+      <app-empty-state
+        *ngIf="!board.incomingOffers.length"
+        [compact]="true"
+        icon="fa-solid fa-inbox"
+        title="No incoming offers"
+        description="Offers other clubs make for your players will appear here.">
+      </app-empty-state>
       <div class="offer" *ngFor="let offer of board.incomingOffers">
         <div>
           <strong>{{ offer.playerName }}</strong>
@@ -38,7 +51,13 @@
 
     <article class="panel">
       <h2>{{ 'My offers' | t }}</h2>
-      <p *ngIf="!board.outgoingOffers.length" class="empty">{{ 'No outgoing offers.' | t }}</p>
+      <app-empty-state
+        *ngIf="!board.outgoingOffers.length"
+        [compact]="true"
+        icon="fa-solid fa-paper-plane"
+        title="No outgoing offers"
+        description="Make an offer on a player from the market below.">
+      </app-empty-state>
       <div class="offer" *ngFor="let offer of board.outgoingOffers">
         <div>
           <strong>{{ offer.playerName }}</strong>
@@ -55,7 +74,21 @@
       <input [(ngModel)]="searchTerm" [placeholder]="'Search player, club or position' | t" />
     </div>
 
-    <p *ngIf="!filteredMarket.length" class="empty">{{ 'No players on the market yet.' | t }}</p>
+    <app-empty-state
+      *ngIf="!filteredMarket.length && searchTerm.trim()"
+      [compact]="true"
+      icon="fa-solid fa-magnifying-glass"
+      title="No players match your search"
+      description="Try another player name, club or position.">
+    </app-empty-state>
+
+    <app-empty-state
+      *ngIf="!filteredMarket.length && !searchTerm.trim()"
+      [compact]="true"
+      icon="fa-solid fa-store"
+      title="No players on the market yet"
+      description="Players become available once the draft is complete.">
+    </app-empty-state>
 
     <div class="player" *ngFor="let player of filteredMarket">
       <img [src]="player.imageUrl || 'https://cdn.sofifa.net/players/239/085/26_120.png'" [alt]="player.name" />
@@ -71,8 +104,15 @@
     </div>
   </article>
 
-  <article class="panel" *ngIf="!isLoading && board?.history?.length">
+  <article class="panel" *ngIf="!isLoading && board">
     <h2>{{ 'Completed transfers' | t }}</h2>
+    <app-empty-state
+      *ngIf="!board.history.length"
+      [compact]="true"
+      icon="fa-solid fa-right-left"
+      title="No completed transfers"
+      description="Accepted transfers this season will be listed here.">
+    </app-empty-state>
     <div class="offer" *ngFor="let item of board?.history">
       <div>
         <strong>{{ item.playerName }}</strong>
