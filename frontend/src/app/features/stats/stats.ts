@@ -6,11 +6,14 @@ import { finalize } from 'rxjs';
 import { StatsService } from '../../core/services/stats.service';
 import { StatsOverview } from '../../core/models/stats-overview.model';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-stats',
   standalone: true,
-  imports: [CommonModule, RouterLink, AppLoading],
+  imports: [CommonModule, RouterLink, AppLoading,
+    TranslatePipe
+  ],
   templateUrl: './stats.html',
   styleUrl: './stats.scss',
 })

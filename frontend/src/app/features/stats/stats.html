@@ -2,15 +2,15 @@
 
   <app-loading
   *ngIf="isLoading"
-  title="Loading Stats"
-  message="Loading player analytics, performance trends and league statistics..."
+  [title]="'Loading Stats' | t"
+  [message]="'Loading player analytics, performance trends and league statistics...' | t"
   [logo]="true"
   [showBar]="true">
 </app-loading>
 
   <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
     <i class="fa-solid fa-triangle-exclamation"></i>
-    <span>{{ errorMessage }}</span>
+    <span>{{ errorMessage | t }}</span>
   </div>
 
   <ng-container *ngIf="!isLoading && !errorMessage && stats">
@@ -19,20 +19,20 @@
 
       <div class="page-header-content">
         <span class="page-eyebrow">
-          Stats
+          {{ 'Stats' | t }}
         </span>
 
-        <h1>Stats</h1>
+        <h1>{{ 'Stats' | t }}</h1>
 
         <p>
-          Advanced player analytics and performance insights.
+          {{ 'Advanced player analytics and performance insights.' | t }}
         </p>
       </div>
 
       <div class="page-header-actions">
         <button class="season-filter">
           <i class="fa-solid fa-calendar-days"></i>
-          <span>Current Season</span>
+          <span>{{ 'Current Season' | t }}</span>
           <i class="fa-solid fa-chevron-down"></i>
         </button>
       </div>
@@ -40,8 +40,8 @@
     </div>
 
     <div class="stats-tabs">
-      <button [class.active]="selectedTab === 'overview'" (click)="setTab('overview')">Overview</button>
-      <button [class.active]="selectedTab === 'league'" (click)="setTab('league')">League Leaders</button>
+      <button [class.active]="selectedTab === 'overview'" (click)="setTab('overview')">{{ 'Overview' | t }}</button>
+      <button [class.active]="selectedTab === 'league'" (click)="setTab('league')">{{ 'League Leaders' | t }}</button>
     </div>
 
     <div class="stats-kpis">
@@ -51,11 +51,11 @@
         </div>
 
         <div>
-          <span>{{ kpi.label }}</span>
+          <span>{{ kpi.label | t }}</span>
           <strong>{{ kpi.value }}</strong>
           <small>
             <i class="fa-solid fa-arrow-up"></i>
-            Current season
+            {{ 'Current season' | t }}
           </small>
         </div>
       </div>
@@ -65,17 +65,17 @@
 
       <div class="panel performance-panel">
         <div class="panel-header">
-          <h3>Performance Over Time</h3>
+          <h3>{{ 'Performance Over Time' | t }}</h3>
 
           <button class="mini-filter">
-            Last {{ stats.performance.length || 0 }} Matches
+            {{ 'Last' | t }} {{ stats.performance.length || 0 }} {{ 'Matches' | t }}
           </button>
         </div>
 
         <div class="legend">
-          <span><i class="dot goals"></i> Goals</span>
-          <span><i class="dot assists"></i> Assists</span>
-          <span><i class="dot wins"></i> Rating</span>
+          <span><i class="dot goals"></i> {{ 'Goals' | t }}</span>
+          <span><i class="dot assists"></i> {{ 'Assists' | t }}</span>
+          <span><i class="dot wins"></i> {{ 'Rating' | t }}</span>
         </div>
 
         <div class="chart-placeholder" *ngIf="stats.performance.length > 0; else noPerformance">
@@ -91,36 +91,36 @@
           </div>
 
           <div class="perf-labels" [style.--perf-count]="stats.performance.length">
-            <span *ngFor="let point of stats.performance">{{ point.label }}</span>
+            <span *ngFor="let point of stats.performance">{{ point.label | t }}</span>
           </div>
         </div>
 
         <ng-template #noPerformance>
-          <div class="empty-panel">No match performance data yet.</div>
+          <div class="empty-panel">{{ 'No match performance data yet.' | t }}</div>
         </ng-template>
       </div>
 
       <div class="panel top-players-panel">
         <div class="panel-header">
-          <h3>Top Players</h3>
+          <h3>{{ 'Top Players' | t }}</h3>
         </div>
 
         <div class="players-table">
 
           <div class="table-row table-head">
             <span>#</span>
-            <span>Player</span>
-            <span>Matches</span>
-            <span>Goals</span>
-            <span>Assists</span>
-            <span>Rating</span>
+            <span>{{ 'Player' | t }}</span>
+            <span>{{ 'Matches' | t }}</span>
+            <span>{{ 'Goals' | t }}</span>
+            <span>{{ 'Assists' | t }}</span>
+            <span>{{ 'Rating' | t }}</span>
           </div>
 
           <div class="table-row" *ngFor="let player of stats.topPlayers">
             <span>{{ player.rank }}</span>
 
             <div class="player-cell">
-              <img [src]="player.avatarUrl || '/images/avatar-default.png'" alt="Player" />
+              <img [src]="player.avatarUrl || '/images/avatar-default.png'" [alt]="'Player' | t" />
 
               <div>
                 <strong>{{ player.gamerTag }}</strong>
@@ -136,7 +136,7 @@
 
         </div>
 
-        <button class="ghost-action" routerLink="/rankings">View Full Rankings</button>
+        <button class="ghost-action" routerLink="/rankings">{{ 'View Full Rankings' | t }}</button>
       </div>
 
     </div>
@@ -144,23 +144,23 @@
     <div class="stats-grid-main" *ngIf="selectedTab === 'league'">
       <div class="panel top-players-panel" style="grid-column: 1 / -1;">
         <div class="panel-header">
-          <h3>League Leaders</h3>
+          <h3>{{ 'League Leaders' | t }}</h3>
         </div>
 
         <div class="players-table">
           <div class="table-row table-head">
             <span>#</span>
-            <span>Player</span>
-            <span>Matches</span>
-            <span>Goals</span>
-            <span>Assists</span>
-            <span>Rating</span>
+            <span>{{ 'Player' | t }}</span>
+            <span>{{ 'Matches' | t }}</span>
+            <span>{{ 'Goals' | t }}</span>
+            <span>{{ 'Assists' | t }}</span>
+            <span>{{ 'Rating' | t }}</span>
           </div>
 
           <div class="table-row" *ngFor="let player of stats.topPlayers">
             <span>{{ player.rank }}</span>
             <div class="player-cell">
-              <img [src]="player.avatarUrl || '/images/avatar-default.png'" alt="Player" />
+              <img [src]="player.avatarUrl || '/images/avatar-default.png'" [alt]="'Player' | t" />
               <div>
                 <strong>{{ player.gamerTag }}</strong>
                 <small>{{ player.clubName }}</small>
@@ -178,38 +178,38 @@
     <div class="stats-grid-bottom" *ngIf="selectedTab === 'overview'">
 
       <div class="panel">
-        <h3>Goals Breakdown</h3>
+        <h3>{{ 'Goals Breakdown' | t }}</h3>
 
         <div class="donut-layout">
           <div class="donut-ring goals-ring">
             <div>
               <strong>{{ stats.goalsBreakdown.totalGoals }}</strong>
-              <span>Total</span>
+              <span>{{ 'Total' | t }}</span>
             </div>
           </div>
 
           <div class="donut-list">
             <div>
               <span class="color one"></span>
-              Goals
+              {{ 'Goals' | t }}
               <strong>{{ stats.goalsBreakdown.totalGoals }}</strong>
             </div>
 
             <div>
               <span class="color two"></span>
-              Assists
+              {{ 'Assists' | t }}
               <strong>{{ stats.goalsBreakdown.assists }}</strong>
             </div>
 
             <div>
               <span class="color four"></span>
-              Yellow Cards
+              {{ 'Yellow Cards' | t }}
               <strong>{{ stats.goalsBreakdown.yellowCards }}</strong>
             </div>
 
             <div>
               <span class="color five"></span>
-              Red Cards
+              {{ 'Red Cards' | t }}
               <strong>{{ stats.goalsBreakdown.redCards }}</strong>
             </div>
           </div>
@@ -217,27 +217,27 @@
       </div>
 
       <div class="panel radar-panel">
-        <h3>Season Totals</h3>
+        <h3>{{ 'Season Totals' | t }}</h3>
 
         <div class="radar-wrap">
           <div class="radar-score">
             <div>
-              <span>Total Goals</span>
+              <span>{{ 'Total Goals' | t }}</span>
               <strong>{{ stats.goalsBreakdown.totalGoals }}</strong>
             </div>
 
             <div>
-              <span>Total Assists</span>
+              <span>{{ 'Total Assists' | t }}</span>
               <strong>{{ stats.goalsBreakdown.assists }}</strong>
             </div>
 
             <div>
-              <span>Yellow Cards</span>
+              <span>{{ 'Yellow Cards' | t }}</span>
               <strong>{{ stats.goalsBreakdown.yellowCards }}</strong>
             </div>
 
             <div>
-              <span>Red Cards</span>
+              <span>{{ 'Red Cards' | t }}</span>
               <strong>{{ stats.goalsBreakdown.redCards }}</strong>
             </div>
           </div>
