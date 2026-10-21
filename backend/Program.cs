@@ -11,6 +11,7 @@ using backend.Features.Messages.Services;
 using backend.Features.Notifications.Services;
 using backend.Features.Rankings.Services;
 using backend.Features.Realtime;
+using backend.Features.Search.Services;
 using backend.Features.Seasons.Services;
 using backend.Features.Sidebar.Services;
 using backend.Features.Stats.Services;
@@ -58,6 +59,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<INotificationInboxService, NotificationInboxService>();
 builder.Services.AddScoped<IMatchStatsService, MatchStatsService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
 
 // Settings
 builder.Services.Configure<CloudinarySettings>(
