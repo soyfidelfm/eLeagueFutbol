@@ -10,11 +10,14 @@ import { RealtimeService } from '../../core/services/realtime.service';
 import { ClubRankingDto } from '../../core/models/ranking.model';
 import { Season } from '../../core/models/season.model';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-rankings',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppLoading],
+  imports: [CommonModule, FormsModule, AppLoading,
+    TranslatePipe
+  ],
   templateUrl: './rankings.html',
   styleUrl: './rankings.scss',
   styles: [`
@@ -78,7 +81,7 @@ export class Rankings implements OnInit, OnDestroy {
           return;
         }
 
-        this.liveMessage = 'Tabla actualizada';
+        this.liveMessage = 'Standings updated';
         this.loadRankings(false);
       })
     );
