@@ -204,26 +204,15 @@ export class Navbar implements OnInit, OnDestroy {
             this.realtime.setCurrentUserId(me.userId);
           }
 
-          const profileIncomplete =
-            !me.gamerTag?.trim() ||
-            !me.clubName?.trim() ||
-            !me.gameClubId;
-
-          if (!this.firstProfileCheckDone && profileIncomplete) {
-            this.showProfileModal = true;
-            this.firstProfileCheckDone = true;
-          }
+          // Incomplete profiles are handled by the onboarding modal (features/onboarding).
+          this.firstProfileCheckDone = true;
 
           this.cdr.detectChanges();
         },
         error: err => {
           console.error('Error loading me', err);
 
-          if (err.status === 404 && !this.firstProfileCheckDone) {
-            this.showProfileModal = true;
-            this.firstProfileCheckDone = true;
-            this.cdr.detectChanges();
-          }
+          this.firstProfileCheckDone = true;
         }
       });
   }

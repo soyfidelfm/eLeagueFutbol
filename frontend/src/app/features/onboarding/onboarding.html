@@ -1,0 +1,57 @@
+@if (step) {
+  <div class="onboarding-backdrop">
+    <div class="onboarding-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+
+      <button type="button" class="close-btn" [attr.aria-label]="'Close' | t" (click)="dismiss()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <ol class="steps">
+        <li [class.active]="step === 'profile'" [class.done]="profileComplete">
+          <span>{{ profileComplete ? '✓' : '1' }}</span> {{ 'Profile' | t }}
+        </li>
+        <li [class.active]="step === 'season'">
+          <span>2</span> {{ 'Season' | t }}
+        </li>
+      </ol>
+
+      @if (step === 'profile') {
+        <p class="eyebrow">{{ 'WELCOME TO ELEAGUEFUTBOL' | t }}</p>
+        <h2 id="onboarding-title">{{ 'Complete your profile' | t }}</h2>
+        <p class="lead">{{ 'Add your Gamertag, team name and club so you can join a season and compete.' | t }}</p>
+
+        <div class="profile-wrap">
+          <app-profile (saved)="onProfileSaved()"></app-profile>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="ghost" (click)="dismiss()">{{ 'Maybe later' | t }}</button>
+        </div>
+      }
+
+      @if (step === 'season' && season) {
+        <div class="season-icon"><i class="fa-solid fa-trophy"></i></div>
+        <p class="eyebrow">{{ 'REGISTRATION OPEN' | t }}</p>
+        <h2 id="onboarding-title">{{ 'Join {season}' | t: { season: season.name } }}</h2>
+        <p class="lead">{{ 'Your profile is ready. Register your club to play matches, enter the draft and climb the rankings.' | t }}</p>
+
+        @if (errorMessage) {
+          <div class="alert error">{{ errorMessage | t }}</div>
+        }
+        @if (successMessage) {
+          <div class="alert success">{{ successMessage | t }}</div>
+        }
+
+        <div class="actions">
+          <button type="button" class="ghost" [disabled]="isRegistering" (click)="dismiss()">{{ 'Maybe later' | t }}</button>
+          <button type="button" class="primary" [disabled]="isRegistering || !!successMessage" (click)="register()">
+            @if (isRegistering) {
+              <i class="fa-solid fa-spinner fa-spin"></i>
+            }
+            {{ 'Register now' | t }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
