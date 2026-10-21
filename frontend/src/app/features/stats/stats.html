@@ -32,7 +32,7 @@
       <div class="page-header-actions">
         <button class="season-filter">
           <i class="fa-solid fa-calendar-days"></i>
-          <span>Season 1</span>
+          <span>Current Season</span>
           <i class="fa-solid fa-chevron-down"></i>
         </button>
       </div>
@@ -41,11 +41,7 @@
 
     <div class="stats-tabs">
       <button [class.active]="selectedTab === 'overview'" (click)="setTab('overview')">Overview</button>
-      <button [class.active]="selectedTab === 'my'" (click)="setTab('my')">My Stats</button>
-      <button [class.active]="selectedTab === 'team'" (click)="setTab('team')">Team Stats</button>
       <button [class.active]="selectedTab === 'league'" (click)="setTab('league')">League Leaders</button>
-      <button [class.active]="selectedTab === 'heatmaps'" (click)="setTab('heatmaps')">Heat Maps</button>
-      <button [class.active]="selectedTab === 'trends'" (click)="setTab('trends')">Trends</button>
     </div>
 
     <div class="stats-kpis">
@@ -65,15 +61,14 @@
       </div>
     </div>
 
-    <div class="stats-grid-main">
+    <div class="stats-grid-main" *ngIf="selectedTab === 'overview'">
 
       <div class="panel performance-panel">
         <div class="panel-header">
           <h3>Performance Over Time</h3>
 
           <button class="mini-filter">
-            Last 10 Matches
-            <i class="fa-solid fa-chevron-down"></i>
+            Last {{ stats.performance.length || 0 }} Matches
           </button>
         </div>
 
@@ -83,7 +78,7 @@
           <span><i class="dot wins"></i> Rating</span>
         </div>
 
-        <div class="chart-placeholder line-chart">
+        <div class="chart-placeholder line-chart" *ngIf="stats.performance.length > 0; else noPerformance">
           <svg viewBox="0 0 600 240" preserveAspectRatio="none">
             <defs>
               <linearGradient id="greenArea" x1="0" x2="0" y1="0" y2="1">
@@ -92,46 +87,38 @@
               </linearGradient>
             </defs>
 
-            <path
-              d="M20 150 L80 150 L140 175 L200 185 L260 140 L320 140 L380 115 L440 150 L500 95 L580 70 L580 230 L20 230 Z"
-              fill="url(#greenArea)"
-            />
-
-            <polyline
-              points="20,150 80,150 140,175 200,185 260,140 320,140 380,115 440,150 500,95 580,70"
-              fill="none"
-              stroke="#00ff88"
-              stroke-width="4"
-            />
-
-            <polyline
-              points="20,165 80,165 140,175 200,195 260,175 320,175 380,165 440,175 500,145 580,125"
-              fill="none"
-              stroke="#18bfff"
-              stroke-width="3"
-            />
-
-            <polyline
-              points="20,215 80,213 140,215 200,214 260,205 320,190 380,195 440,190 500,175 580,178"
-              fill="none"
-              stroke="#8b5cf6"
-              stroke-width="3"
-            />
+            <!-- Simple dynamic bars / lines from real data -->
+            <g *ngFor="let point of stats.performance; let i = index">
+              <rect
+                [attr.x]="20 + i * 55"
+                [attr.y]="220 - (point.goals * 12)"
+                width="12"
+                [attr.height]="point.goals * 12"
+                fill="#00ff88"
+                opacity="0.8" />
+              <rect
+                [attr.x]="34 + i * 55"
+                [attr.y]="220 - (point.assists * 12)"
+                width="12"
+                [attr.height]="point.assists * 12"
+                fill="#18bfff"
+                opacity="0.8" />
+              <circle
+                [attr.cx]="40 + i * 55"
+                [attr.cy]="200 - (point.rating * 15)"
+                r="4"
+                fill="#8b5cf6" />
+            </g>
           </svg>
 
           <div class="chart-labels">
-            <span>M1</span>
-            <span>M2</span>
-            <span>M3</span>
-            <span>M4</span>
-            <span>M5</span>
-            <span>M6</span>
-            <span>M7</span>
-            <span>M8</span>
-            <span>M9</span>
-            <span>M10</span>
+            <span *ngFor="let point of stats.performance">{{ point.label }}</span>
           </div>
         </div>
+
+        <ng-template #noPerformance>
+          <div class="empty-panel">No match performance data yet.</div>
+        </ng-template>
       </div>
 
       <div class="panel top-players-panel">
@@ -170,12 +157,46 @@
 
         </div>
 
-        <button class="ghost-action">View Full Rankings</button>
+        <button class="ghost-action" routerLink="/rankings">View Full Rankings</button>
       </div>
 
     </div>
 
-    <div class="stats-grid-bottom">
+    <div class="stats-grid-main" *ngIf="selectedTab === 'league'">
+      <div class="panel top-players-panel" style="grid-column: 1 / -1;">
+        <div class="panel-header">
+          <h3>League Leaders</h3>
+        </div>
+
+        <div class="players-table">
+          <div class="table-row table-head">
+            <span>#</span>
+            <span>Player</span>
+            <span>Matches</span>
+            <span>Goals</span>
+            <span>Assists</span>
+            <span>Rating</span>
+          </div>
+
+          <div class="table-row" *ngFor="let player of stats.topPlayers">
+            <span>{{ player.rank }}</span>
+            <div class="player-cell">
+              <img [src]="player.avatarUrl || '/images/avatar-default.png'" alt="Player" />
+              <div>
+                <strong>{{ player.gamerTag }}</strong>
+                <small>{{ player.clubName }}</small>
+              </div>
+            </div>
+            <span>{{ player.matches }}</span>
+            <span>{{ player.goals }}</span>
+            <span>{{ player.assists }}</span>
+            <strong class="rating">{{ player.rating }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid-bottom" *ngIf="selectedTab === 'overview'">
 
       <div class="panel">
         <h3>Goals Breakdown</h3>
@@ -217,27 +238,9 @@
       </div>
 
       <div class="panel radar-panel">
-        <h3>Performance Radar</h3>
+        <h3>Season Totals</h3>
 
         <div class="radar-wrap">
-          <svg viewBox="0 0 300 260">
-            <polygon points="150,20 255,80 255,185 150,240 45,185 45,80" class="radar-line" />
-            <polygon points="150,55 220,95 220,170 150,205 80,170 80,95" class="radar-line" />
-            <polygon points="150,90 185,110 185,155 150,170 115,155 115,110" class="radar-line" />
-
-            <polygon
-              points="150,35 215,105 230,175 150,190 75,165 95,105"
-              class="radar-fill"
-            />
-
-            <text x="150" y="14">Attack</text>
-            <text x="262" y="85">Passing</text>
-            <text x="262" y="190">Defense</text>
-            <text x="135" y="255">Physical</text>
-            <text x="10" y="190">Speed</text>
-            <text x="10" y="85">Dribbling</text>
-          </svg>
-
           <div class="radar-score">
             <div>
               <span>Total Goals</span>
@@ -248,10 +251,18 @@
               <span>Total Assists</span>
               <strong>{{ stats.goalsBreakdown.assists }}</strong>
             </div>
+
+            <div>
+              <span>Yellow Cards</span>
+              <strong>{{ stats.goalsBreakdown.yellowCards }}</strong>
+            </div>
+
+            <div>
+              <span>Red Cards</span>
+              <strong>{{ stats.goalsBreakdown.redCards }}</strong>
+            </div>
           </div>
         </div>
-
-        <button class="ghost-action">View Full Analysis</button>
       </div>
 
     </div>
