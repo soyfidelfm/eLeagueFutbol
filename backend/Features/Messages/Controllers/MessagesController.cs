@@ -1,4 +1,4 @@
-﻿namespace backend.Features.Messages.Controllers;
+namespace backend.Features.Messages.Controllers;
 
 using System.Security.Claims;
 using backend.Features.Messages.Dtos;
@@ -28,12 +28,19 @@ public class MessagesController : ControllerBase
 		return Ok(conversations);
 	}
 
+	/// <summary>
+	/// GET api/messages/conversation/{userId}?before={messageId}&amp;take=15
+	/// Returns the newest page (or the page older than "before"), ordered oldest to newest.
+	/// </summary>
 	[HttpGet("conversation/{userId:guid}")]
-	public async Task<ActionResult<List<MessageDto>>> GetConversation(Guid userId)
+	public async Task<ActionResult<MessagePageDto>> GetConversation(
+		Guid userId,
+		[FromQuery] Guid? before = null,
+		[FromQuery] int take = 15)
 	{
 		var auth0Id = GetAuth0Id();
 
-		var messages = await _messageService.GetConversationAsync(auth0Id, userId);
+		var messages = await _messageService.GetConversationAsync(auth0Id, userId, before, take);
 
 		return Ok(messages);
 	}

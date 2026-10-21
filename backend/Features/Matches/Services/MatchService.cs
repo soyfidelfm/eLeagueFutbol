@@ -176,7 +176,9 @@ public class MatchService : IMatchService
 			await _messageService.SendSystemMessageAsync(
 	userId,
 	"Match Result Submitted",
-	$"The match has been completed. Final score: {resultText}");
+	$"The match has been completed. Final score: {resultText}",
+	"match_result",
+	"/matches");
 
 			await _notificationService.SendToUserAsync(
 				userId,
