@@ -4,6 +4,8 @@ import { RouterOutlet } from '@angular/router';
 import { Navbar } from '../navbar/navbar';
 import { Sidebar } from '../sidebar/sidebar';
 import { Footer } from '../footer/footer';
+import { Onboarding } from '../../features/onboarding/onboarding';
+import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 
 import { NotificationService } from '../../core/services/notification.service';
 import { NotificationInboxService } from '../../core/services/notification-inbox.service';
@@ -17,7 +19,9 @@ import { UserService } from '../../core/services/user.service';
     RouterOutlet,
     Navbar,
     Sidebar,
-    Footer
+    Footer,
+    Onboarding,
+    ConfirmDialog
   ],
   templateUrl: './shell.html',
   styleUrl: './shell.scss'
