@@ -1,4 +1,4 @@
-﻿using backend.Features.Users.Dtos;
+using backend.Features.Users.Dtos;
 using backend.Features.Users.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -67,6 +67,35 @@ public class UsersController : ControllerBase
 			return NotFound("User not found.");
 
 		return Ok(me);
+	}
+
+	[HttpGet("me/settings")]
+	public async Task<ActionResult<UserSettingsDto>> GetMySettings()
+	{
+		var settings = await _service.GetSettingsAsync(User);
+
+		if (settings == null)
+			return NotFound(new { message = "User not found." });
+
+		return Ok(settings);
+	}
+
+	[HttpPut("me/settings")]
+	public async Task<ActionResult<UserSettingsDto>> UpdateMySettings([FromBody] UserSettingsDto dto)
+	{
+		try
+		{
+			var settings = await _service.UpdateSettingsAsync(User, dto);
+
+			if (settings == null)
+				return NotFound(new { message = "User not found." });
+
+			return Ok(settings);
+		}
+		catch (ArgumentException ex)
+		{
+			return BadRequest(new { message = ex.Message });
+		}
 	}
 
 	[HttpGet("search")]

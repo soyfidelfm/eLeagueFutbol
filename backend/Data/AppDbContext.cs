@@ -82,6 +82,19 @@ public class AppDbContext : DbContext
 				.HasDatabaseName("IX_PendingMatchResults_MatchId_Pending");
 		});
 
+		modelBuilder.Entity<User>(entity =>
+		{
+			entity.Property(x => x.Language)
+				.HasMaxLength(8)
+				.HasDefaultValue("en");
+
+			entity.Property(x => x.PushNotificationsEnabled)
+				.HasDefaultValue(true);
+
+			entity.Property(x => x.InAppToastsEnabled)
+				.HasDefaultValue(true);
+		});
+
 		modelBuilder.Entity<User>()
 			.HasOne(x => x.GameClub)
 			.WithOne(x => x.User)
