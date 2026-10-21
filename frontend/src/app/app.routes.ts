@@ -38,13 +38,6 @@ export const routes: Routes = [
       },
 
       {
-        path: 'arena',
-        loadComponent: () =>
-          import('./features/arena/arena')
-            .then(m => m.Arena)
-      },
-
-      {
         path: 'seasons',
         loadComponent: () =>
           import('./features/seasons/seasons')
