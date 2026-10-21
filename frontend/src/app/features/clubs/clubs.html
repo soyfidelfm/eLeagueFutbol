@@ -2,22 +2,22 @@
 
   <app-loading
   *ngIf="isLoading"
-  title="Loading Club"
-  message="Loading club information and squad data..."
+  [title]="'Loading Club' | t"
+  [message]="'Loading club information and squad data...' | t"
   [logo]="true"
   [showBar]="true">
 </app-loading>
 
   <div *ngIf="!isLoading && errorMessage" class="error">
     <i class="fa-solid fa-triangle-exclamation"></i>
-    <span>{{ errorMessage }}</span>
+    <span>{{ errorMessage | t }}</span>
   </div>
 
   <ng-container *ngIf="!isLoading && !errorMessage && club">
 
     <div class="clubs-back">
       <i class="fa-solid fa-shirt"></i>
-      <span>Mi plantilla</span>
+      <span>{{ 'My squad' | t }}</span>
     </div>
 
     <div class="club-hero">
@@ -25,7 +25,7 @@
       <div class="club-logo-section">
         <img
           [src]="club.logoUrl || '/images/logo-clear.png'"
-          alt="Club logo"
+          [alt]="'Club logo' | t"
           class="club-logo"
           (error)="onImageError($event)"
         />
@@ -37,7 +37,7 @@
           (click)="logoInput.click()"
         >
           <i class="fa-solid" [ngClass]="isUploadingLogo ? 'fa-circle-notch fa-spin' : 'fa-image'"></i>
-          <span>{{ isUploadingLogo ? 'Uploading Logo...' : 'Edit Club Logo' }}</span>
+          <span>{{ isUploadingLogo ? ('Uploading Logo...' | t) : ('Edit Club Logo' | t) }}</span>
         </button>
 
         <input
@@ -50,12 +50,12 @@
       </div>
 
       <div class="club-info">
-        <span class="eyebrow">MI PLANTILLA</span>
+        <span class="eyebrow">{{ 'MY SQUAD' | t }}</span>
 
         <h1>{{ club.name }}</h1>
 
         <p class="meta">
-          {{ players.length }} jugadores · formación {{ selectedFormation }}
+          {{ players.length }} {{ 'players · formation' | t }} {{ selectedFormation }}
         </p>
 
         <div class="club-tags">
@@ -66,7 +66,7 @@
 
           <span>
             <i class="fa-solid fa-users"></i>
-            {{ players.length }} jugadores
+            {{ players.length }} {{ 'players' | t }}
           </span>
 
           <span *ngIf="club.division">
@@ -87,7 +87,7 @@
       <div class="club-banner">
         <img
           [src]="'/images/logo-clear.png'"
-          alt="Club banner"
+          [alt]="'Club banner' | t"
           (error)="onImageError($event)"
         />
       </div>
@@ -101,9 +101,9 @@
         </div>
 
         <div>
-          <span>{{ stat.label }}</span>
+          <span>{{ stat.label | t }}</span>
           <h3>{{ stat.value }}</h3>
-          <small>{{ stat.sub }}</small>
+          <small>{{ stat.sub | t }}</small>
         </div>
       </div>
     </div>
@@ -115,11 +115,11 @@
         <div class="panel-header">
           <h2>
             <i class="fa-solid fa-users"></i>
-            Starting XI
+            {{ 'Starting XI' | t }}
           </h2>
 
           <button type="button" (click)="openSquadModal()">
-            Editar alineación
+            {{ 'Edit lineup' | t }}
             <i class="fa-solid fa-arrow-right"></i>
           </button>
         </div>
@@ -150,20 +150,20 @@
         <ng-template #noPlayers>
           <div class="empty-state">
             <i class="fa-solid fa-users-slash"></i>
-            <span>Todavía no hay XI. Entra al draft o edita la alineación.</span>
-            <a routerLink="/draft">Ir al draft</a>
+            <span>{{ 'No starting XI yet. Join the draft or edit the lineup.' | t }}</span>
+            <a routerLink="/draft">{{ 'Go to draft' | t }}</a>
           </div>
         </ng-template>
 
         <div class="formation-footer">
 
           <div class="formation-summary">
-            <span>Formation</span>
+            <span>{{ 'Formation' | t }}</span>
             <strong>{{ selectedFormation }}</strong>
           </div>
 
           <div class="chemistry-info">
-            <span>Team Chemistry</span>
+            <span>{{ 'Team Chemistry' | t }}</span>
             <strong>{{ chemistry }}</strong>
 
             <div class="chemistry-bar">
@@ -180,7 +180,7 @@
         <div class="panel-header">
           <h2>
             <i class="fa-solid fa-bolt"></i>
-            Recent Activity
+            {{ 'Recent Activity' | t }}
           </h2>
         </div>
 
@@ -195,14 +195,14 @@
               <p>{{ item.type }}</p>
             </div>
 
-            <span>{{ item.createdAtUTC | date:'short' }}</span>
+            <span>{{ item.createdAtUTC | tdate:'short' }}</span>
           </div>
         </ng-container>
 
         <ng-template #noActivities>
           <div class="empty-state">
             <i class="fa-solid fa-bolt"></i>
-            <span>No recent activity yet.</span>
+            <span>{{ 'No recent activity yet.' | t }}</span>
           </div>
         </ng-template>
 
@@ -215,11 +215,11 @@
       <div class="panel-header">
         <h2>
           <i class="fa-solid fa-shirt"></i>
-          Plantilla
+          {{ 'Squad' | t }}
         </h2>
 
         <button type="button" (click)="openSquadModal()">
-          Ver / editar XI
+          {{ 'View / edit XI' | t }}
           <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>
@@ -237,18 +237,18 @@
 
           <div>
             <h4>{{ player.name }}</h4>
-            <p>{{ player.position || 'Jugador' }} · OVR {{ player.overall ?? '—' }}</p>
+            <p>{{ player.position || ('Player' | t) }} · OVR {{ player.overall ?? '—' }}</p>
           </div>
 
-          <span>{{ isStarter(player.playerId) ? 'Titular' : 'Banquillo' }}</span>
+          <span>{{ isStarter(player.playerId) ? ('Starter' | t) : ('Bench' | t) }}</span>
         </div>
       </ng-container>
 
       <ng-template #emptySquad>
         <div class="empty-state">
           <i class="fa-solid fa-users-slash"></i>
-          <span>Los jugadores salen del draft. No se agregan usuarios de la app.</span>
-          <a routerLink="/draft">Ir al draft</a>
+          <span>{{ 'Players come from the draft. App users are not added.' | t }}</span>
+          <a routerLink="/draft">{{ 'Go to draft' | t }}</a>
         </div>
       </ng-template>
 

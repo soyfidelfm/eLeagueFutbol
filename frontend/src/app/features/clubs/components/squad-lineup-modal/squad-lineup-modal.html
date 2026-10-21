@@ -3,8 +3,8 @@
 
     <div class="lineup-modal-header">
       <div>
-        <span>Squad Management</span>
-        <h2>Edit Starting XI</h2>
+        <span>{{ 'Squad Management' | t }}</span>
+        <h2>{{ 'Edit Starting XI' | t }}</h2>
       </div>
 
       <button type="button" class="close-btn" (click)="close.emit()">
@@ -18,7 +18,7 @@
       </button>
 
       <div class="formation-info">
-        <span>Formation</span>
+        <span>{{ 'Formation' | t }}</span>
         <strong>{{ selectedFormation }}</strong>
       </div>
 
@@ -55,7 +55,7 @@
       </div>
 
       <div class="available-list">
-  <h3>Available Players</h3>
+  <h3>{{ 'Available Players' | t }}</h3>
 
   <div class="available-scroll">
     <button
@@ -87,7 +87,7 @@
 
     <div class="lineup-modal-footer">
       <button type="button" (click)="close.emit()">
-        Cancel
+        {{ 'Cancel' | t }}
       </button>
 
       <button
@@ -96,7 +96,7 @@
         [disabled]="!canSave"
         (click)="saveLineup()"
       >
-        Save Lineup
+        {{ 'Save Lineup' | t }}
       </button>
     </div>
 
