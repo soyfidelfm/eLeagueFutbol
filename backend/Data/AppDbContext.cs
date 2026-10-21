@@ -58,10 +58,29 @@ public class AppDbContext : DbContext
 	public DbSet<MatchPlayerStats> MatchPlayerStats => Set<MatchPlayerStats>();
 	public DbSet<MatchSummaryStats> MatchSummaryStats => Set<MatchSummaryStats>();
 	public DbSet<MatchStatsUpload> MatchStatsUploads => Set<MatchStatsUpload>();
+	public DbSet<PendingMatchResult> PendingMatchResults => Set<PendingMatchResult>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);
+
+		modelBuilder.Entity<PendingMatchResult>(entity =>
+		{
+			entity.HasKey(x => x.PendingMatchResultId);
+
+			entity.HasOne(x => x.Match)
+				.WithMany()
+				.HasForeignKey(x => x.MatchId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			entity.HasIndex(x => new { x.MatchId, x.Status });
+
+			// Only one Pending (Status = 1) proposal per match.
+			entity.HasIndex(x => x.MatchId)
+				.IsUnique()
+				.HasFilter("\"Status\" = 1")
+				.HasDatabaseName("IX_PendingMatchResults_MatchId_Pending");
+		});
 
 		modelBuilder.Entity<User>()
 			.HasOne(x => x.GameClub)

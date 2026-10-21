@@ -48,6 +48,7 @@ builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IActivityFeedService, ActivityFeedService>();
 builder.Services.AddScoped<IRankingService, RankingService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
+builder.Services.AddScoped<IPendingMatchResultService, PendingMatchResultService>();
 builder.Services.AddScoped<ISidebarService, SidebarService>();
 builder.Services.AddScoped<DraftService>();
 builder.Services.AddScoped<IDraftService, DraftRealtimeDecorator>();
