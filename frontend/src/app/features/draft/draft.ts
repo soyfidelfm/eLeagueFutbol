@@ -18,6 +18,7 @@ import {
 } from '../../core/models/draft.model';
 import { TranslationService } from '../../core/i18n/translation.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 
 interface SquadSlot {
@@ -29,7 +30,7 @@ interface SquadSlot {
   selector: 'app-draft',
   standalone: true,
   imports: [CommonModule, FormsModule, AppLoading,
-    TranslatePipe
+    TranslatePipe, EmptyState
   ],
   templateUrl: './draft.html',
   styleUrl: './draft.scss'

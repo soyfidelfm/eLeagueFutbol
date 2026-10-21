@@ -339,10 +339,20 @@
         </div>
 
         <ng-template #noPlayers>
-          <div class="empty-state">
-            <i class="fa-solid fa-user-slash"></i>
-            <span>{{ 'No players found.' | t }}</span>
-          </div>
+          <app-empty-state
+            *ngIf="searchTerm.trim()"
+            [compact]="true"
+            icon="fa-solid fa-magnifying-glass"
+            title="No players match your search"
+            description="Try another name, or change the player pool filter.">
+          </app-empty-state>
+          <app-empty-state
+            *ngIf="!searchTerm.trim()"
+            [compact]="true"
+            icon="fa-solid fa-user-slash"
+            title="No players available"
+            description="There are no players left in this pool. Try another pool filter.">
+          </app-empty-state>
         </ng-template>
 
         <div class="pagination" *ngIf="totalPages > 1">
@@ -531,13 +541,13 @@
       {{ 'Loading picks...' | t }}
     </div>
 
-    <div
-      class="draft-picks-empty"
-      *ngIf="!isLoadingDraftPicks && allDraftPicks.length === 0">
-
-      {{ 'No players have been picked yet.' | t }}
-
-    </div>
+    <app-empty-state
+      *ngIf="!isLoadingDraftPicks && allDraftPicks.length === 0"
+      [compact]="true"
+      icon="fa-solid fa-list-ol"
+      title="No picks yet"
+      description="No players have been picked yet.">
+    </app-empty-state>
 
     <div
       class="draft-picks-list"

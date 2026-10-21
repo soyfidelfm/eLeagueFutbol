@@ -212,25 +212,24 @@
 
         </article>
 
-        <div
-          class="empty-state"
-          *ngIf="filteredMatches.length === 0">
+        <app-empty-state
+          *ngIf="!errorMessage && matches.length === 0"
+          icon="fa-regular fa-calendar-xmark"
+          title="No matches this week"
+          description="There are no matches scheduled for this week. Try another week.">
+        </app-empty-state>
 
-          <i class="fa-regular fa-calendar-xmark"></i>
-
-          <h3>{{ 'No matches found' | t }}</h3>
-
-          <p>
-            {{
-              statusFilter === 'all'
-                ? ('There are no matches scheduled for this week.' | t)
-                : (statusFilter === 'finished'
-                    ? ('No finished matches this week.' | t)
-                    : ('No upcoming matches this week.' | t))
-            }}
-          </p>
-
-        </div>
+        <app-empty-state
+          *ngIf="matches.length > 0 && filteredMatches.length === 0"
+          icon="fa-solid fa-filter"
+          [title]="statusFilter === 'finished' ? 'No finished matches' : 'No upcoming matches'"
+          [description]="statusFilter === 'finished'
+            ? 'None of this week\'s matches have finished yet.'
+            : 'All of this week\'s matches are already finished.'">
+          <button type="button" class="empty-action" (click)="setStatusFilter('all')">
+            {{ 'Show all matches' | t }}
+          </button>
+        </app-empty-state>
 
       </div>
 
