@@ -12,9 +12,46 @@
         </p>
       </div>
 
-      <div class="avatar-preview" *ngIf="form.avatarUrl">
-        <img [src]="form.avatarUrl" [alt]="'Avatar' | t" />
-        <span class="avatar-status"></span>
+      <div class="avatar-block">
+        <div class="avatar-preview">
+          <img
+            *ngIf="showAvatarImage"
+            [src]="form.avatarUrl"
+            [alt]="'Avatar' | t"
+            referrerpolicy="no-referrer"
+            (error)="onAvatarError()" />
+
+          <span *ngIf="!showAvatarImage" class="avatar-initials" aria-hidden="true">
+            {{ avatarInitials }}
+          </span>
+
+          <span *ngIf="isUploadingAvatar" class="avatar-uploading">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+          </span>
+        </div>
+
+        <input
+          #avatarInput
+          type="file"
+          accept="image/*"
+          hidden
+          [disabled]="isUploadingAvatar"
+          (change)="onAvatarSelected($event)" />
+
+        <button
+          *ngIf="user"
+          type="button"
+          class="avatar-change-btn"
+          [disabled]="isUploadingAvatar"
+          (click)="avatarInput.click()">
+          <i
+            class="fa-solid"
+            [ngClass]="isUploadingAvatar ? 'fa-circle-notch fa-spin' : 'fa-camera'">
+          </i>
+          <span>
+            {{ isUploadingAvatar ? ('Uploading Avatar...' | t) : ('Change Avatar' | t) }}
+          </span>
+        </button>
       </div>
     </div>
 
@@ -35,7 +72,7 @@
 
     <form *ngIf="!isLoading && user" (ngSubmit)="save()">
 
-      <label>
+      <label class="full-width">
         <span>
           <i class="fa-regular fa-user"></i>
           {{ 'Display Name' | t }}
@@ -48,45 +85,6 @@
           autocomplete="name"
           [placeholder]="'Enter your player name' | t" />
       </label>
-
-      <div class="avatar-upload-section full-width">
-
-        <div class="avatar-upload-preview">
-          <img
-            *ngIf="form.avatarUrl"
-            [src]="form.avatarUrl"
-            [alt]="'Avatar' | t" />
-
-          <div *ngIf="!form.avatarUrl" class="avatar-placeholder">
-            <i class="fa-regular fa-user"></i>
-          </div>
-        </div>
-
-        <input
-          #avatarInput
-          type="file"
-          accept="image/*"
-          hidden
-          [disabled]="isUploadingAvatar"
-          (change)="onAvatarSelected($event)" />
-
-        <button
-          type="button"
-          class="btn-secondary"
-          [disabled]="isUploadingAvatar"
-          (click)="avatarInput.click()">
-
-          <i
-            class="fa-solid"
-            [ngClass]="isUploadingAvatar ? 'fa-circle-notch fa-spin' : 'fa-camera'">
-          </i>
-
-          <span>
-            {{ isUploadingAvatar ? ('Uploading Avatar...' | t) : ('Change Avatar' | t) }}
-          </span>
-        </button>
-
-      </div>
 
       <div class="team-selection-grid full-width">
 
