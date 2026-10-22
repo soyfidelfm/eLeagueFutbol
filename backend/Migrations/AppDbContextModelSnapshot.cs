@@ -283,6 +283,25 @@ namespace backend.Migrations
                     b.ToTable("UserClubPlayers");
                 });
 
+            modelBuilder.Entity("backend.Entities.Common.AppSetting", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAtUTC")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("AppSettings");
+                });
+
             modelBuilder.Entity("backend.Entities.Dashboard.ActivityFeed", b =>
                 {
                     b.Property<Guid>("Id")
@@ -383,6 +402,9 @@ namespace backend.Migrations
                     b.Property<DateTime>("CreatedAtUTC")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("CurrentPickDeadlineUTC")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("CurrentPickNumber")
                         .HasColumnType("integer");
 
@@ -392,14 +414,29 @@ namespace backend.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPaused")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("OneMinuteWarningSent")
                         .HasColumnType("boolean");
+
+                    b.Property<int?>("PausedRemainingSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PickSeconds")
+                        .HasColumnType("integer");
 
                     b.Property<int>("PlayersPerTeam")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("SeasonId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("TimerEnabled")
+                        .HasColumnType("boolean");
 
                     b.HasKey("DraftSessionId");
 
