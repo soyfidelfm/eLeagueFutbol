@@ -62,11 +62,24 @@
     <div
       class="profile-box"
       [class.loading]="!me"
+      role="button"
+      tabindex="0"
+      aria-haspopup="menu"
+      [attr.aria-expanded]="showUserMenu"
+      (keydown.enter)="me && toggleUserMenu($event)"
       (click)="me && toggleUserMenu($event)">
 
-      <img
-        [src]="me?.avatarUrl || '/images/default-avatar.png'"
-        [alt]="me?.displayName || 'User'" />
+      <span class="nav-avatar">
+        <img
+          *ngIf="showAvatarImage; else avatarInitialsTpl"
+          [src]="me?.avatarUrl"
+          [alt]="me?.displayName || ('User' | t)"
+          referrerpolicy="no-referrer"
+          (error)="onAvatarError()" />
+        <ng-template #avatarInitialsTpl>
+          <span class="avatar-initials" aria-hidden="true">{{ avatarInitials }}</span>
+        </ng-template>
+      </span>
 
       <div class="profile-info">
         <strong>{{ me?.displayName || ('Loading...' | t) }}</strong>
@@ -81,19 +94,22 @@
     <div
       class="user-menu"
       *ngIf="showUserMenu"
+      role="menu"
       (click)="$event.stopPropagation()">
 
-      <button type="button" (click)="openProfileModal($event)">
+      <button type="button" role="menuitem" (click)="openProfileModal($event)">
         <i class="fa-regular fa-user"></i>
         <span>{{ 'Profile' | t }}</span>
       </button>
 
-      <a routerLink="/settings" (click)="showUserMenu = false">
+      <a routerLink="/settings" role="menuitem" (click)="showUserMenu = false">
         <i class="fa-solid fa-gear"></i>
         <span>{{ 'Settings' | t }}</span>
       </a>
 
-      <button type="button" (click)="logout()">
+      <div class="menu-divider"></div>
+
+      <button type="button" role="menuitem" class="danger" (click)="logout()">
         <i class="fa-solid fa-right-from-bracket"></i>
         <span>{{ 'Sign out' | t }}</span>
       </button>

@@ -1,6 +1,6 @@
 import { Component, HostListener, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
 import { firstValueFrom, Subscription, take } from 'rxjs';
 
@@ -48,6 +48,9 @@ export class Navbar implements OnInit, OnDestroy {
   showProfileModal = false;
 
   unreadMessagesCount = 0;
+
+  avatarLoadFailed = false;
+  private lastAvatarUrl = '';
 
   constructor(
     public auth: AuthService,
@@ -221,6 +224,11 @@ export class Navbar implements OnInit, OnDestroy {
       .pipe(take(1))
       .subscribe({
         next: me => {
+          const url = (me?.avatarUrl ?? '').trim();
+          if (url !== this.lastAvatarUrl) {
+            this.avatarLoadFailed = false;
+            this.lastAvatarUrl = url;
+          }
           this.me = me;
 
           if (me?.userId) {
@@ -291,7 +299,31 @@ export class Navbar implements OnInit, OnDestroy {
       });
   }
 
-  toggleUserMenu(event: MouseEvent): void {
+  get showAvatarImage(): boolean {
+    return !!this.me?.avatarUrl?.trim() && !this.avatarLoadFailed;
+  }
+
+  get avatarInitials(): string {
+    const source = (this.me?.displayName || this.me?.gamerTag || '').trim();
+
+    if (!source) {
+      return '?';
+    }
+
+    const parts = source.split(/\s+/).filter(Boolean);
+    const initials = parts.length > 1
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : source.slice(0, 2);
+
+    return initials.toUpperCase();
+  }
+
+  onAvatarError(): void {
+    this.avatarLoadFailed = true;
+    this.cdr.detectChanges();
+  }
+
+  toggleUserMenu(event: Event): void {
     event.stopPropagation();
     this.showUserMenu = !this.showUserMenu;
   }
@@ -333,6 +365,11 @@ export class Navbar implements OnInit, OnDestroy {
 
   @HostListener('document:click')
   onDocumentClick(): void {
+    this.showUserMenu = false;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
     this.showUserMenu = false;
   }
 }
