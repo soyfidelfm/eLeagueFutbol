@@ -53,16 +53,24 @@
 
           <span>
             <i class="fa-regular fa-clock"></i>
-            {{ 'Pick Timer' | t }}
+            {{ 'Pick Timer' | t }}:
+            {{ isTimerEnabled ? (pickSeconds + 's') : ('Off' | t) }}
           </span>
         </div>
       </div>
 
       <div class="hero-status">
-        <div class="timer-card">
+        <div class="timer-card" [class.timer-warning]="timerLevel === 'warning'"
+          [class.timer-danger]="timerLevel === 'danger'" [class.timer-paused]="isDraftPaused">
           <span>{{ 'Time remaining' | t }}:</span>
-          <strong>{{ timerText }}</strong>
-          <small>{{ 'Current pick timer' | t }}</small>
+          <strong class="timer-value" role="timer" aria-live="off">{{ timerText }}</strong>
+          <small>
+            {{
+            isDraftPaused
+            ? ('Paused' | t)
+            : (isDraftActive && !isTimerEnabled ? ('No time limit' | t) : ('Current pick timer' | t))
+            }}
+          </small>
         </div>
 
         <div class="pick-card">
@@ -71,7 +79,7 @@
           <small>{{ 'Current' | t }}: {{ currentClubName }}</small>
         </div>
 
-        <button *ngIf="!isDraftActive" type="button" class="draft-start-btn"
+        <button *ngIf="isAdmin && !isDraftActive && !isDraftCompleted" type="button" class="draft-start-btn"
           [disabled]="isStartingDraft || isLotteryRunning" (click)="startDraft()">
 
           <i class="fa-solid" [class.fa-shuffle]="!isLotteryRunning && !draftCenter?.draftOrder?.length"
@@ -91,8 +99,15 @@
 
         <button *ngIf="isDraftActive" type="button" disabled>
 
-          <i class="fa-solid fa-check"></i>
-          {{ 'Draft is active' | t }}
+          <i class="fa-solid" [class.fa-check]="!isDraftPaused" [class.fa-pause]="isDraftPaused"></i>
+          {{ (isDraftPaused ? 'Draft is paused' : 'Draft is active') | t }}
+
+        </button>
+
+        <button *ngIf="isDraftCompleted" type="button" disabled>
+
+          <i class="fa-solid fa-flag-checkered"></i>
+          {{ 'Draft finished' | t }}
 
         </button>
       </div>
@@ -100,6 +115,70 @@
       <div class="hero-trophy">
         <i class="fa-solid fa-trophy"></i>
       </div>
+    </section>
+
+    <section class="admin-draft-panel" *ngIf="isAdmin" [attr.aria-label]="'Admin draft controls' | t">
+      <div class="admin-draft-head">
+        <i class="fa-solid fa-user-shield"></i>
+        <div>
+          <h2>{{ 'Admin draft controls' | t }}</h2>
+          <p>{{ 'Only admins see this panel. Changes reach every player live.' | t }}</p>
+        </div>
+      </div>
+
+      <div class="admin-draft-actions">
+        <button type="button" class="admin-btn primary" *ngIf="!isDraftActive && !isDraftCompleted"
+          [disabled]="isAdminBusy || isStartingDraft || isLotteryRunning" (click)="startDraft()">
+          <i class="fa-solid" [class.fa-play]="hasDraftOrder" [class.fa-shuffle]="!hasDraftOrder"></i>
+          {{ (hasDraftOrder ? 'Start Draft' : 'Start Draft Lottery') | t }}
+        </button>
+
+        <button type="button" class="admin-btn" *ngIf="isDraftActive && !isDraftPaused" [disabled]="isAdminBusy"
+          (click)="pauseDraft()">
+          <i class="fa-solid fa-pause"></i>
+          {{ 'Pause' | t }}
+        </button>
+
+        <button type="button" class="admin-btn primary" *ngIf="isDraftActive && isDraftPaused"
+          [disabled]="isAdminBusy" (click)="resumeDraft()">
+          <i class="fa-solid fa-play"></i>
+          {{ 'Resume' | t }}
+        </button>
+
+        <button type="button" class="admin-btn danger" *ngIf="isDraftActive" [disabled]="isAdminBusy"
+          (click)="stopDraft()">
+          <i class="fa-solid fa-stop"></i>
+          {{ 'Stop draft' | t }}
+        </button>
+
+        <span class="admin-draft-note" *ngIf="isDraftCompleted">
+          <i class="fa-solid fa-flag-checkered"></i>
+          {{ 'Draft finished' | t }}
+        </span>
+      </div>
+
+      <form class="admin-timer-form" *ngIf="hasDraftOrder && !isDraftCompleted" (ngSubmit)="saveTimerSettings()">
+        <label class="admin-toggle">
+          <input type="checkbox" name="timerEnabled" [(ngModel)]="adminTimerEnabled" [disabled]="isAdminBusy" />
+          <span class="switch" aria-hidden="true"></span>
+          <span>{{ 'Per-pick timer' | t }}</span>
+        </label>
+
+        <label class="admin-seconds">
+          <span>{{ 'Seconds per pick' | t }}</span>
+          <input type="number" name="pickSeconds" [min]="minPickSeconds" [max]="maxPickSeconds" step="1"
+            [(ngModel)]="adminPickSeconds" [disabled]="isAdminBusy || !adminTimerEnabled" />
+        </label>
+
+        <button type="submit" class="admin-btn" [disabled]="isAdminBusy || !isAdminPickSecondsValid">
+          <i class="fa-solid fa-floppy-disk"></i>
+          {{ 'Apply timer' | t }}
+        </button>
+
+        <small class="admin-hint">
+          {{ 'When the time runs out the turn is skipped automatically. Applying restarts the current pick clock.' | t }}
+        </small>
+      </form>
     </section>
 
     <section class="draft-layout">
@@ -283,11 +362,17 @@
             </div>
 
             <div class="player-image">
-              <img [src]="getPlayerImageUrl(player)" [alt]="player.name" referrerpolicy="no-referrer" loading="lazy"
-                (error)="onPlayerImageError($event)" />
+              <img *ngIf="hasPlayerPhoto(player); else playerPhotoFallback" [src]="getPlayerImageUrl(player)"
+                [alt]="player.name" referrerpolicy="no-referrer" loading="lazy" (error)="onPlayerImageError(player)" />
+
+              <ng-template #playerPhotoFallback>
+                <span class="player-photo-fallback" [attr.aria-label]="player.name" role="img">
+                  {{ getPlayerInitials(player.name) }}
+                </span>
+              </ng-template>
             </div>
 
-            <div class="player-name">
+            <div class="player-name" [title]="player.name">
               {{ player.name }}
             </div>
 
@@ -328,7 +413,7 @@
               €{{ player.value | number:'1.0-0' }}
             </div>
 
-            <button class="draft-button" type="button" [disabled]="isPicking || !isDraftActive || isLotteryRunning"
+            <button class="draft-button" type="button" [disabled]="isPicking || !isDraftActive || isDraftPaused || isLotteryRunning"
               (click)="draftPlayer(player)">
 
               <i class="fa-solid fa-plus"></i>

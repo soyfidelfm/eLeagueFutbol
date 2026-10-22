@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { finalize, forkJoin, Subscription, take } from 'rxjs';
+import { finalize, forkJoin, Observable, Subscription, take } from 'rxjs';
 
 import { DraftService } from '../../core/services/draft.service';
 import { SeasonService } from '../../core/services/season.service';
@@ -19,6 +19,12 @@ import {
 import { TranslationService } from '../../core/i18n/translation.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
+import { UserService } from '../../core/services/user.service';
+import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
+import { DraftState } from '../../core/models/draft.model';
+
+/** Countdown colour band: >50% normal, <=50% warning (yellow), <=25% danger (red). */
+export type DraftTimerLevel = 'normal' | 'warning' | 'danger';
 
 
 interface SquadSlot {
@@ -33,7 +39,7 @@ interface SquadSlot {
     TranslatePipe, EmptyState
   ],
   templateUrl: './draft.html',
-  styleUrl: './draft.scss'
+  styleUrls: ['./draft.scss', './draft-controls.scss']
 })
 export class Draft implements OnInit, OnDestroy {
   isLoading = true;
@@ -55,7 +61,21 @@ export class Draft implements OnInit, OnDestroy {
   pageSize = 9;
 
   secondsRemaining = 0;
-  timerText = '00:00:00';
+  timerText = '00:00';
+  timerLevel: DraftTimerLevel = 'normal';
+
+  /** Admin draft controls. */
+  isAdmin = false;
+  isAdminBusy = false;
+  adminTimerEnabled = true;
+  adminPickSeconds = 300;
+  readonly minPickSeconds = 10;
+  readonly maxPickSeconds = 600;
+
+  /** Players whose photo failed to load; they render the initials placeholder instead. */
+  private failedImageIds = new Set<string>();
+  private countdownDeadlineMs = 0;
+  private countdownExpiredReloadDone = false;
 
   lotteryDrawNumber = 0;
 
@@ -73,8 +93,6 @@ export class Draft implements OnInit, OnDestroy {
   private lotteryTimeoutId?: number;
   private subscription = new Subscription();
   private joinedSeasonId = '';
-
-  readonly playerImageFallback = 'https://cdn.sofifa.net/players/239/085/26_120.png';
 
   positions = ['All', 'ST', 'LW', 'RW', 'CM', 'CDM', 'CB', 'LB', 'RB', 'GK'];
 
@@ -98,10 +116,19 @@ export class Draft implements OnInit, OnDestroy {
     private seasonService: SeasonService,
     private realtime: RealtimeService,
     private cdr: ChangeDetectorRef,
-    private i18n: TranslationService
+    private i18n: TranslationService,
+    private userService: UserService,
+    private confirmDialog: ConfirmDialogService
   ) { }
 
   ngOnInit(): void {
+    this.userService.getMe().pipe(take(1)).subscribe({
+      next: me => {
+        this.isAdmin = (me?.role ?? '').toLowerCase() === 'admin';
+        this.cdr.detectChanges();
+      }
+    });
+
     this.subscription.add(
       this.realtime.draftEvents$.subscribe(event => {
         if (!event || (this.seasonId && event.seasonId && event.seasonId !== this.seasonId)) {
@@ -210,6 +237,31 @@ export class Draft implements OnInit, OnDestroy {
     return this.draftCenter?.state.isActive ?? false;
   }
 
+  get isDraftPaused(): boolean {
+    return this.draftCenter?.state.isPaused ?? false;
+  }
+
+  get isDraftCompleted(): boolean {
+    return this.draftCenter?.state.isCompleted ?? false;
+  }
+
+  get isTimerEnabled(): boolean {
+    return this.draftCenter?.state.timerEnabled ?? true;
+  }
+
+  get pickSeconds(): number {
+    return this.draftCenter?.state.pickSeconds ?? 0;
+  }
+
+  get hasDraftOrder(): boolean {
+    return (this.draftCenter?.draftOrder?.length ?? 0) > 0;
+  }
+
+  get isAdminPickSecondsValid(): boolean {
+    const value = Number(this.adminPickSeconds);
+    return Number.isInteger(value) && value >= this.minPickSeconds && value <= this.maxPickSeconds;
+  }
+
   get currentBudget(): number {
     return this.draftCenter?.currentBudget ?? 0;
   }
@@ -231,15 +283,29 @@ export class Draft implements OnInit, OnDestroy {
   }
 
   getPlayerImageUrl(player: DraftPlayer): string {
-    return player.imageUrl?.trim() || this.playerImageFallback;
+    return player.imageUrl?.trim() ?? '';
   }
 
-  onPlayerImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
+  hasPlayerPhoto(player: DraftPlayer): boolean {
+    return !!this.getPlayerImageUrl(player) && !this.failedImageIds.has(player.gamePlayerId);
+  }
 
-    if (img.src !== this.playerImageFallback) {
-      img.src = this.playerImageFallback;
+  onPlayerImageError(player: DraftPlayer): void {
+    this.failedImageIds.add(player.gamePlayerId);
+    this.cdr.detectChanges();
+  }
+
+  getPlayerInitials(name: string): string {
+    const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
+
+    if (parts.length === 0) {
+      return '?';
     }
+
+    const first = parts[0][0] ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1][0] ?? '' : '';
+
+    return (first + last).toUpperCase();
   }
 
   loadCurrentSeasonAndDraft(): void {
@@ -313,9 +379,10 @@ export class Draft implements OnInit, OnDestroy {
           this.draftOrder = center.draftOrder ?? [];
           this.lastPicks = center.recentPicks ?? [];
           this.players = players ?? [];
+          this.syncAdminInputs(center.state);
 
           this.mapMySquadToSlots();
-          this.startTimer(center.state.secondsRemaining);
+          this.startTimer(center.state);
 
           this.cdr.detectChanges();
         },
@@ -352,7 +419,7 @@ export class Draft implements OnInit, OnDestroy {
             this.lastPicks = center.recentPicks ?? [];
 
             this.mapMySquadToSlots();
-            this.startTimer(center.state.secondsRemaining);
+            this.startTimer(center.state);
             this.loadPlayers();
 
             this.showToast('🚀 ' + this.i18n.t('Draft started.'));
@@ -524,6 +591,11 @@ export class Draft implements OnInit, OnDestroy {
       return;
     }
 
+    if (this.isDraftPaused) {
+      this.showToast('The draft is paused.');
+      return;
+    }
+
     if (this.isPicking) {
       return;
     }
@@ -591,6 +663,14 @@ export class Draft implements OnInit, OnDestroy {
       this.showToast('Draft completed');
     } else if (type === 'order' || type === 'lottery') {
       this.showToast('Draft order updated');
+    } else if (type === 'paused') {
+      this.showToast('The draft is paused');
+    } else if (type === 'resumed') {
+      this.showToast('The draft has resumed');
+    } else if (type === 'stopped') {
+      this.showToast('The draft was stopped');
+    } else if (type === 'timerupdated') {
+      this.showToast('Pick timer updated');
     }
 
     this.loadDraft();
@@ -646,32 +726,79 @@ export class Draft implements OnInit, OnDestroy {
     });
   }
 
-  private startTimer(seconds: number): void {
+  /**
+   * Countdown driven by the server's pick deadline. The client only renders it; the server
+   * (DraftTimerBackgroundService) skips the turn at 0 and broadcasts a DraftEvent.
+   */
+  private startTimer(state: DraftState): void {
     if (this.timerId) {
       window.clearInterval(this.timerId);
+      this.timerId = undefined;
     }
 
-    this.secondsRemaining = Math.max(0, seconds);
-    this.timerText = this.formatTime(this.secondsRemaining);
-    this.cdr.detectChanges();
+    this.countdownExpiredReloadDone = false;
 
-    if (!this.isDraftActive || this.secondsRemaining <= 0) {
+    if (!state.isActive) {
+      this.setTimerDisplay(0, state);
       return;
     }
 
-    this.timerId = window.setInterval(() => {
-      this.secondsRemaining--;
-      this.timerText = this.formatTime(this.secondsRemaining);
-      this.cdr.detectChanges();
+    if (state.isPaused || state.timerEnabled === false || !state.currentPickDeadlineUTC) {
+      // Paused: the server froze the remaining seconds. Timer off: no limit.
+      this.setTimerDisplay(state.secondsRemaining ?? 0, state);
+      return;
+    }
 
-      if (this.secondsRemaining <= 0) {
+    const serverNow = state.serverTimeUTC ? Date.parse(state.serverTimeUTC) : NaN;
+    const clockOffsetMs = Number.isFinite(serverNow) ? serverNow - Date.now() : 0;
+    this.countdownDeadlineMs = Date.parse(state.currentPickDeadlineUTC);
+
+    const tick = () => {
+      const remainingMs = this.countdownDeadlineMs - (Date.now() + clockOffsetMs);
+      const remaining = Math.max(0, Math.ceil(remainingMs / 1000));
+
+      this.setTimerDisplay(remaining, state);
+
+      if (remaining <= 0) {
         window.clearInterval(this.timerId);
+        this.timerId = undefined;
 
-        setTimeout(() => {
-          this.loadDraft();
-        }, 1200);
+        // Fallback in case the DraftEvent from the server sweep is missed.
+        if (!this.countdownExpiredReloadDone) {
+          this.countdownExpiredReloadDone = true;
+          window.setTimeout(() => this.loadDraft(), 4000);
+        }
       }
-    }, 1000);
+    };
+
+    tick();
+    this.timerId = window.setInterval(tick, 250);
+  }
+
+  private setTimerDisplay(remaining: number, state: DraftState): void {
+    this.secondsRemaining = remaining;
+
+    if (state.isActive && state.timerEnabled === false) {
+      this.timerText = '∞';
+      this.timerLevel = 'normal';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.timerText = this.formatTime(remaining);
+
+    const total = state.pickSeconds ?? 0;
+    const ratio = total > 0 ? remaining / total : 1;
+
+    this.timerLevel = !state.isActive
+      ? 'normal'
+      : ratio <= 0.25
+        ? 'danger'
+        : ratio <= 0.5
+          ? 'warning'
+          : 'normal';
+
+    this.cdr.detectChanges();
   }
 
   private formatTime(totalSeconds: number): string {
@@ -682,6 +809,95 @@ export class Draft implements OnInit, OnDestroy {
     return `${minutes.toString().padStart(2, '0')}:${seconds
       .toString()
       .padStart(2, '0')}`;
+  }
+
+  // ===== Admin draft controls =====
+
+  private syncAdminInputs(state: DraftState): void {
+    if (this.isAdminBusy) {
+      return;
+    }
+
+    this.adminTimerEnabled = state.timerEnabled ?? true;
+    this.adminPickSeconds = state.pickSeconds || 300;
+  }
+
+  private applyCenter(center: DraftCenter): void {
+    this.draftCenter = center;
+    this.draftOrder = center.draftOrder ?? [];
+    this.lastPicks = center.recentPicks ?? [];
+    this.mapMySquadToSlots();
+    this.startTimer(center.state);
+    this.isAdminBusy = false;
+    this.syncAdminInputs(center.state);
+    this.cdr.detectChanges();
+  }
+
+  private runAdminAction(
+    request: () => Observable<DraftCenter>,
+    successMessage: string
+  ): void {
+    if (!this.isAdmin || !this.seasonId || this.isAdminBusy) {
+      return;
+    }
+
+    this.isAdminBusy = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    request().subscribe({
+      next: center => {
+        this.applyCenter(center);
+        this.showToast(successMessage);
+      },
+      error: err => {
+        this.isAdminBusy = false;
+        this.errorMessage = err?.error?.message || 'Could not update the draft.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  pauseDraft(): void {
+    this.runAdminAction(() => this.draftService.pauseDraft(this.seasonId), 'The draft is paused');
+  }
+
+  resumeDraft(): void {
+    this.runAdminAction(() => this.draftService.resumeDraft(this.seasonId), 'The draft has resumed');
+  }
+
+  async stopDraft(): Promise<void> {
+    if (!this.isAdmin) {
+      return;
+    }
+
+    const ok = await this.confirmDialog.confirm({
+      title: 'Stop the draft?',
+      description: 'The draft ends now and cannot be restarted. Picks already made are kept.',
+      confirmLabel: 'Stop draft',
+      danger: true
+    });
+
+    if (!ok) {
+      return;
+    }
+
+    this.runAdminAction(() => this.draftService.stopDraft(this.seasonId), 'The draft was stopped');
+  }
+
+  saveTimerSettings(): void {
+    if (!this.isAdminPickSecondsValid) {
+      this.errorMessage = 'Seconds per pick must be between 10 and 600.';
+      return;
+    }
+
+    this.runAdminAction(
+      () => this.draftService.updateTimer(this.seasonId, {
+        timerEnabled: this.adminTimerEnabled,
+        pickSeconds: Number(this.adminPickSeconds)
+      }),
+      'Pick timer updated'
+    );
   }
 
   openDraftPicksModal(): void {
