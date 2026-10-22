@@ -49,6 +49,8 @@ public class AppDbContext : DbContext
 	public DbSet<DraftOrder> DraftOrders => Set<DraftOrder>();
 	public DbSet<DraftPick> DraftPicks => Set<DraftPick>();
 
+	public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+
 	public DbSet<NotificationToken> NotificationTokens => Set<NotificationToken>();
 	public DbSet<Message> Messages => Set<Message>();
 	public DbSet<Notification> Notifications => Set<Notification>();
@@ -63,6 +65,13 @@ public class AppDbContext : DbContext
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);
+
+		modelBuilder.Entity<AppSetting>(entity =>
+		{
+			entity.HasKey(x => x.Key);
+			entity.Property(x => x.Key).HasMaxLength(100);
+			entity.Property(x => x.Value).HasMaxLength(1000);
+		});
 
 		modelBuilder.Entity<PendingMatchResult>(entity =>
 		{
