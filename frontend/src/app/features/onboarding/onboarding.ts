@@ -53,7 +53,7 @@ export class Onboarding implements OnInit {
       ]
     },
     {
-      key: 'profile', eyebrow: 'STEP 1', title: 'Complete your profile', icon: 'fa-solid fa-id-card', accent: 'cyan', chips: ['fa-solid fa-user', 'fa-solid fa-shield-halved', 'fa-solid fa-hashtag'],
+      key: 'profile', eyebrow: 'STEP 1', title: 'Complete your profile', icon: 'fa-solid fa-id-card', accent: 'green', chips: ['fa-solid fa-user', 'fa-solid fa-shield-halved', 'fa-solid fa-hashtag'],
       bullets: [
         'Add your PS ID / Gamertag so opponents can find you in-game.',
         'Set your team name and pick your in-game club (league + team).',
@@ -69,7 +69,7 @@ export class Onboarding implements OnInit {
       ]
     },
     {
-      key: 'draft', eyebrow: 'DRAFT', title: 'How the Draft works', icon: 'fa-solid fa-list-ol', accent: 'purple', chips: ['fa-solid fa-stopwatch', 'fa-solid fa-coins', 'fa-solid fa-shuffle'],
+      key: 'draft', eyebrow: 'DRAFT', title: 'How the Draft works', icon: 'fa-solid fa-list-ol', accent: 'green', chips: ['fa-solid fa-stopwatch', 'fa-solid fa-coins', 'fa-solid fa-shuffle'],
       bullets: [
         'A lottery sets the order, then it runs as a snake draft: the order reverses every round.',
         'Each pick has a timer; if it runs out, your turn is skipped.',
@@ -77,7 +77,7 @@ export class Onboarding implements OnInit {
       ]
     },
     {
-      key: 'transfers', eyebrow: 'MARKET', title: 'Transfers & squad', icon: 'fa-solid fa-right-left', accent: 'cyan', chips: ['fa-solid fa-handshake', 'fa-solid fa-euro-sign', 'fa-solid fa-people-group'],
+      key: 'transfers', eyebrow: 'MARKET', title: 'Transfers & squad', icon: 'fa-solid fa-right-left', accent: 'green', chips: ['fa-solid fa-handshake', 'fa-solid fa-euro-sign', 'fa-solid fa-people-group'],
       bullets: [
         'Make offers for other clubs\' players from the Transfer Market; they can accept or reject.',
         'You can cancel your pending offers. Accepted fees move between club budgets.',
@@ -93,7 +93,7 @@ export class Onboarding implements OnInit {
       ]
     },
     {
-      key: 'messages', eyebrow: 'STAY CONNECTED', title: 'Messages & notifications', icon: 'fa-solid fa-comments', accent: 'purple', chips: ['fa-solid fa-bell', 'fa-solid fa-paper-plane', 'fa-solid fa-circle'],
+      key: 'messages', eyebrow: 'STAY CONNECTED', title: 'Messages & notifications', icon: 'fa-solid fa-comments', accent: 'green', chips: ['fa-solid fa-bell', 'fa-solid fa-paper-plane', 'fa-solid fa-circle'],
       bullets: [
         'Chat privately with any player and see when they\'re online or typing.',
         'Get notified about draft turns, transfer offers and match results.',

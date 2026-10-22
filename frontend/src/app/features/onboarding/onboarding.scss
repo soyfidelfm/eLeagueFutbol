@@ -1,6 +1,6 @@
-$green: #00ffaa;
-$cyan: #00e5ff;
-$purple: #b084ff;
+$green: var(--neon-primary);
+$cyan: var(--neon-secondary);
+$purple: var(--neon-secondary);
 
 .tour-backdrop, .profile-backdrop {
   position: fixed; inset: 0; z-index: 2500; display: grid; place-items: center; padding: 2vh 2vw;
@@ -10,13 +10,13 @@ $purple: #b084ff;
 
 .tour {
   position: relative; display: flex; flex-direction: column;
-  width: min(1180px, 96vw); height: min(760px, 94vh); overflow: hidden; border-radius: 24px; color: #f4f7fb;
+  width: min(1180px, 96vw); height: min(760px, 94vh); overflow: hidden; border-radius: 24px; color: var(--text-main);
   background:
-    radial-gradient(1200px 500px at 0% 0%, rgba(0, 255, 170, .07), transparent 60%),
-    radial-gradient(900px 500px at 100% 100%, rgba(0, 229, 255, .07), transparent 60%),
+    radial-gradient(1200px 500px at 0% 0%, rgba(0, 255, 136, .07), transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, rgba(0, 255, 136, .07), transparent 60%),
     linear-gradient(160deg, #0d1421, #070b14);
-  border: 1px solid rgba(0, 255, 170, .22);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, .6), 0 0 40px rgba(0, 255, 170, .08);
+  border: 1px solid rgba(0, 255, 136, .22);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .6), 0 0 40px rgba(0, 255, 136, .08);
   animation: pop .25s ease-out;
 }
 
@@ -49,17 +49,17 @@ $purple: #b084ff;
 .hero-icon {
   position: absolute; inset: 32%; border-radius: 28%; display: grid; place-items: center;
   font-size: clamp(40px, 7vw, 72px); color: #fff;
-  background: linear-gradient(145deg, rgba(0, 255, 170, .28), rgba(0, 229, 255, .18));
+  background: linear-gradient(145deg, rgba(0, 255, 136, .28), rgba(0, 255, 136, .18));
   border: 1px solid currentColor; box-shadow: 0 0 40px currentColor, inset 0 0 30px rgba(255, 255, 255, .06);
   i { filter: drop-shadow(0 0 14px currentColor); color: currentColor; }
-  .accent-purple & { background: linear-gradient(145deg, rgba(176, 132, 255, .3), rgba(0, 229, 255, .15)); }
+  .accent-purple & { background: linear-gradient(145deg, rgba(0, 255, 136, .3), rgba(0, 255, 136, .15)); }
 }
 .active .hero-icon { animation: float 5s ease-in-out infinite; }
 
 .chip {
   position: absolute; width: 18%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;
   font-size: clamp(16px, 2.2vw, 24px); color: currentColor;
-  background: rgba(8, 12, 22, .9); border: 1px solid currentColor; box-shadow: 0 0 18px rgba(0, 255, 170, .25);
+  background: rgba(8, 12, 22, .9); border: 1px solid currentColor; box-shadow: 0 0 18px rgba(0, 255, 136, .25);
 }
 .chip-0 { top: 8%; left: 14%; }
 .chip-1 { top: 18%; right: 6%; }
@@ -81,11 +81,11 @@ ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: col
 li { display: flex; gap: 12px; align-items: flex-start; color: #c3cfdc; font-size: 16px; line-height: 1.5; }
 li i {
   flex: 0 0 auto; margin-top: 3px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
-  font-size: 10px; color: #04110c; background: linear-gradient(135deg, $green, $cyan);
+  font-size: 10px; color: var(--text-inverse); background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
 }
 .status { margin: 20px 0 0; display: inline-flex; gap: 8px; align-items: center; padding: 8px 14px; border-radius: 10px; font-size: 14px; }
-.status.ok { color: #8fffd6; background: rgba(0, 255, 170, .08); border: 1px solid rgba(0, 255, 170, .35); }
-.status.warn { color: #ffd98a; background: rgba(255, 209, 102, .08); border: 1px solid rgba(255, 209, 102, .35); }
+.status.ok { color: var(--neon-primary); background: rgba(0, 255, 136, .08); border: 1px solid rgba(0, 255, 136, .35); }
+.status.warn { color: var(--warning); background: rgba(255, 204, 0, .08); border: 1px solid rgba(255, 204, 0, .35); }
 
 /* ---------- footer ---------- */
 .tour-footer {
@@ -93,53 +93,53 @@ li i {
   padding: 18px 28px 22px; border-top: 1px solid rgba(255, 255, 255, .06);
 }
 .dont-show {
-  display: inline-flex; align-items: center; gap: 10px; color: #8ea0b5; font-size: 13px; cursor: pointer; user-select: none;
+  display: inline-flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 13px; cursor: pointer; user-select: none;
   input { position: absolute; opacity: 0; pointer-events: none; }
   .box {
     width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; font-size: 10px; color: transparent;
     border: 1px solid rgba(255, 255, 255, .25); transition: .15s;
   }
-  input:checked + .box { color: #04110c; background: $green; border-color: $green; box-shadow: 0 0 10px rgba(0, 255, 170, .5); }
-  input:focus-visible + .box { outline: 2px solid $cyan; }
+  input:checked + .box { color: var(--text-inverse); background: $green; border-color: $green; box-shadow: 0 0 10px rgba(0, 255, 136, .5); }
+  input:focus-visible + .box { outline: 2px solid $green; }
 }
 .dots { display: flex; gap: 8px; justify-content: center; }
 .dot {
   width: 10px; height: 10px; padding: 0; border-radius: 999px; border: 0; cursor: pointer;
   background: rgba(255, 255, 255, .2); transition: width .25s, background .25s;
-  &.active { width: 28px; background: linear-gradient(90deg, $green, $cyan); box-shadow: 0 0 10px rgba(0, 255, 170, .5); }
-  &:focus-visible { outline: 2px solid $cyan; outline-offset: 2px; }
+  &.active { width: 28px; background: linear-gradient(90deg, var(--neon-primary), var(--neon-secondary)); box-shadow: 0 0 10px rgba(0, 255, 136, .5); }
+  &:focus-visible { outline: 2px solid $green; outline-offset: 2px; }
 }
 .nav { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .nav button, .reminder .cta {
   display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 12px;
   font-weight: 800; font-size: 14px; cursor: pointer; white-space: nowrap;
   &:disabled { opacity: .4; cursor: default; }
-  &:focus-visible { outline: 2px solid $cyan; outline-offset: 2px; }
+  &:focus-visible { outline: 2px solid $green; outline-offset: 2px; }
 }
 .ghost { background: transparent; color: #cfd8e3; border: 1px solid rgba(255, 255, 255, .16); }
 .ghost:hover:not(:disabled) { border-color: rgba(255, 255, 255, .35); }
-.primary { border: 0; color: #04110c; background: linear-gradient(90deg, $green, $cyan); }
-.primary:hover { box-shadow: 0 0 18px rgba(0, 255, 170, .45); }
+.primary { border: 0; color: var(--text-inverse); background: linear-gradient(90deg, var(--neon-primary), var(--neon-secondary)); }
+.primary:hover { box-shadow: 0 0 18px rgba(0, 255, 136, .45); }
 
 /* ---------- reminder banner ---------- */
 .reminder {
   position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 1400;
   display: flex; align-items: center; gap: 12px; max-width: calc(100vw - 24px); padding: 10px 12px 10px 16px;
-  border-radius: 14px; color: #f4f7fb; font-size: 14px;
-  background: rgba(8, 12, 22, .96); border: 1px solid rgba(0, 255, 170, .35);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, .5), 0 0 18px rgba(0, 255, 170, .15);
+  border-radius: 14px; color: var(--text-main); font-size: 14px;
+  background: rgba(8, 12, 22, .96); border: 1px solid rgba(0, 255, 136, .35);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .5), 0 0 18px rgba(0, 255, 136, .15);
   animation: rise .25s ease-out;
   > i { color: $green; }
-  &.success { border-color: rgba(0, 255, 170, .6); }
-  &.error { border-color: rgba(255, 80, 80, .5); > i { color: #ff7b7b; } }
-  .cta { padding: 7px 14px; border: 0; color: #04110c; background: linear-gradient(90deg, $green, $cyan); }
-  .x, .link { background: transparent; border: 0; color: #8ea0b5; cursor: pointer; padding: 6px; }
+  &.success { border-color: rgba(0, 255, 136, .6); }
+  &.error { border-color: rgba(255, 77, 109, .5); > i { color: var(--danger); } }
+  .cta { padding: 7px 14px; border: 0; color: var(--text-inverse); background: linear-gradient(90deg, var(--neon-primary), var(--neon-secondary)); }
+  .x, .link { background: transparent; border: 0; color: var(--text-secondary); cursor: pointer; padding: 6px; }
 }
 
 /* ---------- profile modal ---------- */
 .profile-modal {
   position: relative; width: min(720px, 96vw); max-height: 92vh; overflow-y: auto; padding: 24px; border-radius: 20px;
-  background: linear-gradient(160deg, #0d1421, #070b14); border: 1px solid rgba(0, 255, 170, .22);
+  background: linear-gradient(160deg, #0d1421, #070b14); border: 1px solid rgba(0, 255, 136, .22);
 }
 
 /* ---------- responsive ---------- */
