@@ -1,41 +1,41 @@
-.settings-page { padding: 24px; color: #f4f7fb; max-width: 720px; }
+.settings-page { padding: 24px; color: var(--text-main); max-width: 720px; }
 .settings-header { margin-bottom: 20px; }
-.eyebrow { letter-spacing: .12em; font-size: 12px; color: #8ea0b5; margin: 0 0 6px; }
+.eyebrow { letter-spacing: .12em; font-size: 12px; color: var(--text-secondary); margin: 0 0 6px; }
 h1 { margin: 0; font-size: 28px; }
-.subtitle, .muted { color: #8ea0b5; margin: 6px 0 0; }
+.subtitle, .muted { color: var(--text-secondary); margin: 6px 0 0; }
 .settings-card {
   display: flex; flex-direction: column; gap: 20px; padding: 24px;
   background: linear-gradient(160deg, rgba(14, 20, 33, .95), rgba(8, 12, 22, .95));
-  border: 1px solid rgba(0, 255, 170, .18); border-radius: 16px;
-  box-shadow: 0 0 24px rgba(0, 255, 170, .06);
+  border: 1px solid rgba(0, 255, 136, .18); border-radius: 16px;
+  box-shadow: 0 0 24px rgba(0, 255, 136, .06);
 }
 .field { display: flex; flex-direction: column; gap: 8px; }
 .field label { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #cfd8e3; }
-.field small, .toggle small { color: #8ea0b5; font-size: 12px; }
+.field small, .toggle small { color: var(--text-secondary); font-size: 12px; }
 select {
-  background: #0b111c; color: #f4f7fb; border: 1px solid rgba(255, 255, 255, .12);
+  background: #0b111c; color: var(--text-main); border: 1px solid rgba(255, 255, 255, .12);
   border-radius: 10px; padding: 10px 12px; font-size: 14px; outline: none;
-  &:focus { border-color: #00ffaa; box-shadow: 0 0 0 2px rgba(0, 255, 170, .2); }
+  &:focus { border-color: var(--neon-primary); box-shadow: 0 0 0 2px rgba(0, 255, 136, .2); }
 }
-.link-btn { background: none; border: 0; color: #00e5ff; cursor: pointer; padding: 0 0 0 4px; font-size: 12px; }
+.link-btn { background: none; border: 0; color: var(--neon-primary); cursor: pointer; padding: 0 0 0 4px; font-size: 12px; }
 .toggle { display: flex; align-items: center; gap: 14px; cursor: pointer; }
 .toggle input { position: absolute; opacity: 0; pointer-events: none; }
 .toggle-text { display: flex; flex-direction: column; gap: 2px; }
 .switch {
   flex: 0 0 auto; width: 44px; height: 24px; border-radius: 999px; position: relative;
   background: #1c2433; border: 1px solid rgba(255, 255, 255, .12); transition: .2s;
-  &::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #8ea0b5; transition: .2s; }
+  &::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--text-secondary); transition: .2s; }
 }
-.toggle input:checked + .switch { background: rgba(0, 255, 170, .2); border-color: #00ffaa; box-shadow: 0 0 10px rgba(0, 255, 170, .35); }
-.toggle input:checked + .switch::after { left: 23px; background: #00ffaa; }
-.toggle input:focus-visible + .switch { outline: 2px solid #00e5ff; }
+.toggle input:checked + .switch { background: rgba(0, 255, 136, .2); border-color: var(--neon-primary); box-shadow: 0 0 10px rgba(0, 255, 136, .35); }
+.toggle input:checked + .switch::after { left: 23px; background: var(--neon-primary); }
+.toggle input:focus-visible + .switch { outline: 2px solid var(--neon-primary); }
 .alert { padding: 10px 14px; border-radius: 10px; font-size: 14px; }
-.alert.success { background: rgba(0, 255, 170, .1); border: 1px solid rgba(0, 255, 170, .4); color: #8fffd6; }
-.alert.error { background: rgba(255, 80, 80, .1); border: 1px solid rgba(255, 80, 80, .4); color: #ffb4b4; }
+.alert.success { background: rgba(0, 255, 136, .1); border: 1px solid rgba(0, 255, 136, .4); color: var(--neon-primary); }
+.alert.error { background: rgba(255, 77, 109, .1); border: 1px solid rgba(255, 77, 109, .4); color: #ffb4b4; }
 .actions { display: flex; justify-content: flex-end; }
 .primary {
-  background: linear-gradient(90deg, #00ffaa, #00e5ff); color: #04110c; border: 0; border-radius: 10px;
+  background: linear-gradient(90deg, var(--neon-primary), var(--neon-secondary)); color: var(--text-inverse); border: 0; border-radius: 10px;
   padding: 10px 22px; font-weight: 800; letter-spacing: .04em; cursor: pointer;
   &:disabled { opacity: .6; cursor: default; }
-  &:hover:not(:disabled) { box-shadow: 0 0 16px rgba(0, 255, 170, .45); }
+  &:hover:not(:disabled) { box-shadow: 0 0 16px rgba(0, 255, 136, .45); }
 }
