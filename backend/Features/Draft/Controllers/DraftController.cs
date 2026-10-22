@@ -133,6 +133,46 @@ public class DraftController : ControllerBase
 			_draftService.PreviewDraftOrderAsync(seasonId, drawNumber, auth0Id));
 	}
 
+	// ===== Admin draft controls (Role == "Admin", enforced in DraftService) =====
+
+	[HttpPost("pause")]
+	public Task<ActionResult<DraftCenterDto>> PauseDraft([FromQuery] Guid seasonId) =>
+		RunAdminAsync(auth0Id => _draftService.PauseDraftAsync(seasonId, auth0Id));
+
+	[HttpPost("resume")]
+	public Task<ActionResult<DraftCenterDto>> ResumeDraft([FromQuery] Guid seasonId) =>
+		RunAdminAsync(auth0Id => _draftService.ResumeDraftAsync(seasonId, auth0Id));
+
+	[HttpPost("stop")]
+	public Task<ActionResult<DraftCenterDto>> StopDraft([FromQuery] Guid seasonId) =>
+		RunAdminAsync(auth0Id => _draftService.StopDraftAsync(seasonId, auth0Id));
+
+	[HttpPut("timer")]
+	public Task<ActionResult<DraftCenterDto>> UpdateTimer(
+		[FromQuery] Guid seasonId,
+		[FromBody] UpdateDraftTimerDto dto) =>
+		RunAdminAsync(auth0Id => _draftService.UpdateTimerAsync(seasonId, auth0Id, dto));
+
+	[HttpGet("settings")]
+	public async Task<ActionResult<DraftSettingsDto>> GetSettings()
+	{
+		return Ok(await _draftService.GetDraftSettingsAsync());
+	}
+
+	[HttpPut("settings")]
+	public Task<ActionResult<DraftSettingsDto>> UpdateSettings([FromBody] DraftSettingsDto dto) =>
+		RunAdminAsync(auth0Id => _draftService.UpdateDraftSettingsAsync(auth0Id, dto));
+
+	private async Task<ActionResult<T>> RunAdminAsync<T>(Func<string, Task<T>> action)
+	{
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized();
+
+		return await ExecuteAdminDraftAction(() => action(auth0Id));
+	}
+
 	private async Task<ActionResult<T>> ExecuteAdminDraftAction<T>(Func<Task<T>> action)
 	{
 		try

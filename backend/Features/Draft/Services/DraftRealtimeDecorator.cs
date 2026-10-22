@@ -80,4 +80,42 @@ public class DraftRealtimeDecorator : IDraftService
 			drawNumber == 3 ? "lotteryFinal" : "lottery");
 		return result;
 	}
+
+	public async Task<DraftCenterDto> PauseDraftAsync(Guid seasonId, string auth0Id)
+	{
+		var result = await _inner.PauseDraftAsync(seasonId, auth0Id);
+		await _realtime.PublishDraftEventAsync(seasonId, "paused");
+		return result;
+	}
+
+	public async Task<DraftCenterDto> ResumeDraftAsync(Guid seasonId, string auth0Id)
+	{
+		var result = await _inner.ResumeDraftAsync(seasonId, auth0Id);
+		await _realtime.PublishDraftEventAsync(seasonId, "resumed");
+		return result;
+	}
+
+	public async Task<DraftCenterDto> StopDraftAsync(Guid seasonId, string auth0Id)
+	{
+		var result = await _inner.StopDraftAsync(seasonId, auth0Id);
+		await _realtime.PublishDraftEventAsync(seasonId, "stopped");
+		return result;
+	}
+
+	public async Task<DraftCenterDto> UpdateTimerAsync(Guid seasonId, string auth0Id, UpdateDraftTimerDto dto)
+	{
+		var result = await _inner.UpdateTimerAsync(seasonId, auth0Id, dto);
+		await _realtime.PublishDraftEventAsync(seasonId, "timerUpdated");
+		return result;
+	}
+
+	public Task<DraftSettingsDto> GetDraftSettingsAsync()
+	{
+		return _inner.GetDraftSettingsAsync();
+	}
+
+	public Task<DraftSettingsDto> UpdateDraftSettingsAsync(string auth0Id, DraftSettingsDto dto)
+	{
+		return _inner.UpdateDraftSettingsAsync(auth0Id, dto);
+	}
 }

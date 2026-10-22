@@ -14,7 +14,8 @@ public class DraftService : IDraftService
 	private readonly AppDbContext _context;
 	private readonly IMessageService _messageService;
 
-	private const int PickSeconds = 300; // 5 minutes
+	/// <summary>Result of a timer sweep: which season changed and how ("skipped" or "completed").</summary>
+	public record DraftTimerOutcome(Guid SeasonId, string EventType);
 
 	public DraftService(AppDbContext context, IMessageService messageService)
 	{
@@ -115,6 +116,8 @@ public class DraftService : IDraftService
 
 		if (session is null)
 		{
+			var defaultPickSeconds = await GetDefaultPickSecondsAsync();
+
 			return new DraftCenterDto
 			{
 				MyUserId = user.UserId,
@@ -129,7 +132,10 @@ public class DraftService : IDraftService
 					CurrentClubName = "Draft not started",
 					SecondsRemaining = 0,
 					TotalTeams = 0,
-					PlayersPerTeam = 25
+					PlayersPerTeam = 25,
+					TimerEnabled = true,
+					PickSeconds = defaultPickSeconds,
+					ServerTimeUTC = DateTime.UtcNow
 				},
 				DraftOrder = [],
 				RecentPicks = [],
@@ -173,6 +179,9 @@ public class DraftService : IDraftService
 		if (session.IsActive)
 			throw new Exception("Draft is already active.");
 
+		if (session.IsCompleted)
+			throw new Exception("This draft has already finished.");
+
 		var order = await GetDraftOrderAsync(seasonId);
 
 		if (order.Count == 0)
@@ -181,8 +190,13 @@ public class DraftService : IDraftService
 		var now = DateTime.UtcNow;
 
 		session.IsActive = true;
+		session.IsPaused = false;
+		session.PausedRemainingSeconds = null;
 		session.CurrentPickNumber = 1;
 		session.CurrentPickStartedAtUTC = now;
+		session.CurrentPickDeadlineUTC = session.TimerEnabled
+			? now.AddSeconds(session.PickSeconds)
+			: null;
 		session.OneMinuteWarningSent = false;
 
 		var firstTurn = GetCurrentTurn(session, order);
@@ -246,6 +260,7 @@ public class DraftService : IDraftService
 			throw new Exception("Draft order does not match registered users.");
 
 		var now = DateTime.UtcNow;
+		var pickSeconds = await GetDefaultPickSecondsAsync();
 
 		var session = new DraftSession
 		{
@@ -256,6 +271,8 @@ public class DraftService : IDraftService
 			PlayersPerTeam = 25,
 			CurrentPickStartedAtUTC = null,
 			OneMinuteWarningSent = false,
+			TimerEnabled = true,
+			PickSeconds = pickSeconds,
 			CreatedAtUTC = now
 		};
 
@@ -477,6 +494,9 @@ public class DraftService : IDraftService
 		if (!session.IsActive)
 			throw new Exception("Draft is not active.");
 
+		if (session.IsPaused)
+			throw new Exception("The draft is paused.");
+
 		var order = await GetDraftOrderAsync(seasonId);
 
 		if (order.Count == 0)
@@ -487,8 +507,10 @@ public class DraftService : IDraftService
 		if (currentTurn is null)
 			throw new Exception("Current draft turn not found.");
 
-		//if (currentTurn.UserId != user.UserId)
-		//	throw new Exception("It is not your turn.");
+		if (currentTurn.UserId != user.UserId)
+			throw new Exception("It is not your turn.");
+
+		var expectedPickNumber = session.CurrentPickNumber;
 
 		var currentSquadCount = await _context.UserClubPlayers
 			.CountAsync(x =>
@@ -576,10 +598,23 @@ public class DraftService : IDraftService
 			"Pick seleccionado",
 			$"Seleccionaste a {player.Name} en el Draft.");
 
-		//await AdvanceDraftTurnAsync(session, order);
-
 		await _context.SaveChangesAsync();
+
+		// Advance only if the turn is still the one we validated; the timer sweep may have
+		// skipped it a moment ago, in which case the whole pick is rolled back.
+		var advanced = await TryAdvanceAsync(
+			session,
+			expectedPickNumber,
+			order.Count * session.PlayersPerTeam,
+			DateTime.UtcNow,
+			onlyIfExpired: false);
+
+		if (!advanced)
+			throw new Exception("Your turn has expired.");
+
 		await transaction.CommitAsync();
+
+		await NotifyCurrentTurnAsync(seasonId, order);
 
 		var result = await GetPicksAsync(seasonId);
 
@@ -673,10 +708,17 @@ public class DraftService : IDraftService
 				CurrentClubName = session.IsActive
 	? currentTeam?.ClubName ?? string.Empty
 	: "Draft order ready",
-				SecondsRemaining = GetSecondsRemaining(session),
-				//SecondsRemaining = -1,
+				SecondsRemaining = GetSecondsRemaining(session, DateTime.UtcNow),
 				TotalTeams = totalTeams,
-				PlayersPerTeam = session.PlayersPerTeam
+				PlayersPerTeam = session.PlayersPerTeam,
+				IsPaused = session.IsPaused,
+				IsCompleted = session.IsCompleted,
+				TimerEnabled = session.TimerEnabled,
+				PickSeconds = session.PickSeconds,
+				CurrentPickDeadlineUTC = session.IsActive && !session.IsPaused && session.TimerEnabled
+					? AsUtc(session.CurrentPickDeadlineUTC)
+					: null,
+				ServerTimeUTC = DateTime.UtcNow
 			},
 			DraftOrder = visibleDraftOrder,
 			RecentPicks = picks.OrderByDescending(x => x.PickNumber).Take(10).ToList(),
@@ -688,71 +730,394 @@ public class DraftService : IDraftService
 		};
 	}
 
+	/// <summary>Sends the one-minute warning for the current pick. Skipping expired picks is done by
+	/// <see cref="ProcessExpiredPicksAsync"/> (run by DraftTimerBackgroundService) so it works with no clients open.</summary>
 	private async Task ProcessDraftTimerAsync(DraftSession session)
 	{
-		if (!session.IsActive || session.CurrentPickStartedAtUTC is null)
+		if (!session.IsActive ||
+			session.IsPaused ||
+			!session.TimerEnabled ||
+			session.CurrentPickDeadlineUTC is null ||
+			session.OneMinuteWarningSent ||
+			session.PickSeconds <= 60)
+			return;
+
+		var remaining = GetSecondsRemaining(session, DateTime.UtcNow);
+
+		if (remaining > 60 || remaining <= 0)
 			return;
 
 		var order = await GetDraftOrderAsync(session.SeasonId);
-
-		if (order.Count == 0)
-			return;
-
 		var currentTurn = GetCurrentTurn(session, order);
 
 		if (currentTurn is null)
 			return;
 
-		var remaining = GetSecondsRemaining(session);
+		var updated = await _context.DraftSessions
+			.Where(x =>
+				x.DraftSessionId == session.DraftSessionId &&
+				x.CurrentPickNumber == session.CurrentPickNumber &&
+				!x.OneMinuteWarningSent)
+			.ExecuteUpdateAsync(s => s.SetProperty(x => x.OneMinuteWarningSent, true));
 
-		if (remaining <= 60 && !session.OneMinuteWarningSent && remaining > 0)
+		session.OneMinuteWarningSent = true;
+
+		if (updated == 1)
 		{
-			session.OneMinuteWarningSent = true;
-
 			await SendSystemAsync(
 				currentTurn.UserId,
 				"Te queda 1 minuto",
 				"Te queda 1 minuto para seleccionar tu pick del Draft.");
 		}
-
-		if (remaining <= 0)
-		{
-			await SendSystemAsync(
-				currentTurn.UserId,
-				"Tu turno terminó",
-				"Se acabó tu tiempo para seleccionar. Tu turno fue saltado.");
-
-			//await AdvanceDraftTurnAsync(session, order);
-		}
-
-		await _context.SaveChangesAsync();
 	}
 
-	private async Task AdvanceDraftTurnAsync(DraftSession session, List<DraftOrder> order)
+	/// <summary>
+	/// Moves the draft from <paramref name="expectedPickNumber"/> to the next pick (or completes it) with a
+	/// single conditional UPDATE, so a pick and the timer sweep can never both advance the same turn.
+	/// </summary>
+	private async Task<bool> TryAdvanceAsync(
+		DraftSession session,
+		int expectedPickNumber,
+		int totalPicks,
+		DateTime nowUtc,
+		bool onlyIfExpired)
 	{
-		var totalPicks = order.Count * session.PlayersPerTeam;
+		var timerEnabled = session.TimerEnabled;
+		var pickSeconds = session.PickSeconds;
 
-		if (session.CurrentPickNumber >= totalPicks)
+		var query = _context.DraftSessions.Where(x =>
+			x.DraftSessionId == session.DraftSessionId &&
+			x.CurrentPickNumber == expectedPickNumber &&
+			x.IsActive &&
+			!x.IsPaused &&
+			x.TimerEnabled == timerEnabled &&
+			x.PickSeconds == pickSeconds);
+
+		if (onlyIfExpired)
 		{
-			session.IsActive = false;
-			session.CurrentPickStartedAtUTC = null;
-			session.OneMinuteWarningSent = false;
-			return;
+			query = query.Where(x =>
+				x.TimerEnabled &&
+				x.CurrentPickDeadlineUTC != null &&
+				x.CurrentPickDeadlineUTC <= nowUtc);
 		}
 
-		session.CurrentPickNumber++;
-		session.CurrentPickStartedAtUTC = DateTime.UtcNow;
-		session.OneMinuteWarningSent = false;
+		int rows;
 
-		var nextTurn = GetCurrentTurn(session, order);
+		if (expectedPickNumber >= totalPicks)
+		{
+			rows = await query.ExecuteUpdateAsync(s => s
+				.SetProperty(x => x.IsActive, false)
+				.SetProperty(x => x.IsCompleted, true)
+				.SetProperty(x => x.CurrentPickStartedAtUTC, (DateTime?)null)
+				.SetProperty(x => x.CurrentPickDeadlineUTC, (DateTime?)null)
+				.SetProperty(x => x.OneMinuteWarningSent, false));
+		}
+		else
+		{
+			DateTime? deadline = timerEnabled ? nowUtc.AddSeconds(pickSeconds) : null;
+
+			rows = await query.ExecuteUpdateAsync(s => s
+				.SetProperty(x => x.CurrentPickNumber, expectedPickNumber + 1)
+				.SetProperty(x => x.CurrentPickStartedAtUTC, nowUtc)
+				.SetProperty(x => x.CurrentPickDeadlineUTC, deadline)
+				.SetProperty(x => x.OneMinuteWarningSent, false));
+		}
+
+		return rows == 1;
+	}
+
+	private async Task NotifyCurrentTurnAsync(Guid seasonId, List<DraftOrder> order)
+	{
+		var fresh = await _context.DraftSessions
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x => x.SeasonId == seasonId);
+
+		if (fresh is null || !fresh.IsActive)
+			return;
+
+		var nextTurn = GetCurrentTurn(fresh, order);
 
 		if (nextTurn is not null)
 		{
 			await SendSystemAsync(
 				nextTurn.UserId,
-				 "It's Your Turn!",
-	"Choose wisely. Your next player could change everything.");
+				"It's Your Turn!",
+				"Choose wisely. Your next player could change everything.");
 		}
+	}
+
+	/// <summary>
+	/// Skips every pick whose deadline has passed (no auto-pick logic exists, so the turn moves on).
+	/// Safe to run from several instances at once: each skip is a conditional UPDATE.
+	/// </summary>
+	public async Task<List<DraftTimerOutcome>> ProcessExpiredPicksAsync(CancellationToken ct = default)
+	{
+		var now = DateTime.UtcNow;
+
+		var expired = await _context.DraftSessions
+			.AsNoTracking()
+			.Where(x =>
+				x.IsActive &&
+				!x.IsPaused &&
+				x.TimerEnabled &&
+				x.CurrentPickDeadlineUTC != null &&
+				x.CurrentPickDeadlineUTC <= now)
+			.ToListAsync(ct);
+
+		var outcomes = new List<DraftTimerOutcome>();
+
+		foreach (var session in expired)
+		{
+			var order = await GetDraftOrderAsync(session.SeasonId);
+
+			if (order.Count == 0)
+				continue;
+
+			var skippedTurn = GetCurrentTurn(session, order);
+			var totalPicks = order.Count * session.PlayersPerTeam;
+			var wasLastPick = session.CurrentPickNumber >= totalPicks;
+
+			var advanced = await TryAdvanceAsync(
+				session,
+				session.CurrentPickNumber,
+				totalPicks,
+				now,
+				onlyIfExpired: true);
+
+			if (!advanced)
+				continue;
+
+			if (skippedTurn is not null)
+			{
+				await SendSystemAsync(
+					skippedTurn.UserId,
+					"Tu turno terminó",
+					"Se acabó tu tiempo para seleccionar. Tu turno fue saltado.");
+			}
+
+			if (!wasLastPick)
+				await NotifyCurrentTurnAsync(session.SeasonId, order);
+
+			outcomes.Add(new DraftTimerOutcome(
+				session.SeasonId,
+				wasLastPick ? "completed" : "skipped"));
+		}
+
+		return outcomes;
+	}
+
+	// ===== Admin draft controls =====
+
+	public async Task<DraftCenterDto> PauseDraftAsync(Guid seasonId, string auth0Id)
+	{
+		var admin = await EnsureAdminUserAsync(auth0Id);
+		var session = await GetSessionOrThrowAsync(seasonId);
+
+		if (!session.IsActive)
+			throw new Exception("Draft is not active.");
+
+		if (session.IsPaused)
+			throw new Exception("The draft is already paused.");
+
+		var now = DateTime.UtcNow;
+		int? remaining = session.TimerEnabled ? GetSecondsRemaining(session, now) : null;
+
+		var rows = await _context.DraftSessions
+			.Where(x =>
+				x.DraftSessionId == session.DraftSessionId &&
+				x.CurrentPickNumber == session.CurrentPickNumber &&
+				x.IsActive &&
+				!x.IsPaused)
+			.ExecuteUpdateAsync(s => s
+				.SetProperty(x => x.IsPaused, true)
+				.SetProperty(x => x.PausedRemainingSeconds, remaining)
+				.SetProperty(x => x.CurrentPickDeadlineUTC, (DateTime?)null));
+
+		if (rows != 1)
+			throw new Exception("The draft changed while pausing. Please try again.");
+
+		return await BuildFreshCenterAsync(seasonId, admin.UserId);
+	}
+
+	public async Task<DraftCenterDto> ResumeDraftAsync(Guid seasonId, string auth0Id)
+	{
+		var admin = await EnsureAdminUserAsync(auth0Id);
+		var session = await GetSessionOrThrowAsync(seasonId);
+
+		if (!session.IsActive || !session.IsPaused)
+			throw new Exception("The draft is not paused.");
+
+		var now = DateTime.UtcNow;
+		var seconds = Math.Max(1, session.PausedRemainingSeconds ?? session.PickSeconds);
+		DateTime? deadline = session.TimerEnabled ? now.AddSeconds(seconds) : null;
+
+		var rows = await _context.DraftSessions
+			.Where(x =>
+				x.DraftSessionId == session.DraftSessionId &&
+				x.IsActive &&
+				x.IsPaused)
+			.ExecuteUpdateAsync(s => s
+				.SetProperty(x => x.IsPaused, false)
+				.SetProperty(x => x.PausedRemainingSeconds, (int?)null)
+				.SetProperty(x => x.CurrentPickDeadlineUTC, deadline));
+
+		if (rows != 1)
+			throw new Exception("The draft changed while resuming. Please try again.");
+
+		return await BuildFreshCenterAsync(seasonId, admin.UserId);
+	}
+
+	public async Task<DraftCenterDto> StopDraftAsync(Guid seasonId, string auth0Id)
+	{
+		var admin = await EnsureAdminUserAsync(auth0Id);
+		var session = await GetSessionOrThrowAsync(seasonId);
+
+		if (!session.IsActive)
+			throw new Exception("Draft is not active.");
+
+		var rows = await _context.DraftSessions
+			.Where(x => x.DraftSessionId == session.DraftSessionId && x.IsActive)
+			.ExecuteUpdateAsync(s => s
+				.SetProperty(x => x.IsActive, false)
+				.SetProperty(x => x.IsPaused, false)
+				.SetProperty(x => x.IsCompleted, true)
+				.SetProperty(x => x.PausedRemainingSeconds, (int?)null)
+				.SetProperty(x => x.CurrentPickStartedAtUTC, (DateTime?)null)
+				.SetProperty(x => x.CurrentPickDeadlineUTC, (DateTime?)null));
+
+		if (rows != 1)
+			throw new Exception("The draft changed while stopping. Please try again.");
+
+		return await BuildFreshCenterAsync(seasonId, admin.UserId);
+	}
+
+	public async Task<DraftCenterDto> UpdateTimerAsync(
+		Guid seasonId,
+		string auth0Id,
+		UpdateDraftTimerDto dto)
+	{
+		var admin = await EnsureAdminUserAsync(auth0Id);
+		ValidatePickSeconds(dto.PickSeconds);
+
+		var session = await GetSessionOrThrowAsync(seasonId);
+
+		if (session.IsCompleted)
+			throw new Exception("This draft has already finished.");
+
+		var now = DateTime.UtcNow;
+		var running = session.IsActive && !session.IsPaused;
+
+		// A running pick restarts with the new settings; a paused pick resumes with a full new clock.
+		DateTime? deadline = running && dto.TimerEnabled ? now.AddSeconds(dto.PickSeconds) : null;
+		int? pausedRemaining = session.IsPaused && dto.TimerEnabled ? dto.PickSeconds : null;
+		DateTime? startedAt = running ? now : session.CurrentPickStartedAtUTC;
+
+		var rows = await _context.DraftSessions
+			.Where(x =>
+				x.DraftSessionId == session.DraftSessionId &&
+				x.CurrentPickNumber == session.CurrentPickNumber &&
+				x.IsActive == session.IsActive &&
+				x.IsPaused == session.IsPaused)
+			.ExecuteUpdateAsync(s => s
+				.SetProperty(x => x.TimerEnabled, dto.TimerEnabled)
+				.SetProperty(x => x.PickSeconds, dto.PickSeconds)
+				.SetProperty(x => x.CurrentPickDeadlineUTC, deadline)
+				.SetProperty(x => x.PausedRemainingSeconds, pausedRemaining)
+				.SetProperty(x => x.CurrentPickStartedAtUTC, startedAt)
+				.SetProperty(x => x.OneMinuteWarningSent, false));
+
+		if (rows != 1)
+			throw new Exception("The draft changed while saving the timer. Please try again.");
+
+		return await BuildFreshCenterAsync(seasonId, admin.UserId);
+	}
+
+	// ===== League-wide draft settings =====
+
+	public async Task<DraftSettingsDto> GetDraftSettingsAsync()
+	{
+		return new DraftSettingsDto
+		{
+			DefaultPickSeconds = await GetDefaultPickSecondsAsync()
+		};
+	}
+
+	public async Task<DraftSettingsDto> UpdateDraftSettingsAsync(string auth0Id, DraftSettingsDto dto)
+	{
+		await EnsureAdminUserAsync(auth0Id);
+		ValidatePickSeconds(dto.DefaultPickSeconds);
+
+		var setting = await _context.AppSettings
+			.FirstOrDefaultAsync(x => x.Key == DraftTimerLimits.DefaultPickSecondsKey);
+
+		if (setting is null)
+		{
+			setting = new backend.Entities.Common.AppSetting
+			{
+				Key = DraftTimerLimits.DefaultPickSecondsKey
+			};
+
+			_context.AppSettings.Add(setting);
+		}
+
+		setting.Value = dto.DefaultPickSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+		setting.UpdatedAtUTC = DateTime.UtcNow;
+
+		await _context.SaveChangesAsync();
+
+		return await GetDraftSettingsAsync();
+	}
+
+	private async Task<int> GetDefaultPickSecondsAsync()
+	{
+		var value = await _context.AppSettings
+			.AsNoTracking()
+			.Where(x => x.Key == DraftTimerLimits.DefaultPickSecondsKey)
+			.Select(x => x.Value)
+			.FirstOrDefaultAsync();
+
+		return int.TryParse(value, out var seconds) &&
+			seconds >= DraftTimerLimits.MinPickSeconds &&
+			seconds <= DraftTimerLimits.MaxPickSeconds
+				? seconds
+				: DraftTimerLimits.DefaultPickSeconds;
+	}
+
+	private static void ValidatePickSeconds(int seconds)
+	{
+		if (seconds < DraftTimerLimits.MinPickSeconds || seconds > DraftTimerLimits.MaxPickSeconds)
+			throw new ArgumentException(
+				$"Seconds per pick must be between {DraftTimerLimits.MinPickSeconds} and {DraftTimerLimits.MaxPickSeconds}.");
+	}
+
+	private async Task<backend.Entities.Identity.User> EnsureAdminUserAsync(string auth0Id)
+	{
+		var user = await _context.Users
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x =>
+				x.Auth0Id == auth0Id &&
+				!x.IsDeleted &&
+				x.IsActive)
+			?? throw new UnauthorizedAccessException("User not found.");
+
+		if (!string.Equals(user.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+			throw new UnauthorizedAccessException("Only admins can control the draft.");
+
+		return user;
+	}
+
+	private async Task<DraftSession> GetSessionOrThrowAsync(Guid seasonId)
+	{
+		return await _context.DraftSessions
+			.AsNoTracking()
+			.FirstOrDefaultAsync(x => x.SeasonId == seasonId)
+			?? throw new Exception("Draft order has not been generated.");
+	}
+
+	private async Task<DraftCenterDto> BuildFreshCenterAsync(Guid seasonId, Guid userId)
+	{
+		var session = await GetSessionOrThrowAsync(seasonId);
+		return await BuildDraftCenterAsync(seasonId, userId, session);
 	}
 
 	private async Task<List<DraftOrder>> GetDraftOrderAsync(Guid seasonId)
@@ -791,49 +1156,26 @@ public class DraftService : IDraftService
 			: totalTeams - positionInRound + 1;
 	}
 
-	private static int GetSecondsRemaining(DraftSession session)
+	private static int GetSecondsRemaining(DraftSession session, DateTime nowUtc)
 	{
-		if (!session.IsActive || session.CurrentPickStartedAtUTC is null)
+		if (!session.IsActive)
 			return 0;
 
-		var activeElapsedSeconds = GetActiveDraftElapsedSecondsUtc(
-			session.CurrentPickStartedAtUTC.Value,
-			DateTime.UtcNow);
+		if (session.IsPaused)
+			return Math.Max(0, session.PausedRemainingSeconds ?? 0);
 
-		return Math.Max(0, PickSeconds - activeElapsedSeconds);
+		var deadline = AsUtc(session.CurrentPickDeadlineUTC);
+
+		if (!session.TimerEnabled || deadline is null)
+			return 0;
+
+		return Math.Max(0, (int)Math.Ceiling((deadline.Value - nowUtc).TotalSeconds));
 	}
 
-	private static int GetActiveDraftElapsedSecondsUtc(DateTime startUtc, DateTime nowUtc)
-{
-	if (nowUtc <= startUtc)
-		return 0;
-
-	startUtc = DateTime.SpecifyKind(startUtc, DateTimeKind.Utc);
-	nowUtc = DateTime.SpecifyKind(nowUtc, DateTimeKind.Utc);
-
-	var totalSeconds = 0d;
-
-	for (var day = startUtc.Date; day <= nowUtc.Date; day = day.AddDays(1))
+	private static DateTime? AsUtc(DateTime? value)
 	{
-		// 5:00 PM California PDT = 00:00 UTC
-		// 11:00 PM California PDT = 06:00 UTC
-		var windowStartUtc = day.AddHours(0); // 00:00 UTC
-		var windowEndUtc = day.AddHours(6);   // 06:00 UTC
-
-		var rangeStart = startUtc > windowStartUtc
-			? startUtc
-			: windowStartUtc;
-
-		var rangeEnd = nowUtc < windowEndUtc
-			? nowUtc
-			: windowEndUtc;
-
-		if (rangeEnd > rangeStart)
-			totalSeconds += (rangeEnd - rangeStart).TotalSeconds;
+		return value is null ? null : DateTime.SpecifyKind(value.Value, DateTimeKind.Utc);
 	}
-
-	return (int)totalSeconds;
-}
 
 	private async Task SendSystemAsync(Guid userId, string title, string body)
 	{
