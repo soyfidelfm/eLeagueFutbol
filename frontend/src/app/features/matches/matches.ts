@@ -89,53 +89,6 @@ import { EmptyState } from '../../shared/components/empty-state/empty-state';
       text-transform: uppercase;
     }
     .match-card.finished { border-color: rgba(61, 255, 138, 0.28); }
-    .result-card {
-      margin: 0 0 16px;
-      padding: 18px;
-      border: 1px solid var(--neon-primary);
-      border-radius: 18px;
-      background: radial-gradient(circle at top, rgba(0,255,136,.12), transparent 50%), rgba(0,255,136,.04);
-      text-align: center;
-    }
-    .result-card h3 { margin: 0 0 6px; font-size: 16px; font-weight: 900; }
-    .result-card p { margin: 0 0 14px; color: var(--text-secondary); font-size: 13px; }
-    .result-card button {
-      width: 100%;
-      margin-top: 14px;
-      padding: 12px;
-      border: none;
-      border-radius: 12px;
-      background: var(--neon-primary);
-      color: var(--text-inverse);
-      font-weight: 900;
-      cursor: pointer;
-    }
-    .result-card button:disabled { opacity: .55; cursor: not-allowed; }
-    .result-inputs {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: end;
-      gap: 10px;
-    }
-    .result-inputs label {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-    .result-inputs input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border-secondary);
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.28);
-      color: var(--text-main);
-      font-size: 22px;
-      font-weight: 900;
-      text-align: center;
-    }
-    .result-inputs span { padding-bottom: 10px; font-size: 22px; font-weight: 900; }
   `]
 })
 export class Matches implements OnInit, OnDestroy {
@@ -157,7 +110,6 @@ export class Matches implements OnInit, OnDestroy {
   isLoading = false;
   isRefreshing = false;
   isUploadingResult = false;
-  isSubmittingResult = false;
   errorMessage = '';
   liveMessage = '';
   seasonClosed = false;
@@ -184,9 +136,6 @@ export class Matches implements OnInit, OnDestroy {
 
   statsUploadResult:
     MatchStatsUploadResult | null = null;
-
-  resultHomeScore: number | null = null;
-  resultAwayScore: number | null = null;
 
   currentUserId = '';
 
@@ -406,7 +355,6 @@ export class Matches implements OnInit, OnDestroy {
           const changedMatch = this.selectedMatch?.id !== preserved?.id;
 
           this.selectedMatch = preserved;
-          this.syncResultInputs(preserved);
 
           if (changedMatch || !this.pendingProposal) {
             this.loadPendingProposal();
@@ -441,7 +389,6 @@ export class Matches implements OnInit, OnDestroy {
 
   selectMatch(match: MatchView): void {
     this.selectedMatch = match;
-    this.syncResultInputs(match);
     this.clearUploadState();
     this.loadPendingProposal();
   }
@@ -609,58 +556,6 @@ export class Matches implements OnInit, OnDestroy {
       match.homeUserId === this.currentUserId ||
       match.awayUserId === this.currentUserId
     );
-  }
-
-  submitResult(): void {
-    if (!this.selectedMatch) {
-      this.errorMessage = 'Please select a match.';
-      return;
-    }
-
-    if (!this.canSubmitResult(this.selectedMatch)) {
-      this.errorMessage =
-        this.seasonClosed
-          ? 'This season is closed.'
-          : 'Only match participants or an admin can submit the result.';
-      return;
-    }
-
-    if (
-      this.resultHomeScore === null ||
-      this.resultAwayScore === null ||
-      this.resultHomeScore < 0 ||
-      this.resultAwayScore < 0
-    ) {
-      this.errorMessage = 'Enter a valid score.';
-      return;
-    }
-
-    this.isSubmittingResult = true;
-    this.errorMessage = '';
-
-    this.matchService
-      .uploadResult(this.selectedMatch.id, {
-        homeScore: Number(this.resultHomeScore),
-        awayScore: Number(this.resultAwayScore)
-      })
-      .pipe(
-        finalize(() => {
-          this.isSubmittingResult = false;
-          this.cdr.detectChanges();
-        })
-      )
-      .subscribe({
-        next: () => {
-          this.liveMessage = 'Result saved';
-          this.loadMatches(false);
-        },
-        error: error => {
-          this.errorMessage =
-            error?.error?.message ??
-            'Could not save match result.';
-          this.cdr.detectChanges();
-        }
-      });
   }
 
   previewUploadedResult(): void {
@@ -886,11 +781,6 @@ export class Matches implements OnInit, OnDestroy {
     return this.filteredMatches.filter(
       x => x.id !== matchOfTheWeek.id
     );
-  }
-
-  private syncResultInputs(match: MatchView | null): void {
-    this.resultHomeScore = match?.homeScore ?? null;
-    this.resultAwayScore = match?.awayScore ?? null;
   }
 
   private clearUploadState(): void {

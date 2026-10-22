@@ -361,64 +361,6 @@
 
         <p class="proposal-message" *ngIf="proposalMessage">{{ proposalMessage | t }}</p>
 
-        <div class="result-card" *ngIf="canSubmitResult(selectedMatch)">
-
-          <h3>{{ 'SUBMIT RESULT' | t }}</h3>
-
-          <p>
-            {{ 'Participants and admins can post the final score. Rankings update when the match is finished.' | t }}
-          </p>
-
-          <div class="result-inputs">
-
-            <label>
-              {{ selectedMatch.home.name }}
-              <input
-                type="number"
-                min="0"
-                [(ngModel)]="resultHomeScore"
-                [disabled]="isSubmittingResult">
-            </label>
-
-            <span>:</span>
-
-            <label>
-              {{ selectedMatch.away.name }}
-              <input
-                type="number"
-                min="0"
-                [(ngModel)]="resultAwayScore"
-                [disabled]="isSubmittingResult">
-            </label>
-
-          </div>
-
-          <button
-            type="button"
-            [disabled]="
-              resultHomeScore === null ||
-              resultAwayScore === null ||
-              isSubmittingResult
-            "
-            (click)="submitResult()">
-
-            <i
-              class="fa-solid"
-              [class.fa-spinner]="isSubmittingResult"
-              [class.fa-spin]="isSubmittingResult"
-              [class.fa-flag-checkered]="!isSubmittingResult">
-            </i>
-
-            {{
-              isSubmittingResult
-                ? ('Saving Result...' | t)
-                : (isFinished(selectedMatch) ? ('Update Result' | t) : ('Submit Result' | t))
-            }}
-
-          </button>
-
-        </div>
-
         <div class="stat-box">
 
           <h4>
@@ -640,7 +582,7 @@
             {{
               isUploadingResult
                 ? ('Reading Screenshots...' | t)
-                : ('Read Stats & Review' | t)
+                : ('Upload & Review' | t)
             }}
 
           </button>
