@@ -53,6 +53,7 @@ builder.Services.AddScoped<IPendingMatchResultService, PendingMatchResultService
 builder.Services.AddScoped<ISidebarService, SidebarService>();
 builder.Services.AddScoped<DraftService>();
 builder.Services.AddScoped<IDraftService, DraftRealtimeDecorator>();
+builder.Services.AddHostedService<DraftTimerBackgroundService>();
 builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<ITransferService, TransferRealtimeDecorator>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
