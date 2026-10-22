@@ -12,7 +12,7 @@ h1 { margin: 0; font-size: 28px; }
 .field { display: flex; flex-direction: column; gap: 8px; }
 .field label { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #cfd8e3; }
 .field small, .toggle small { color: var(--text-secondary); font-size: 12px; }
-select {
+select, input[type='number'] {
   background: #0b111c; color: var(--text-main); border: 1px solid rgba(255, 255, 255, .12);
   border-radius: 10px; padding: 10px 12px; font-size: 14px; outline: none;
   &:focus { border-color: var(--neon-primary); box-shadow: 0 0 0 2px rgba(0, 255, 136, .2); }
@@ -39,3 +39,8 @@ select {
   &:disabled { opacity: .6; cursor: default; }
   &:hover:not(:disabled) { box-shadow: 0 0 16px rgba(0, 255, 136, .45); }
 }
+
+.settings-card + .settings-card { margin-top: 20px; }
+.settings-card .eyebrow { margin: 0; }
+.card-title { margin: -14px 0 0; font-size: 18px; color: var(--text-main); }
+input[type='number'] { max-width: 160px; }

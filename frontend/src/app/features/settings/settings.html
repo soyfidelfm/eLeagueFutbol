@@ -65,5 +65,34 @@
         </button>
       </div>
     </form>
+
+    @if (isAdmin) {
+      <form class="settings-card" (ngSubmit)="saveDraftSettings()">
+        <p class="eyebrow">{{ 'ADMIN' | t }}</p>
+        <h2 class="card-title">{{ 'Draft' | t }}</h2>
+
+        <div class="field">
+          <label for="draftPickSeconds">{{ 'Default seconds per pick' | t }}</label>
+          <input id="draftPickSeconds" name="draftPickSeconds" type="number" step="1"
+            [min]="draftMinSeconds" [max]="draftMaxSeconds" [(ngModel)]="draftPickSeconds" />
+          <small>
+            {{ 'Used when a new draft order is generated. Between {min} and {max} seconds.' | t: { min: draftMinSeconds, max: draftMaxSeconds } }}
+          </small>
+        </div>
+
+        @if (draftSuccessMessage) {
+          <div class="alert success">{{ draftSuccessMessage | t }}</div>
+        }
+        @if (draftErrorMessage) {
+          <div class="alert error">{{ draftErrorMessage | t }}</div>
+        }
+
+        <div class="actions">
+          <button type="submit" class="primary" [disabled]="isSavingDraft || !isDraftSecondsValid">
+            {{ (isSavingDraft ? 'Saving...' : 'Save draft settings') | t }}
+          </button>
+        </div>
+      </form>
+    }
   }
 </section>
