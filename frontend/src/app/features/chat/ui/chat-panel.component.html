@@ -1,0 +1,90 @@
+@if (chat.panelOpen()) {
+  <section id="chat-panel" role="dialog" aria-label="Messages"
+           class="chat-panel fixed inset-0 z-[70] flex flex-col overflow-hidden bg-[#0a0f0c] text-white sm:inset-auto sm:bottom-4 sm:right-4 sm:h-[min(36rem,calc(100dvh-6rem))] sm:w-[24rem] sm:rounded-2xl sm:border sm:border-[rgba(0,255,136,0.28)] sm:shadow-2xl">
+    @if (chat.composing()) {
+      <app-new-chat (closed)="close()" />
+    } @else if (chat.activeId()) {
+      <app-chat-thread (closed)="close()" />
+    } @else {
+      <header class="flex items-center gap-2 border-b border-[rgba(0,255,136,0.18)] px-4 py-3">
+        <h2 class="flex-1 text-base font-semibold text-white">{{ 'Messages' | t }}</h2>
+        <button type="button" (click)="chat.startComposing()" aria-label="New Message" title="New Message"
+                class="rounded-lg p-1.5 text-[#8d97a5] hover:bg-[#111a14] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00ff88]">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button type="button" (click)="close()" aria-label="Close"
+                class="rounded-lg p-1.5 text-[#8d97a5] hover:bg-[#111a14] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00ff88]">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <div class="px-3 pt-3">
+        <label class="sr-only" for="chat-filter">Filter</label>
+        <input id="chat-filter" type="search" autocomplete="off" [value]="filter()" (input)="filter.set($any($event.target).value)"
+               placeholder="Search conversations..."
+               class="w-full rounded-full border border-[rgba(0,255,136,0.28)] bg-[#111a14] px-4 py-2 text-sm text-white placeholder:text-[#5f6977] focus:border-[#00ff88] focus:outline-none" />
+      </div>
+
+      <div class="mt-2 flex-1 overflow-y-auto pb-2">
+        @if (chat.loadingConversations() && !chat.conversationsLoaded()) {
+          <div class="flex flex-col gap-3 px-4 py-3" role="status">
+            @for (i of [1, 2, 3, 4]; track i) {
+              <div class="flex items-center gap-3">
+                <div class="skeleton h-11 w-11 rounded-full bg-[#111a14]"></div>
+                <div class="flex-1 space-y-2"><div class="skeleton h-3 w-1/2 rounded bg-[#111a14]"></div><div class="skeleton h-3 w-3/4 rounded bg-[#111a14]"></div></div>
+              </div>
+            }
+          </div>
+        } @else if (chat.conversationsError() && !chat.conversationsLoaded()) {
+          <div class="flex flex-col items-center gap-3 px-6 py-10 text-center text-sm text-[#8d97a5]" role="alert">
+            <span>Unable to load conversations.</span>
+            <button type="button" (click)="chat.loadConversations()" class="rounded-lg bg-[#00ff88] px-3 py-1.5 text-xs font-medium text-[#02120a] hover:bg-[#00cc6a]">Retry</button>
+          </div>
+        } @else if (!chat.conversations().length) {
+          <div class="flex flex-col items-center gap-3 px-6 py-12 text-center">
+            <span class="text-3xl" aria-hidden="true">💬</span>
+            <p class="text-sm font-medium text-white">No conversations yet</p>
+            <p class="text-xs text-[#8d97a5]">Start a message with another player.</p>
+            <button type="button" (click)="chat.startComposing()" class="rounded-lg bg-[#00ff88] px-3 py-1.5 text-xs font-medium text-[#02120a] hover:bg-[#00cc6a]">New Message</button>
+          </div>
+        } @else if (!rows().length) {
+          <p class="px-6 py-8 text-center text-sm text-[#8d97a5]">No matches</p>
+        } @else {
+          <ul aria-label="Conversations">
+            @for (r of rows(); track r.id) {
+              <li>
+                <button type="button" (click)="chat.openConversation(r.id)"
+                        class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[#111a14] focus:outline-none focus-visible:bg-[#111a14]">
+                  <span class="relative shrink-0">
+                    @if (r.peer?.avatarUrl) {
+                      <img [src]="r.peer.avatarUrl" [alt]="r.name" class="h-11 w-11 rounded-full object-cover object-top border border-[rgba(0,255,136,0.35)]" />
+                    } @else {
+                      <span class="flex h-11 w-11 items-center justify-center rounded-full bg-[#111a14] border border-[rgba(0,255,136,0.35)] text-sm font-bold text-[#00ff88]">{{ r.name.charAt(0) }}</span>
+                    }
+                    <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#0a0f0c]" [class.bg-[#00ff88]]="r.online" [class.bg-[#5b6b63]]="!r.online"></span>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="flex items-baseline gap-2">
+                      <span class="truncate text-sm" [class]="r.unread ? 'font-semibold text-white' : 'font-medium text-white'">{{ r.name }}</span>
+                      <span class="ml-auto shrink-0 text-[11px]" [class]="r.unread ? 'font-semibold text-[#00ff88]' : 'text-[#5f6977]'">{{ r.time }}</span>
+                    </span>
+                    <span class="mt-0.5 flex items-center gap-2">
+                      @if (r.typing) {
+                        <span class="truncate text-xs italic text-[#00ff88]">typing…</span>
+                      } @else {
+                        <span class="truncate text-xs" [class]="r.unread ? 'font-medium text-white' : 'text-[#8d97a5]'">{{ r.preview || 'No messages yet' }}</span>
+                      }
+                      @if (r.unread) {
+                        <span class="ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#00ff88] px-1.5 text-[10px] font-bold text-[#02120a]">{{ badge(r.unread) }}</span>
+                      }
+                    </span>
+                  </span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+  </section>
+}
