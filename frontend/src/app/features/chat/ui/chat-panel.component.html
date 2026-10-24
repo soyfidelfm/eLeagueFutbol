@@ -57,7 +57,7 @@
                         class="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[#111a14] focus:outline-none focus-visible:bg-[#111a14]">
                   <span class="relative shrink-0">
                     @if (r.peer?.avatarUrl) {
-                      <img [src]="r.peer.avatarUrl" [alt]="r.name" class="h-11 w-11 rounded-full object-cover object-top border border-[rgba(0,255,136,0.35)]" />
+                      <img [src]="r.peer!.avatarUrl" [alt]="r.name" class="h-11 w-11 rounded-full object-cover object-top border border-[rgba(0,255,136,0.35)]" />
                     } @else {
                       <span class="flex h-11 w-11 items-center justify-center rounded-full bg-[#111a14] border border-[rgba(0,255,136,0.35)] text-sm font-bold text-[#00ff88]">{{ r.name.charAt(0) }}</span>
                     }
