@@ -25,7 +25,7 @@
   </button>
 </header>
 
-<div #scroller (scroll)="onScroll()" role="log" class="flex-1 overflow-y-auto px-3 py-3">
+<div #scroller (scroll)="onScroll()" role="log" class="min-h-0 flex-1 overflow-y-auto px-3 py-3">
   @if (loading() && !chat.activeMessages().length) {
     <div class="flex h-full items-center justify-center" role="status">
       <span class="spinner h-6 w-6 rounded-full border-2 border-[rgba(0,255,136,0.28)] border-t-[#00ff88]"></span>
@@ -72,12 +72,12 @@
   }
 </div>
 
-<form class="flex items-end gap-2 border-t border-[rgba(0,255,136,0.18)] p-2.5" (submit)="$event.preventDefault(); send()">
+<form class="flex shrink-0 items-end gap-2 border-t border-[rgba(0,255,136,0.18)] p-2.5" (submit)="$event.preventDefault(); send()">
   <label class="sr-only" for="chat-composer">Message</label>
   <textarea #box id="chat-composer" rows="1" [value]="draft()" [attr.maxlength]="maxLength"
             (input)="onInput($event)" (keydown.enter)="onEnter($event)"
             placeholder="Write a message..."
-            class="max-h-28 min-h-10 flex-1 resize-none rounded-2xl border border-[rgba(0,255,136,0.28)] bg-[#111a14] px-3.5 py-2 text-sm text-white placeholder:text-[#5f6977] focus:border-[#00ff88] focus:outline-none"></textarea>
+            class="h-10 max-h-28 min-h-10 w-0 flex-1 resize-none overflow-y-auto rounded-2xl border border-[rgba(0,255,136,0.28)] bg-[#111a14] px-3.5 py-2 text-sm leading-5 text-white placeholder:text-[#5f6977] focus:border-[#00ff88] focus:outline-none"></textarea>
   <button type="submit" aria-label="Send" title="Send"
           class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00ff88] text-[#02120a] hover:bg-[#00cc6a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00ff88]">
     <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/></svg>
