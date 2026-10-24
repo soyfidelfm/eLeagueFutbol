@@ -105,6 +105,27 @@ public class AppHub : Hub
 		await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"season:{seasonId}");
 	}
 
+	/// <summary>
+	/// Forwards a typing signal to the receiver. The sender is always the
+	/// authenticated connection's user (set in OnConnectedAsync), never a client value.
+	/// </summary>
+	public async Task Typing(Guid receiverUserId)
+	{
+		if (receiverUserId == Guid.Empty)
+			return;
+
+		if (!Context.Items.TryGetValue("UserId", out var value) || value is not Guid senderUserId)
+			return;
+
+		if (senderUserId == receiverUserId)
+			return;
+
+		await Clients.Group($"user:{receiverUserId}").SendAsync("UserTyping", new
+		{
+			senderUserId
+		});
+	}
+
 	public Task<IReadOnlyList<PresenceUserDto>> GetOnlineUsers()
 	{
 		return Task.FromResult(_presence.GetOnlineUsers());

@@ -1,20 +1,28 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Subscription, finalize, forkJoin } from 'rxjs';
 
 import { RankingService } from '../../core/services/ranking.service';
 import { SeasonService } from '../../core/services/season.service';
 import { RealtimeService } from '../../core/services/realtime.service';
 
-import { ClubRankingDto } from '../../core/models/ranking.model';
+import { ClubRankingDto, PlayerRankingDto } from '../../core/models/ranking.model';
 import { Season } from '../../core/models/season.model';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
+import { NeonDropdownComponent, NeonDropdownOption } from '../../shared/components/neon-dropdown/neon-dropdown';
+
+type RankingSort = 'points' | 'goalDifference' | 'goalsFor' | 'name';
 
 @Component({
   selector: 'app-rankings',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppLoading],
+  imports: [CommonModule, FormsModule, AppLoading,
+    TranslatePipe, EmptyState, NeonDropdownComponent
+  ],
   templateUrl: './rankings.html',
   styleUrl: './rankings.scss',
   styles: [`
@@ -49,6 +57,66 @@ export class Rankings implements OnInit, OnDestroy {
 
   seasons: Season[] = [];
   clubRankings: ClubRankingDto[] = [];
+  playerRankings: PlayerRankingDto[] = [];
+
+  // Client-side filters/sort. Kept as component state so they survive SignalR reloads.
+  searchTerm = '';
+  clubFilter = 'all';
+  sortBy: RankingSort = 'points';
+
+  readonly sortOptions: NeonDropdownOption[] = [
+    { label: 'Points', value: 'points' },
+    { label: 'Goal difference', value: 'goalDifference' },
+    { label: 'Goals for', value: 'goalsFor' },
+    { label: 'Name (A–Z)', value: 'name' }
+  ];
+
+  get clubOptions(): NeonDropdownOption[] {
+    const clubs = [...this.clubRankings].sort((a, b) => a.clubName.localeCompare(b.clubName));
+    return [{ label: 'All clubs', value: 'all' }, ...clubs.map(c => ({ label: c.clubName, value: c.clubId }))];
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!this.searchTerm.trim() || this.clubFilter !== 'all';
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.clubFilter = 'all';
+  }
+
+  onSortChange(value: string): void {
+    this.sortBy = value as RankingSort;
+  }
+
+  get filteredClubRankings(): ClubRankingDto[] {
+    const term = this.searchTerm.trim().toLowerCase();
+    const playerClubIds = new Set(
+      term
+        ? this.playerRankings
+            .filter(p => (p.playerName ?? '').toLowerCase().includes(term) && p.clubId)
+            .map(p => p.clubId as string)
+        : []
+    );
+
+    const list = this.clubRankings.filter(c => {
+      if (this.clubFilter !== 'all' && c.clubId !== this.clubFilter) return false;
+      if (term && !c.clubName.toLowerCase().includes(term) && !playerClubIds.has(c.clubId)) return false;
+      return true;
+    });
+
+    const byRank = (a: ClubRankingDto, b: ClubRankingDto) => a.rank - b.rank;
+    switch (this.sortBy) {
+      case 'goalDifference':
+        return list.sort((a, b) => b.goalDifference - a.goalDifference || byRank(a, b));
+      case 'goalsFor':
+        return list.sort((a, b) => b.goalsFor - a.goalsFor || byRank(a, b));
+      case 'name':
+        return list.sort((a, b) => a.clubName.localeCompare(b.clubName));
+      default:
+        return list.sort((a, b) => b.points - a.points || byRank(a, b));
+    }
+  }
 
   isLoading = false;
   isRefreshing = false;
@@ -62,11 +130,22 @@ export class Rankings implements OnInit, OnDestroy {
     private rankingService: RankingService,
     private seasonService: SeasonService,
     private realtime: RealtimeService,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) { }
 
+  /** Deep link from global search: ?seasonId=&clubId= */
+  private requestedSeasonId: string | null = null;
+  private requestedClubId: string | null = null;
+
   ngOnInit(): void {
-    this.loadInitialData();
+    this.subscription.add(
+      this.route.queryParamMap.subscribe(params => {
+        this.requestedSeasonId = params.get('seasonId')?.trim() || null;
+        this.requestedClubId = params.get('clubId')?.trim() || null;
+        this.loadInitialData();
+      })
+    );
 
     this.subscription.add(
       this.realtime.draftEvents$.subscribe(event => {
@@ -78,7 +157,7 @@ export class Rankings implements OnInit, OnDestroy {
           return;
         }
 
-        this.liveMessage = 'Tabla actualizada';
+        this.liveMessage = 'Standings updated';
         this.loadRankings(false);
       })
     );
@@ -98,7 +177,7 @@ export class Rankings implements OnInit, OnDestroy {
 
     forkJoin({
       seasons: this.seasonService.getAll(),
-      rankings: this.rankingService.getRankings()
+      rankings: this.rankingService.getRankings(this.requestedSeasonId)
     }).subscribe({
       next: ({ seasons, rankings }) => {
         this.seasons = seasons ?? [];
@@ -110,6 +189,12 @@ export class Rankings implements OnInit, OnDestroy {
           '';
 
         this.clubRankings = rankings?.clubRankings ?? [];
+          this.playerRankings = rankings?.playerRankings ?? [];
+
+        if (this.requestedClubId && this.clubRankings.some(c => c.clubId === this.requestedClubId)) {
+          this.clubFilter = this.requestedClubId;
+        }
+
         void this.joinSelectedSeason();
 
         this.isLoading = false;
@@ -130,6 +215,8 @@ export class Rankings implements OnInit, OnDestroy {
       return;
     }
 
+    // Club ids differ per season; keep search + sort, reset the club filter.
+    this.clubFilter = 'all';
     void this.joinSelectedSeason();
     this.loadRankings(true);
   }
@@ -174,6 +261,7 @@ export class Rankings implements OnInit, OnDestroy {
       .subscribe({
         next: (rankings) => {
           this.clubRankings = rankings?.clubRankings ?? [];
+          this.playerRankings = rankings?.playerRankings ?? [];
         },
         error: (error) => {
           console.error('Error loading rankings by season:', error);

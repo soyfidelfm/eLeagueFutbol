@@ -1,17 +1,18 @@
 // src/app/core/services/message.service.ts
 
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { ApiService } from './api.service.ts.js';
-import { API_ENDPOINTS } from '../constants/api-endpoints.js';
+import { ApiService } from './api.service.ts';
+import { API_ENDPOINTS } from '../constants/api-endpoints';
 
 import {
   ConversationDto,
   MessageDto,
+  MessagePageDto,
   SendMessageDto
-} from '../models/message.model.js';
+} from '../models/message.model';
 
 @Injectable({
   providedIn: 'root'
@@ -30,11 +31,24 @@ export class MessageService extends ApiService {
     );
   }
 
+  /**
+   * Loads one page of a conversation (oldest to newest).
+   * Omit `beforeMessageId` for the latest page; pass the oldest loaded id to get older messages.
+   */
   getConversation(
-    userId: string
-  ): Observable<MessageDto[]> {
-    return this.get<MessageDto[]>(
-      `${API_ENDPOINTS.messages}/conversation/${userId}`
+    userId: string,
+    beforeMessageId?: string | null,
+    take = 15
+  ): Observable<MessagePageDto> {
+    let params = new HttpParams().set('take', take);
+
+    if (beforeMessageId) {
+      params = params.set('before', beforeMessageId);
+    }
+
+    return this.get<MessagePageDto>(
+      `${API_ENDPOINTS.messages}/conversation/${userId}`,
+      params
     );
   }
 

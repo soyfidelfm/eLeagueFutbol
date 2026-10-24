@@ -33,5 +33,6 @@ export const API_ENDPOINTS = {
   draft: `${environment.api.baseUrl}/api/draft`,
   notifications: `${environment.api.baseUrl}/api/notifications`,
   messages: `${environment.api.baseUrl}/api/messages`,
-  transfers: `${environment.api.baseUrl}/api/transfers`
+  transfers: `${environment.api.baseUrl}/api/transfers`,
+  search: `${environment.api.baseUrl}/api/search`
 };

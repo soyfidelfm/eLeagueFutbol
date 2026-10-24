@@ -27,6 +27,7 @@ import {
   CloudinaryService,
   CloudinaryUploadResponse
 } from '../../core/services/cloudinary.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-profile',
@@ -36,7 +37,8 @@ import {
     FormsModule,
     MatAutocompleteModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    TranslatePipe
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.scss'
@@ -69,6 +71,8 @@ export class Profile implements OnInit {
 
   errorMessage = '';
   successMessage = '';
+
+  avatarLoadFailed = false;
 
   form: {
     displayName: string;
@@ -112,6 +116,30 @@ export class Profile implements OnInit {
     return club.name;
   }
 
+  get showAvatarImage(): boolean {
+    return !!this.form.avatarUrl?.trim() && !this.avatarLoadFailed;
+  }
+
+  get avatarInitials(): string {
+    const source = (this.form.displayName || this.form.gamerTag || '').trim();
+
+    if (!source) {
+      return '?';
+    }
+
+    const parts = source.split(/\s+/).filter(Boolean);
+    const initials = parts.length > 1
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : source.slice(0, 2);
+
+    return initials.toUpperCase();
+  }
+
+  onAvatarError(): void {
+    this.avatarLoadFailed = true;
+    this.cdr.detectChanges();
+  }
+
   onAvatarSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
 
@@ -136,6 +164,7 @@ export class Profile implements OnInit {
       .subscribe({
         next: (response: CloudinaryUploadResponse) => {
           this.form.avatarUrl = response.secureUrl;
+          this.avatarLoadFailed = false;
           this.successMessage = 'Avatar uploaded. Save your profile to keep changes.';
           this.cdr.detectChanges();
         },
@@ -185,12 +214,14 @@ export class Profile implements OnInit {
 
         this.form = {
           displayName: user.displayName ?? '',
-          avatarUrl: user.avatarUrl ?? '',
+          avatarUrl: (user.avatarUrl ?? '').trim(),
           timeZone: currentTimeZone,
           clubName: user.clubName ?? '',
           gameClubId: user.gameClubId ?? null,
           gamerTag: user.gamerTag ?? ''
         };
+
+        this.avatarLoadFailed = false;
 
         this.selectedGameClubId = user.gameClubId ?? null;
         this.form.gameClubId = this.selectedGameClubId;
@@ -374,7 +405,7 @@ export class Profile implements OnInit {
 
           this.form = {
             displayName: user.displayName ?? '',
-            avatarUrl: user.avatarUrl ?? '',
+            avatarUrl: (user.avatarUrl ?? '').trim(),
             timeZone: currentTimeZone,
             clubName: user.clubName ?? '',
             gameClubId: user.gameClubId ?? null,

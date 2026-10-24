@@ -1,0 +1,81 @@
+<section class="nc-page">
+  <header class="nc-header">
+    <div>
+      <p class="eyebrow">{{ 'INBOX' | t }}</p>
+      <h1>{{ 'Notifications' | t }}</h1>
+      <p class="sub">{{ '{n} unread' | t: { n: unreadCount } }}</p>
+    </div>
+
+    <div class="nc-actions">
+      <div class="filter" role="group" [attr.aria-label]="'Filter notifications' | t">
+        <button type="button" [class.active]="filter === 'all'" (click)="setFilter('all')">{{ 'All' | t }}</button>
+        <button type="button" [class.active]="filter === 'unread'" (click)="setFilter('unread')">
+          {{ 'Unread' | t }}
+          @if (unreadCount > 0) { <span class="count">{{ unreadCount > 99 ? '99+' : unreadCount }}</span> }
+        </button>
+      </div>
+
+      <button type="button" class="mark-all" [disabled]="unreadCount === 0" (click)="markAllRead()">
+        <i class="fa-solid fa-check-double"></i> {{ 'Mark all read' | t }}
+      </button>
+    </div>
+  </header>
+
+  @if (isLoading) {
+    <app-loading [title]="'Loading' | t" [message]="'Loading notifications...' | t" [small]="true" [logo]="false" [showBar]="false"></app-loading>
+  } @else if (errorMessage && items.length === 0) {
+    <app-empty-state tone="error" icon="fa-solid fa-triangle-exclamation" title="Something went wrong" [description]="errorMessage">
+      <button type="button" class="empty-action" (click)="retry()">{{ 'Try again' | t }}</button>
+    </app-empty-state>
+  } @else if (items.length === 0) {
+    @if (filter === 'unread') {
+      <app-empty-state icon="fa-solid fa-check-double" title="You're all caught up" description="No unread notifications. New ones will appear here instantly.">
+        <button type="button" class="empty-action" (click)="setFilter('all')">{{ 'Show all notifications' | t }}</button>
+      </app-empty-state>
+    } @else {
+      <app-empty-state icon="fa-regular fa-bell" title="No notifications yet" description="Draft turns, offers and results will appear here."></app-empty-state>
+    }
+  } @else {
+    <ul class="nc-list">
+      @for (item of items; track item.notificationId) {
+        <li>
+          <button type="button" class="nc-item" [class.unread]="!item.isRead" (click)="open(item)">
+            <span class="nc-icon" [attr.data-type]="item.type"><i [class]="center.iconFor(item.type)"></i></span>
+
+            <span class="nc-body">
+              <span class="nc-title-row">
+                <strong>{{ item.title }}</strong>
+                @if (!item.isRead) { <span class="dot" [attr.aria-label]="'Unread' | t"></span> }
+              </span>
+              <span class="nc-message">{{ item.message }}</span>
+              <small [title]="item.createdAtUTC | tdate:'medium'">
+                {{ center.relativeTime(item.createdAtUTC) || (item.createdAtUTC | tdate:'medium') }}
+              </small>
+            </span>
+
+            @if (!item.isRead) {
+              <span class="nc-read" role="button" tabindex="0" [attr.aria-label]="'Mark as read' | t"
+                (click)="markRead(item, $event)" (keydown.enter)="markRead(item, $event)">
+                <i class="fa-solid fa-check"></i>
+              </span>
+            }
+            @if (item.url) { <i class="fa-solid fa-chevron-right nc-go"></i> }
+          </button>
+        </li>
+      }
+    </ul>
+
+    @if (errorMessage) {
+      <p class="nc-error">{{ errorMessage | t }}</p>
+    }
+
+    @if (hasMore) {
+      <div class="nc-more">
+        <button type="button" [disabled]="isLoadingMore" (click)="loadMore()">
+          @if (isLoadingMore) { <i class="fa-solid fa-spinner fa-spin"></i> }
+          {{ 'Load more' | t }}
+        </button>
+      </div>
+    }
+  }
+</section>

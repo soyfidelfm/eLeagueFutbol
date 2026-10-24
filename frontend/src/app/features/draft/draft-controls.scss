@@ -1,0 +1,349 @@
+/* Draft center: responsive player grid, photo fallback, countdown states and admin controls.
+   Kept apart from draft.scss so each stylesheet stays under the component style budget. */
+
+/* =========================================
+   RESPONSIVE PLAYER GRID + PHOTO FALLBACK
+   Cards size themselves to the column (auto-fill) and scale their text
+   with container query units, so nothing overflows at 900-1400px.
+========================================= */
+
+.players-panel {
+  min-width: 0;
+}
+
+.player-grid {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+  min-width: 0;
+}
+
+.player-card {
+  container-type: inline-size;
+  width: 100%;
+  max-width: 220px;
+  min-width: 0;
+}
+
+.player-rating {
+  font-size: 11cqw;
+}
+
+.player-position {
+  width: 34%;
+  max-width: 34%;
+  font-size: 4.2cqw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-name {
+  bottom: 33%;
+  width: 78%;
+  font-size: 7cqw;
+}
+
+.player-card-stats {
+  bottom: 22%;
+  width: 82%;
+  gap: 1cqw;
+
+  strong {
+    font-size: 6.4cqw;
+  }
+
+  span {
+    font-size: 3.6cqw;
+  }
+}
+
+.player-image {
+  width: 56% !important;
+  aspect-ratio: 1 / 1;
+  bottom: 41% !important;
+}
+
+.player-image img {
+  max-height: 100%;
+}
+
+.player-photo-fallback {
+  width: 78%;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+
+  display: grid;
+  place-items: center;
+
+  border: 2px solid var(--neon-primary);
+  border-radius: 50%;
+
+  background: var(--neon-soft);
+  color: var(--neon-primary);
+  box-shadow: var(--shadow-neon);
+
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13cqw;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+@media (min-width: 901px) and (max-width: 1400px) {
+  /* Three columns squeeze the pool too much here: keep order + pool side by side
+     and drop the squad panel below them. */
+  .draft-layout {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .draft-layout > .squad-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .player-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+/* =========================================
+   PICK COUNTDOWN STATES
+========================================= */
+
+.timer-card .timer-value {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease;
+}
+
+.timer-card.timer-warning .timer-value {
+  color: var(--warning);
+  text-shadow: 0 0 12px var(--warning);
+  animation: draft-timer-blink 1s steps(2, start) infinite;
+}
+
+.timer-card.timer-danger .timer-value {
+  color: var(--danger);
+  text-shadow: 0 0 14px var(--danger);
+  animation: draft-timer-blink 0.5s steps(2, start) infinite;
+}
+
+.timer-card.timer-paused .timer-value {
+  color: var(--text-muted);
+  text-shadow: none;
+  animation: none;
+}
+
+@keyframes draft-timer-blink {
+  to {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer-card.timer-warning .timer-value,
+  .timer-card.timer-danger .timer-value {
+    animation: none;
+  }
+}
+
+/* =========================================
+   ADMIN DRAFT CONTROLS
+========================================= */
+
+.admin-draft-panel {
+  margin-top: 18px;
+  padding: 18px 20px;
+
+  display: grid;
+  gap: 16px;
+
+  border: 1px solid var(--neon-primary);
+  border-radius: 20px;
+
+  background: var(--bg-card);
+  box-shadow: var(--shadow-panel);
+}
+
+.admin-draft-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  > i {
+    color: var(--neon-primary);
+    font-size: 22px;
+  }
+
+  h2 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 15px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  p {
+    margin: 2px 0 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+}
+
+.admin-draft-actions,
+.admin-timer-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 16px;
+
+  border: 1px solid var(--border-secondary);
+  border-radius: 12px;
+
+  background: var(--bg-button-secondary);
+  color: var(--text-main);
+
+  font-weight: 800;
+  cursor: pointer;
+
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--neon-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--neon-primary);
+    outline-offset: 2px;
+  }
+
+  &.primary {
+    border-color: var(--neon-primary);
+    background: var(--neon-primary);
+    color: var(--text-inverse);
+  }
+
+  &.danger {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.admin-draft-note {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+
+  i {
+    color: var(--neon-primary);
+  }
+}
+
+.admin-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-secondary);
+    transition: background 0.2s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--text-secondary);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+  }
+
+  input:checked + .switch {
+    background: var(--neon-soft-strong);
+    border-color: var(--neon-primary);
+
+    &::after {
+      transform: translateX(18px);
+      background: var(--neon-primary);
+    }
+  }
+
+  input:focus-visible + .switch {
+    outline: 2px solid var(--neon-primary);
+    outline-offset: 2px;
+  }
+}
+
+.admin-seconds {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  color: var(--text-secondary);
+  font-size: 13px;
+
+  input {
+    width: 96px;
+    padding: 8px 10px;
+
+    border: 1px solid var(--border-secondary);
+    border-radius: 10px;
+
+    background: var(--bg-input);
+    color: var(--text-main);
+
+    font-weight: 800;
+
+    &:focus {
+      outline: none;
+      border-color: var(--neon-primary);
+      background: var(--bg-input-focus);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+    }
+  }
+}
+
+.admin-hint {
+  flex-basis: 100%;
+  color: var(--text-muted);
+  font-size: 12px;
+}

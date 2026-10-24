@@ -77,8 +77,14 @@ public class MessageService : IMessageService
 		return conversations;
 	}
 
-	public async Task<List<MessageDto>> GetConversationAsync(string auth0Id, Guid otherUserId)
+	public async Task<MessagePageDto> GetConversationAsync(
+		string auth0Id,
+		Guid otherUserId,
+		Guid? beforeMessageId = null,
+		int take = 15)
 	{
+		take = Math.Clamp(take, 1, 50);
+
 		var me = await _context.Users
 			.AsNoTracking()
 			.FirstOrDefaultAsync(x =>
@@ -86,19 +92,34 @@ public class MessageService : IMessageService
 				!x.IsDeleted);
 
 		if (me is null)
-			return [];
+			return new MessagePageDto();
 
-		var messages = await _context.Messages
+		var query = _context.Messages
 			.AsNoTracking()
-			.Include(x => x.SenderUser)
-			.Include(x => x.ReceiverUser)
 			.Where(x =>
 				!x.IsDeleted &&
 				(
 					(x.SenderUserId == me.UserId && x.ReceiverUserId == otherUserId) ||
 					(x.SenderUserId == otherUserId && x.ReceiverUserId == me.UserId)
-				))
-			.OrderBy(x => x.SentAtUTC)
+				));
+
+		if (beforeMessageId.HasValue && beforeMessageId.Value != Guid.Empty)
+		{
+			var cursor = await query
+				.Where(x => x.MessageId == beforeMessageId.Value)
+				.Select(x => new { x.SentAtUTC })
+				.FirstOrDefaultAsync();
+
+			if (cursor is null)
+				return new MessagePageDto();
+
+			query = query.Where(x => x.SentAtUTC < cursor.SentAtUTC);
+		}
+
+		// Newest first so Take grabs the most recent page; one extra row tells us if more exist.
+		var page = await query
+			.OrderByDescending(x => x.SentAtUTC)
+			.Take(take + 1)
 			.Select(x => new MessageDto
 			{
 				MessageId = x.MessageId,
@@ -113,7 +134,18 @@ public class MessageService : IMessageService
 			})
 			.ToListAsync();
 
-		return messages;
+		var hasMore = page.Count > take;
+
+		var items = page
+			.Take(take)
+			.OrderBy(x => x.SentAtUTC)
+			.ToList();
+
+		return new MessagePageDto
+		{
+			Items = items,
+			HasMore = hasMore
+		};
 	}
 
 	public async Task<MessageDto> SendAsync(string auth0Id, SendMessageDto dto)
@@ -275,8 +307,13 @@ public class MessageService : IMessageService
 	public async Task SendSystemMessageAsync(
 		Guid receiverUserId,
 		string title,
-		string body)
+		string body,
+		string type,
+		string url)
 	{
+		type = string.IsNullOrWhiteSpace(type) ? "system" : type;
+		url = string.IsNullOrWhiteSpace(url) ? "/messages" : url;
+
 		var receiver = await _context.Users
 			.FirstOrDefaultAsync(x =>
 				x.UserId == receiverUserId &&
@@ -329,8 +366,8 @@ public class MessageService : IMessageService
 			UserId = receiver.UserId,
 			Title = title,
 			Message = body,
-			Type = "draft_lottery",
-			Url = "/draft",
+			Type = type,
+			Url = url,
 			IsRead = false,
 			CreatedAtUTC = now
 		};
@@ -373,8 +410,8 @@ public class MessageService : IMessageService
 			body,
 			new Dictionary<string, string>
 			{
-				{ "type", "draft_lottery" },
-				{ "url", "/draft" },
+				{ "type", type },
+				{ "url", url },
 				{ "receiverUserId", receiver.UserId.ToString() },
 				{ "notificationId", notification.NotificationId.ToString() }
 			});

@@ -5,7 +5,7 @@ import { BehaviorSubject, Subject } from 'rxjs';
 import { firstValueFrom } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { MessageDto } from '../models/message.model';
+import { MessageDto, TypingEvent } from '../models/message.model';
 import { Notification } from '../models/notification.model';
 import {
   DraftRealtimeEvent,
@@ -20,6 +20,7 @@ export class RealtimeService implements OnDestroy {
   private connection?: HubConnection;
   private starting?: Promise<void>;
   private currentUserId = '';
+  private lastSeasonId: string | null = null;
 
   private readonly onlineUsersSubject = new BehaviorSubject<PresenceUser[]>([]);
   readonly onlineUsers$ = this.onlineUsersSubject.asObservable();
@@ -42,7 +43,23 @@ export class RealtimeService implements OnDestroy {
   private readonly draftEventSubject = new Subject<DraftRealtimeEvent>();
   readonly draftEvents$ = this.draftEventSubject.asObservable();
 
+  private readonly typingSubject = new Subject<TypingEvent>();
+  readonly typing$ = this.typingSubject.asObservable();
+
   constructor(private auth: AuthService) {}
+
+  /** Tells the receiver that the current user is typing. The server resolves the sender from the token. */
+  async sendTyping(receiverUserId: string): Promise<void> {
+    if (!receiverUserId || !this.connection || this.connection.state !== HubConnectionState.Connected) {
+      return;
+    }
+
+    try {
+      await this.connection.invoke('Typing', receiverUserId);
+    } catch (err) {
+      console.error('Failed to send typing event:', err);
+    }
+  }
 
   setCurrentUserId(userId: string): void {
     this.currentUserId = userId;
@@ -71,6 +88,10 @@ export class RealtimeService implements OnDestroy {
   }
 
   async joinSeason(seasonId: string): Promise<void> {
+    if (seasonId) {
+      this.lastSeasonId = seasonId;
+    }
+
     if (!seasonId || !this.connection || this.connection.state !== HubConnectionState.Connected) {
       return;
     }
@@ -79,6 +100,10 @@ export class RealtimeService implements OnDestroy {
   }
 
   async leaveSeason(seasonId: string): Promise<void> {
+    if (seasonId && this.lastSeasonId === seasonId) {
+      this.lastSeasonId = null;
+    }
+
     if (!seasonId || !this.connection || this.connection.state !== HubConnectionState.Connected) {
       return;
     }
@@ -155,11 +180,27 @@ export class RealtimeService implements OnDestroy {
       this.onlineUsersSubject.next(users ?? []);
     });
 
+    this.connection.on('UserTyping', (event: TypingEvent) => {
+      this.typingSubject.next(event);
+    });
+
     this.connection.on('DraftEvent', (event: DraftRealtimeEvent) => {
       this.draftEventSubject.next(event);
       window.dispatchEvent(
         new CustomEvent('eleague-draft-event', { detail: event })
       );
+    });
+
+    this.connection.onreconnected(async () => {
+      if (!this.lastSeasonId || !this.connection) {
+        return;
+      }
+
+      try {
+        await this.connection.invoke('JoinSeason', this.lastSeasonId);
+      } catch (err) {
+        console.error('Failed to rejoin season after reconnect:', err);
+      }
     });
 
     await this.connection.start();

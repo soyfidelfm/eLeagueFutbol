@@ -1,8 +1,8 @@
-<a
-  routerLink="/messages"
-  routerLinkActive="active"
+<button
+  type="button"
   class="message-button"
-  title="Messages">
+  [title]="'Messages' | t"
+  (click)="openChat()">
 
   <i class="fa-regular fa-envelope"></i>
 
@@ -12,4 +12,4 @@
     {{ unreadMessagesCount }}
   </span>
 
-</a>
+</button>

@@ -7,11 +7,14 @@ import { Subject, filter, firstValueFrom, switchMap, take, takeUntil } from 'rxj
 import { UserService } from '../../../core/services/user.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { SyncUserDto } from '../../../core/models/user.model';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,
+    TranslatePipe
+  ],
   templateUrl: './login.html',
   styleUrl: './login.scss'
 })

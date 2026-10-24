@@ -1,0 +1,173 @@
+<!-- Product tour -->
+@if (showTour) {
+  <div class="tour-backdrop" (click)="closeTour()">
+    <div
+      class="tour"
+      role="dialog"
+      aria-modal="true"
+      aria-roledescription="carousel"
+      [attr.aria-label]="'Welcome to eLeague' | t"
+      (click)="$event.stopPropagation()"
+      (touchstart)="onTouchStart($event)"
+      (touchend)="onTouchEnd($event)">
+
+      <button type="button" class="tour-close" [attr.aria-label]="'Close' | t" (click)="closeTour()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="viewport">
+        <div class="track" [style.transform]="'translateX(-' + (index * 100) + '%)'">
+          @for (slide of slides; track slide.key; let i = $index) {
+            <section
+              class="slide"
+              [class.active]="i === index"
+              [attr.aria-hidden]="i !== index"
+              [attr.aria-label]="(i + 1) + ' / ' + slides.length">
+
+              <div class="illustration" [ngClass]="'accent-' + slide.accent">
+                <svg class="illu-bg" viewBox="0 0 400 400" aria-hidden="true">
+                  <defs>
+                    <radialGradient [attr.id]="'glow-' + slide.key" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="currentColor" stop-opacity="0.35" />
+                      <stop offset="70%" stop-color="currentColor" stop-opacity="0.05" />
+                      <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+                    </radialGradient>
+                    <linearGradient [attr.id]="'ring-' + slide.key" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#00ff88" />
+                      <stop offset="100%" stop-color="#00cc6a" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="200" cy="200" r="190" [attr.fill]="'url(#glow-' + slide.key + ')'" />
+                  <circle class="orbit o1" cx="200" cy="200" r="150" fill="none" [attr.stroke]="'url(#ring-' + slide.key + ')'" />
+                  <circle class="orbit o2" cx="200" cy="200" r="112" fill="none" [attr.stroke]="'url(#ring-' + slide.key + ')'" />
+                  <g class="grid">
+                    <line x1="40" y1="200" x2="360" y2="200" />
+                    <line x1="200" y1="40" x2="200" y2="360" />
+                  </g>
+                </svg>
+
+                <div class="hero-icon"><i [class]="slide.icon" aria-hidden="true"></i></div>
+
+                @for (chip of slide.chips; track chip; let c = $index) {
+                  <div class="chip" [ngClass]="'chip-' + c"><i [class]="chip" aria-hidden="true"></i></div>
+                }
+
+                <span class="step-badge">{{ i + 1 }} / {{ slides.length }}</span>
+              </div>
+
+              <div class="content">
+                <p class="eyebrow">{{ slide.eyebrow | t }}</p>
+                <h2>{{ slide.title | t }}</h2>
+                <ul>
+                  @for (bullet of slide.bullets; track bullet) {
+                    <li><i class="fa-solid fa-check" aria-hidden="true"></i><span>{{ bullet | t }}</span></li>
+                  }
+                </ul>
+
+                @if (slide.key === 'profile' && !profileComplete) {
+                  <p class="status warn"><i class="fa-solid fa-circle-exclamation"></i> {{ 'Your profile is not complete yet.' | t }}</p>
+                }
+                @if (slide.key === 'profile' && profileComplete) {
+                  <p class="status ok"><i class="fa-solid fa-circle-check"></i> {{ 'Your profile is complete.' | t }}</p>
+                }
+                @if (slide.key === 'season' && season && isRegistered) {
+                  <p class="status ok"><i class="fa-solid fa-circle-check"></i> {{ 'You are registered in {season}.' | t: { season: season.name } }}</p>
+                }
+                @if (slide.key === 'season' && canRegister) {
+                  <p class="status warn"><i class="fa-solid fa-circle-exclamation"></i> {{ 'Registration is open for {season}.' | t: { season: season!.name } }}</p>
+                }
+              </div>
+            </section>
+          }
+        </div>
+      </div>
+
+      <footer class="tour-footer">
+        <label class="dont-show">
+          <input type="checkbox" [(ngModel)]="dontShowAgain" />
+          <span class="box"><i class="fa-solid fa-check"></i></span>
+          {{ "Don't show this again" | t }}
+        </label>
+
+        <div class="dots" role="tablist">
+          @for (slide of slides; track slide.key; let i = $index) {
+            <button
+              type="button"
+              role="tab"
+              class="dot"
+              [class.active]="i === index"
+              [attr.aria-selected]="i === index"
+              [attr.aria-label]="slide.title | t"
+              (click)="goTo(i)">
+            </button>
+          }
+        </div>
+
+        <div class="nav">
+          <button type="button" class="ghost" [disabled]="index === 0" (click)="prev()">
+            <i class="fa-solid fa-arrow-left"></i> {{ 'Previous' | t }}
+          </button>
+
+          @if (!isLast) {
+            <button type="button" class="ghost" (click)="closeTour()">{{ 'Close' | t }}</button>
+            <button type="button" class="primary" (click)="next()">
+              {{ 'Next' | t }} <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          } @else {
+            @if (pendingTask) {
+              <button type="button" class="ghost" (click)="closeTour()">{{ 'Close' | t }}</button>
+            }
+            <button type="button" class="primary" (click)="primaryCta()">
+              @if (pendingTask === 'profile') {
+                <i class="fa-solid fa-id-card"></i> {{ 'Complete profile' | t }}
+              } @else if (pendingTask === 'register') {
+                <i class="fa-solid fa-flag-checkered"></i> {{ 'Register for season' | t }}
+              } @else {
+                {{ 'Get started' | t }} <i class="fa-solid fa-rocket"></i>
+              }
+            </button>
+          }
+        </div>
+      </footer>
+    </div>
+  </div>
+}
+
+<!-- Slim reminder for unfinished setup (independent of the tour) -->
+@if (showReminder || registerSuccess || (registerError && !showTour)) {
+  <div class="reminder" role="status" [class.success]="!!registerSuccess" [class.error]="!!registerError && !registerSuccess">
+    @if (registerSuccess) {
+      <i class="fa-solid fa-circle-check"></i>
+      <span>{{ registerSuccess | t }}</span>
+    } @else if (registerError) {
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>{{ registerError | t }}</span>
+      <button type="button" class="link" (click)="registerError = ''">{{ 'Close' | t }}</button>
+    } @else if (pendingTask === 'profile') {
+      <i class="fa-solid fa-id-card"></i>
+      <span>{{ 'Finish your profile to join the season.' | t }}</span>
+      <button type="button" class="cta" (click)="openProfile()">{{ 'Complete profile' | t }}</button>
+      <button type="button" class="x" [attr.aria-label]="'Close' | t" (click)="dismissReminder()"><i class="fa-solid fa-xmark"></i></button>
+    } @else if (pendingTask === 'register') {
+      <i class="fa-solid fa-flag-checkered"></i>
+      <span>{{ 'Registration is open for {season}.' | t: { season: season!.name } }}</span>
+      <button type="button" class="cta" [disabled]="isRegistering" (click)="register()">
+        @if (isRegistering) { <i class="fa-solid fa-spinner fa-spin"></i> }
+        {{ 'Register for season' | t }}
+      </button>
+      <button type="button" class="x" [attr.aria-label]="'Close' | t" (click)="dismissReminder()"><i class="fa-solid fa-xmark"></i></button>
+    }
+  </div>
+}
+
+<!-- Existing profile form in a modal -->
+@if (showProfileModal) {
+  <div class="profile-backdrop" (click)="showProfileModal = false">
+    <div class="profile-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <button type="button" class="tour-close" [attr.aria-label]="'Close' | t" (click)="showProfileModal = false">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <app-profile (saved)="onProfileSaved()"></app-profile>
+    </div>
+  </div>
+}

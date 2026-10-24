@@ -1,3 +1,4 @@
+import { tap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -8,11 +9,19 @@ import { SeasonService } from '../../core/services/season.service';
 import { RealtimeService } from '../../core/services/realtime.service';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
 import { TransferBoard, TransferMarketPlayer, TransferOffer } from '../../core/models/transfer.model';
+import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
+import { NeonDropdownComponent, NeonDropdownOption } from '../../shared/components/neon-dropdown/neon-dropdown';
+
+type MarketSort = 'price-desc' | 'price-asc' | 'rating' | 'name';
 
 @Component({
   selector: 'app-transfers',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppLoading],
+  imports: [CommonModule, FormsModule, AppLoading,
+    TranslatePipe, EmptyState, NeonDropdownComponent
+  ],
   templateUrl: './transfers.html',
   styleUrl: './transfers.scss'
 })
@@ -27,9 +36,31 @@ export class Transfers implements OnInit, OnDestroy {
   seasonId = '';
   seasonClosed = false;
 
+  // Market filters / sort (client-side: the board already ships the full market for one season).
+  positionFilter = 'all';
+  clubFilter = 'all';
+  statusFilter = 'all';
+  minPrice: number | null = null;
+  maxPrice: number | null = null;
+  sortBy: MarketSort = 'price-desc';
+
+  readonly statusOptions: NeonDropdownOption[] = [
+    { label: 'All statuses', value: 'all' },
+    { label: 'Available', value: 'available' },
+    { label: 'Offer sent', value: 'pending' }
+  ];
+
+  readonly sortOptions: NeonDropdownOption[] = [
+    { label: 'Price: high to low', value: 'price-desc' },
+    { label: 'Price: low to high', value: 'price-asc' },
+    { label: 'Rating', value: 'rating' },
+    { label: 'Name (A–Z)', value: 'name' }
+  ];
+
   private subscription = new Subscription();
 
   constructor(
+    private confirmDialog: ConfirmDialogService,
     private transfers: TransferService,
     private seasons: SeasonService,
     private realtime: RealtimeService,
@@ -100,17 +131,74 @@ export class Transfers implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
+  get positionOptions(): NeonDropdownOption[] {
+    const positions = [...new Set((this.board?.market ?? []).map(p => p.position).filter(Boolean))].sort();
+    return [{ label: 'All positions', value: 'all' }, ...positions.map(p => ({ label: p, value: p }))];
+  }
+
+  get clubOptions(): NeonDropdownOption[] {
+    const clubs = new Map<string, string>();
+    for (const p of this.board?.market ?? []) {
+      if (p.ownerUserClubId) clubs.set(p.ownerUserClubId, p.ownerClubName);
+    }
+    const sorted = [...clubs.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+    return [{ label: 'All clubs', value: 'all' }, ...sorted.map(([value, label]) => ({ label, value }))];
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!this.searchTerm.trim()
+      || this.positionFilter !== 'all'
+      || this.clubFilter !== 'all'
+      || this.statusFilter !== 'all'
+      || this.minPrice != null
+      || this.maxPrice != null;
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.positionFilter = 'all';
+    this.clubFilter = 'all';
+    this.statusFilter = 'all';
+    this.minPrice = null;
+    this.maxPrice = null;
+  }
+
+  onSortChange(value: string): void {
+    this.sortBy = value as MarketSort;
+  }
+
   get filteredMarket(): TransferMarketPlayer[] {
     const term = this.searchTerm.trim().toLowerCase();
-    const market = this.board?.market ?? [];
-    if (!term) {
-      return market;
+    const min = this.minPrice != null && `${this.minPrice}` !== '' ? Number(this.minPrice) : null;
+    const max = this.maxPrice != null && `${this.maxPrice}` !== '' ? Number(this.maxPrice) : null;
+
+    const list = (this.board?.market ?? []).filter(p => {
+      if (term && !(
+        p.name.toLowerCase().includes(term) ||
+        p.ownerClubName.toLowerCase().includes(term) ||
+        p.position.toLowerCase().includes(term)
+      )) return false;
+      if (this.positionFilter !== 'all' && p.position !== this.positionFilter) return false;
+      if (this.clubFilter !== 'all' && p.ownerUserClubId !== this.clubFilter) return false;
+      if (this.statusFilter === 'available' && p.hasMyPendingOffer) return false;
+      if (this.statusFilter === 'pending' && !p.hasMyPendingOffer) return false;
+      const price = p.marketValue ?? 0;
+      if (min != null && !isNaN(min) && price < min) return false;
+      if (max != null && !isNaN(max) && price > max) return false;
+      return true;
+    });
+
+    const byName = (a: TransferMarketPlayer, b: TransferMarketPlayer) => a.name.localeCompare(b.name);
+    switch (this.sortBy) {
+      case 'price-asc':
+        return list.sort((a, b) => (a.marketValue ?? 0) - (b.marketValue ?? 0) || byName(a, b));
+      case 'rating':
+        return list.sort((a, b) => b.overall - a.overall || byName(a, b));
+      case 'name':
+        return list.sort(byName);
+      default:
+        return list.sort((a, b) => (b.marketValue ?? 0) - (a.marketValue ?? 0) || byName(a, b));
     }
-    return market.filter(p =>
-      p.name.toLowerCase().includes(term) ||
-      p.ownerClubName.toLowerCase().includes(term) ||
-      p.position.toLowerCase().includes(term)
-    );
   }
 
   loadBoard(showLoader: boolean): void {
@@ -173,22 +261,40 @@ export class Transfers implements OnInit, OnDestroy {
   }
 
   reject(offer: TransferOffer): void {
-    this.transfers.rejectOffer(offer.transferRecordId).subscribe({
-      next: () => this.loadBoard(false),
-      error: err => {
-        this.errorMessage = err?.error?.message || 'Could not reject offer.';
-        this.cdr.detectChanges();
-      }
+    void this.confirmDialog.confirm({
+      title: 'Reject offer for {player}?',
+      description: '{club} will be notified that you rejected the offer.',
+      params: { player: offer.playerName, club: offer.toClubName },
+      confirmLabel: 'Reject offer',
+      cancelLabel: 'Keep it',
+      action: () => this.transfers.rejectOffer(offer.transferRecordId).pipe(
+        tap({
+          next: () => this.loadBoard(false),
+          error: err => {
+            this.errorMessage = err?.error?.message || 'Could not reject offer.';
+            this.cdr.detectChanges();
+          }
+        })
+      )
     });
   }
 
   cancel(offer: TransferOffer): void {
-    this.transfers.cancelOffer(offer.transferRecordId).subscribe({
-      next: () => this.loadBoard(false),
-      error: err => {
-        this.errorMessage = err?.error?.message || 'Could not cancel offer.';
-        this.cdr.detectChanges();
-      }
+    void this.confirmDialog.confirm({
+      title: 'Cancel your offer for {player}?',
+      description: 'The offer will be withdrawn. You can make a new one later.',
+      params: { player: offer.playerName, club: offer.fromClubName },
+      confirmLabel: 'Cancel offer',
+      cancelLabel: 'Keep it',
+      action: () => this.transfers.cancelOffer(offer.transferRecordId).pipe(
+        tap({
+          next: () => this.loadBoard(false),
+          error: err => {
+            this.errorMessage = err?.error?.message || 'Could not cancel offer.';
+            this.cdr.detectChanges();
+          }
+        })
+      )
     });
   }
 

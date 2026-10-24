@@ -17,6 +17,25 @@ export interface DraftState {
   secondsRemaining: number;
   totalTeams: number;
   playersPerTeam: number;
+  isPaused?: boolean;
+  isCompleted?: boolean;
+  timerEnabled?: boolean;
+  pickSeconds?: number;
+  /** Server-authoritative expiry of the current pick (UTC ISO). Null when paused, timer off or inactive. */
+  currentPickDeadlineUTC?: string | null;
+  /** Server clock when the state was built, used to correct client clock skew. */
+  serverTimeUTC?: string;
+}
+
+export interface UpdateDraftTimer {
+  timerEnabled: boolean;
+  pickSeconds: number;
+}
+
+export interface DraftSettings {
+  defaultPickSeconds: number;
+  minPickSeconds: number;
+  maxPickSeconds: number;
 }
 
 export interface DraftOrder {

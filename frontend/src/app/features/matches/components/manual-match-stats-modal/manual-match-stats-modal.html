@@ -8,14 +8,14 @@
 
     <header class="modal-header">
       <div>
-        <span class="eyebrow">MANUAL ENTRY</span>
-        <h2>Enter Match Statistics</h2>
+        <span class="eyebrow">{{ 'MANUAL ENTRY' | t }}</span>
+        <h2>{{ 'Enter Match Statistics' | t }}</h2>
       </div>
 
       <button
         type="button"
         class="btn btn-danger btn-icon close-button"
-        aria-label="Close modal"
+        [aria-label]="'Close modal' | t"
         [disabled]="isSaving"
         (click)="close()">
         ✕
@@ -56,11 +56,11 @@
 
         <!-- MATCH SUMMARY -->
         <section class="summary-section">
-          <h3>Match Summary</h3>
+          <h3>{{ 'Match Summary' | t }}</h3>
 
           <div class="summary-header">
             <span>{{ homeTeamName }}</span>
-            <span>Statistic</span>
+            <span>{{ 'Statistic' | t }}</span>
             <span>{{ awayTeamName }}</span>
           </div>
 
@@ -71,7 +71,7 @@
               max="100"
               formControlName="homePossession">
 
-            <label>Possession %</label>
+            <label>{{ 'Possession %' | t }}</label>
 
             <input
               type="number"
@@ -86,7 +86,7 @@
               min="0"
               formControlName="homeShots">
 
-            <label>Shots</label>
+            <label>{{ 'Shots' | t }}</label>
 
             <input
               type="number"
@@ -101,7 +101,7 @@
               step="0.1"
               formControlName="homeExpectedGoals">
 
-            <label>Expected Goals</label>
+            <label>{{ 'Expected Goals' | t }}</label>
 
             <input
               type="number"
@@ -116,7 +116,7 @@
               min="0"
               formControlName="homePasses">
 
-            <label>Passes</label>
+            <label>{{ 'Passes' | t }}</label>
 
             <input
               type="number"
@@ -130,7 +130,7 @@
               min="0"
               formControlName="homeTackles">
 
-            <label>Tackles</label>
+            <label>{{ 'Tackles' | t }}</label>
 
             <input
               type="number"
@@ -144,7 +144,7 @@
               min="0"
               formControlName="homeTacklesWon">
 
-            <label>Tackles Won</label>
+            <label>{{ 'Tackles Won' | t }}</label>
 
             <input
               type="number"
@@ -158,7 +158,7 @@
               min="0"
               formControlName="homeInterceptions">
 
-            <label>Interceptions</label>
+            <label>{{ 'Interceptions' | t }}</label>
 
             <input
               type="number"
@@ -172,7 +172,7 @@
               min="0"
               formControlName="homeSaves">
 
-            <label>Saves</label>
+            <label>{{ 'Saves' | t }}</label>
 
             <input
               type="number"
@@ -186,7 +186,7 @@
               min="0"
               formControlName="homeFoulsCommitted">
 
-            <label>Fouls</label>
+            <label>{{ 'Fouls' | t }}</label>
 
             <input
               type="number"
@@ -200,7 +200,7 @@
               min="0"
               formControlName="homeOffsides">
 
-            <label>Offsides</label>
+            <label>{{ 'Offsides' | t }}</label>
 
             <input
               type="number"
@@ -214,7 +214,7 @@
               min="0"
               formControlName="homeCorners">
 
-            <label>Corners</label>
+            <label>{{ 'Corners' | t }}</label>
 
             <input
               type="number"
@@ -228,7 +228,7 @@
               min="0"
               formControlName="homeFreeKicks">
 
-            <label>Free Kicks</label>
+            <label>{{ 'Free Kicks' | t }}</label>
 
             <input
               type="number"
@@ -242,7 +242,7 @@
               min="0"
               formControlName="homePenaltyKicks">
 
-            <label>Penalties</label>
+            <label>{{ 'Penalties' | t }}</label>
 
             <input
               type="number"
@@ -256,7 +256,7 @@
               min="0"
               formControlName="homeYellowCards">
 
-            <label>Yellow Cards</label>
+            <label>{{ 'Yellow Cards' | t }}</label>
 
             <input
               type="number"
@@ -272,13 +272,13 @@
           <div class="players-section">
 
             <div class="section-header">
-              <h3>{{ homeTeamName }} Players</h3>
+              <h3>{{ homeTeamName }} {{ 'Players' | t }}</h3>
 
               <button
                 type="button"
                 class="btn btn-secondary btn-sm"
                 (click)="addHomePlayer()">
-                + Add Player
+                {{ '+ Add Player' | t }}
               </button>
             </div>
 
@@ -295,7 +295,7 @@
 
                   <input
                     type="text"
-                    placeholder="Pos"
+                    [placeholder]="'Pos' | t"
                     formControlName="position"
                     readonly>
 
@@ -304,7 +304,7 @@
                     (change)="onHomePlayerSelected(index)">
 
                     <option value="">
-                      Select player
+                      {{ 'Select player' | t }}
                     </option>
 
                     @for (
@@ -332,25 +332,25 @@
                     min="0"
                     max="10"
                     step="0.1"
-                    placeholder="Rating"
+                    [placeholder]="'Rating' | t"
                     formControlName="rating">
 
                   <input
                     type="number"
                     min="0"
-                    placeholder="Goals"
+                    [placeholder]="'Goals' | t"
                     formControlName="goals">
 
                   <input
                     type="number"
                     min="0"
-                    placeholder="Assists"
+                    [placeholder]="'Assists' | t"
                     formControlName="assists">
 
                   <button
                     type="button"
                     class="btn btn-danger btn-icon remove-button"
-                    aria-label="Remove home player"
+                    [aria-label]="'Remove home player' | t"
                     (click)="removeHomePlayer(index)">
                     ✕
                   </button>
@@ -365,13 +365,13 @@
           <div class="players-section">
 
             <div class="section-header">
-              <h3>{{ awayTeamName }} Players</h3>
+              <h3>{{ awayTeamName }} {{ 'Players' | t }}</h3>
 
               <button
                 type="button"
                 class="btn btn-secondary btn-sm"
                 (click)="addAwayPlayer()">
-                + Add Player
+                {{ '+ Add Player' | t }}
               </button>
             </div>
 
@@ -388,7 +388,7 @@
 
                   <input
                     type="text"
-                    placeholder="Pos"
+                    [placeholder]="'Pos' | t"
                     formControlName="position"
                     readonly>
 
@@ -397,7 +397,7 @@
                     (change)="onAwayPlayerSelected(index)">
 
                     <option value="">
-                      Select player
+                      {{ 'Select player' | t }}
                     </option>
 
                     @for (
@@ -425,25 +425,25 @@
                     min="0"
                     max="10"
                     step="0.1"
-                    placeholder="Rating"
+                    [placeholder]="'Rating' | t"
                     formControlName="rating">
 
                   <input
                     type="number"
                     min="0"
-                    placeholder="Goals"
+                    [placeholder]="'Goals' | t"
                     formControlName="goals">
 
                   <input
                     type="number"
                     min="0"
-                    placeholder="Assists"
+                    [placeholder]="'Assists' | t"
                     formControlName="assists">
 
                   <button
                     type="button"
                     class="btn btn-danger btn-icon remove-button"
-                    aria-label="Remove away player"
+                    [aria-label]="'Remove away player' | t"
                     (click)="removeAwayPlayer(index)">
                     ✕
                   </button>
@@ -458,7 +458,7 @@
 
         @if (errorMessage) {
           <div class="error-message">
-            {{ errorMessage }}
+            {{ errorMessage | t }}
           </div>
         }
 
@@ -471,7 +471,7 @@
           class="btn btn-secondary"
           [disabled]="isSaving || isLoading"
           (click)="close()">
-          Cancel
+          {{ 'Cancel' | t }}
         </button>
 
         <button
@@ -480,9 +480,9 @@
           [disabled]="isSaving || isLoading">
 
           @if (isLoading) {
-            Loading...
+            {{ 'Loading...' | t }}
           } @else {
-            {{ isSaving ? 'Saving...' : 'Save Statistics' }}
+            {{ isSaving ? ('Saving...' | t) : ('Save Statistics' | t) }}
           }
 
         </button>

@@ -1,4 +1,4 @@
-﻿namespace backend.Features.Messages.Services;
+namespace backend.Features.Messages.Services;
 
 using backend.Features.Messages.Dtos;
 
@@ -6,7 +6,11 @@ public interface IMessageService
 {
 	Task<List<ConversationDto>> GetConversationsAsync(string auth0Id);
 
-	Task<List<MessageDto>> GetConversationAsync(string auth0Id, Guid otherUserId);
+	Task<MessagePageDto> GetConversationAsync(
+		string auth0Id,
+		Guid otherUserId,
+		Guid? beforeMessageId = null,
+		int take = 15);
 
 	Task<MessageDto> SendAsync(string auth0Id, SendMessageDto dto);
 
@@ -14,5 +18,7 @@ public interface IMessageService
 	Task SendSystemMessageAsync(
 	Guid receiverUserId,
 	string title,
-	string body);
+	string body,
+	string type,
+	string url);
 }

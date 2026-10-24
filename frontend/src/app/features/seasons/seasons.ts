@@ -15,6 +15,11 @@ import { SeasonService } from '../../core/services/season.service';
 import { MatchService } from '../../core/services/match.service';
 import { UserService } from '../../core/services/user.service';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
+import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
+import { TranslationService } from '../../core/i18n/translation.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-season',
@@ -22,7 +27,8 @@ import { AppLoading } from '../../shared/components/app-loading/app-loading';
   imports: [
     CommonModule,
     FormsModule,
-    AppLoading
+    AppLoading,
+    TranslatePipe, LocalizedDatePipe, EmptyState
   ],
   templateUrl: './seasons.html',
   styleUrl: './seasons.scss'
@@ -58,7 +64,9 @@ export class Seasons implements OnInit {
     private userService: UserService,
     private route: ActivatedRoute,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private i18n: TranslationService,
+    private confirmDialog: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
@@ -159,32 +167,32 @@ export class Seasons implements OnInit {
 
   save(): void {
     if (!this.isAdmin) {
-      alert('Only admins can manage seasons.');
+      alert(this.i18n.t('Only admins can manage seasons.'));
       return;
     }
 
     if (!this.form.name.trim()) {
-      alert('Season name is required');
+      alert(this.i18n.t('Season name is required'));
       return;
     }
 
     if (!this.form.startDate) {
-      alert('Start date is required');
+      alert(this.i18n.t('Start date is required'));
       return;
     }
 
     if (!this.form.endDate) {
-      alert('End date is required');
+      alert(this.i18n.t('End date is required'));
       return;
     }
 
     if (new Date(this.form.endDate) <= new Date(this.form.startDate)) {
-      alert('End date must be greater than start date');
+      alert(this.i18n.t('End date must be greater than start date'));
       return;
     }
 
     if (!this.form.totalWeeks || Number(this.form.totalWeeks) < 1) {
-      alert('Total weeks must be at least 1');
+      alert(this.i18n.t('Total weeks must be at least 1'));
       return;
     }
 
@@ -223,7 +231,7 @@ export class Seasons implements OnInit {
         },
         error: err => {
           console.error('Error saving season:', err);
-          alert(err?.error?.message || 'Error saving season');
+          alert(err?.error?.message || this.i18n.t('Error saving season'));
         }
       });
   }
@@ -260,12 +268,20 @@ export class Seasons implements OnInit {
     });
   }
 
-  generateSchedule(season: Season): void {
+  async generateSchedule(season: Season): Promise<void> {
     if (!this.isAdmin || !season?.seasonId) {
       return;
     }
 
-    if (!confirm(`Generate schedule for ${season.name}?`)) {
+    const ok = await this.confirmDialog.confirm({
+      title: 'Generate schedule for {name}?',
+      description: 'Matches will be created for every week of this season.',
+      params: { name: season.name },
+      confirmLabel: 'Generate',
+      danger: false
+    });
+
+    if (!ok) {
       return;
     }
 
@@ -275,8 +291,13 @@ export class Seasons implements OnInit {
     );
   }
 
-  closeRegistration(season: Season): void {
-    if (!this.confirmAdmin(season, `Close registration for ${season.name}?`)) {
+  async closeRegistration(season: Season): Promise<void> {
+    if (!(await this.confirmAdmin(season, {
+      title: 'Close registration for {name}?',
+      description: 'Players will no longer be able to join this season.',
+      confirmLabel: 'Close registration',
+      danger: true
+    }))) {
       return;
     }
 
@@ -286,8 +307,13 @@ export class Seasons implements OnInit {
     );
   }
 
-  openRegistration(season: Season): void {
-    if (!this.confirmAdmin(season, `Open registration for ${season.name}?`)) {
+  async openRegistration(season: Season): Promise<void> {
+    if (!(await this.confirmAdmin(season, {
+      title: 'Open registration for {name}?',
+      description: 'Players will be able to join this season.',
+      confirmLabel: 'Open registration',
+      danger: false
+    }))) {
       return;
     }
 
@@ -297,8 +323,13 @@ export class Seasons implements OnInit {
     );
   }
 
-  setCurrent(season: Season): void {
-    if (!this.confirmAdmin(season, `Set ${season.name} as the current season?`)) {
+  async setCurrent(season: Season): Promise<void> {
+    if (!(await this.confirmAdmin(season, {
+      title: 'Set {name} as the current season?',
+      description: 'Only one season can be current. Others will be unmarked.',
+      confirmLabel: 'Make current',
+      danger: false
+    }))) {
       return;
     }
 
@@ -308,8 +339,13 @@ export class Seasons implements OnInit {
     );
   }
 
-  closeSeason(season: Season): void {
-    if (!this.confirmAdmin(season, `Close ${season.name}? Pending transfer offers will be cancelled.`)) {
+  async closeSeason(season: Season): Promise<void> {
+    if (!(await this.confirmAdmin(season, {
+      title: 'Close {name}?',
+      description: 'Pending transfer offers will be cancelled and results will be locked. This cannot be undone.',
+      confirmLabel: 'Close season',
+      danger: true
+    }))) {
       return;
     }
 
@@ -319,8 +355,13 @@ export class Seasons implements OnInit {
     );
   }
 
-  activateSeason(season: Season): void {
-    if (!this.confirmAdmin(season, `Activate ${season.name}?`)) {
+  async activateSeason(season: Season): Promise<void> {
+    if (!(await this.confirmAdmin(season, {
+      title: 'Activate {name}?',
+      description: 'The season will be visible across the platform.',
+      confirmLabel: 'Activate',
+      danger: false
+    }))) {
       return;
     }
 
@@ -330,18 +371,24 @@ export class Seasons implements OnInit {
     );
   }
 
-  delete(seasonId: string): void {
+  async delete(seasonId: string): Promise<void> {
     if (!this.isAdmin) {
       return;
     }
 
-    if (!confirm('Are you sure you want to delete this season?')) return;
+    const ok = await this.confirmDialog.confirm({
+      title: 'Delete this season?',
+      description: 'The season and its configuration will be removed. This cannot be undone.',
+      confirmLabel: 'Delete'
+    });
+
+    if (!ok) return;
 
     this.seasonService.remove(seasonId).subscribe({
       next: () => this.loadSeasons(),
       error: err => {
         console.error('Error deleting season:', err);
-        alert(err?.error?.message || 'Error deleting season');
+        alert(err?.error?.message || this.i18n.t('Error deleting season'));
       }
     });
   }
@@ -363,12 +410,15 @@ export class Seasons implements OnInit {
     };
   }
 
-  private confirmAdmin(season: Season | null, message: string): boolean {
+  private confirmAdmin(
+    season: Season | null,
+    options: { title: string; description: string; confirmLabel: string; danger: boolean }
+  ): Promise<boolean> {
     if (!this.isAdmin || !season?.seasonId) {
-      return false;
+      return Promise.resolve(false);
     }
 
-    return confirm(message);
+    return this.confirmDialog.confirm({ ...options, params: { name: season.name } });
   }
 
   private runAction(request$: Observable<unknown>, successMessage: string): void {
@@ -384,11 +434,11 @@ export class Seasons implements OnInit {
       .subscribe({
         next: () => {
           this.loadSeasons();
-          alert(successMessage);
+          alert(this.i18n.t(successMessage));
         },
         error: err => {
           console.error(err);
-          alert(err?.error?.message || 'Action failed.');
+          alert(err?.error?.message || this.i18n.t('Action failed.'));
         }
       });
   }

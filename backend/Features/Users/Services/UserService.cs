@@ -1,4 +1,4 @@
-﻿using backend.Data;
+using backend.Data;
 using backend.Entities.Identity;
 using backend.Features.Users.Dtos;
 using Microsoft.EntityFrameworkCore;
@@ -328,4 +328,65 @@ public class UserService : IUserService
 			})
 			.ToListAsync();
 	}
+
+	public static readonly string[] SupportedLanguages = ["en", "es"];
+
+	public async Task<UserSettingsDto?> GetSettingsAsync(ClaimsPrincipal principal)
+	{
+		var user = await FindCurrentUserAsync(principal);
+
+		return user is null ? null : ToSettingsDto(user);
+	}
+
+	public async Task<UserSettingsDto?> UpdateSettingsAsync(ClaimsPrincipal principal, UserSettingsDto dto)
+	{
+		var user = await FindCurrentUserAsync(principal);
+
+		if (user is null)
+			return null;
+
+		var timeZone = (dto.TimeZone ?? string.Empty).Trim();
+
+		if (string.IsNullOrWhiteSpace(timeZone) ||
+			!TimeZoneInfo.TryFindSystemTimeZoneById(timeZone, out _))
+			throw new ArgumentException("Invalid time zone.");
+
+		var language = (dto.Language ?? string.Empty).Trim().ToLowerInvariant();
+
+		if (!SupportedLanguages.Contains(language))
+			throw new ArgumentException("Invalid language. Supported: en, es.");
+
+		user.TimeZone = timeZone;
+		user.Language = language;
+		user.PushNotificationsEnabled = dto.PushNotificationsEnabled;
+		user.InAppToastsEnabled = dto.InAppToastsEnabled;
+		user.UpdatedAtUTC = DateTime.UtcNow;
+		user.UpdatedByUserId = user.UserId;
+
+		await _context.SaveChangesAsync();
+
+		return ToSettingsDto(user);
+	}
+
+	private async Task<User?> FindCurrentUserAsync(ClaimsPrincipal principal)
+	{
+		var auth0Id =
+			principal.FindFirstValue(ClaimTypes.NameIdentifier)
+			?? principal.FindFirstValue("sub");
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return null;
+
+		return await _context.Users.FirstOrDefaultAsync(x =>
+			x.Auth0Id == auth0Id &&
+			!x.IsDeleted);
+	}
+
+	private static UserSettingsDto ToSettingsDto(User user) => new()
+	{
+		TimeZone = string.IsNullOrWhiteSpace(user.TimeZone) ? "UTC" : user.TimeZone,
+		Language = SupportedLanguages.Contains(user.Language) ? user.Language : "en",
+		PushNotificationsEnabled = user.PushNotificationsEnabled,
+		InAppToastsEnabled = user.InAppToastsEnabled
+	};
 }

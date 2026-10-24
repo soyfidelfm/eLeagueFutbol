@@ -756,3 +756,212 @@
     height: 78px;
   }
 }
+
+/* =========================================
+   LOGO PLACEHOLDER + STATUS FILTER
+========================================= */
+
+.logo-placeholder {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 255, 136, .35);
+  background: rgba(0, 255, 136, .08);
+  color: var(--neon-primary, #00ff88);
+  font-size: 28px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.versus-team .logo-placeholder {
+  width: 96px;
+  height: 96px;
+  font-size: 38px;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .team .logo-placeholder {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+}
+
+.status-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+
+  button {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .03);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+
+    &.active {
+      border-color: var(--neon-primary, #00ff88);
+      color: var(--neon-primary, #00ff88);
+      background: rgba(0, 255, 136, .08);
+    }
+  }
+}
+
+
+/* =========================================
+   PENDING RESULT PROPOSAL
+========================================= */
+
+.pending-result-card {
+  margin-bottom: 16px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 196, 0, .45);
+  background: rgba(255, 196, 0, .06);
+
+  h3 {
+    margin: 0 0 4px;
+    color: var(--warning, #ffc400);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: .04em;
+  }
+
+  p {
+    margin: 0 0 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  h4 {
+    margin: 0 0 6px;
+    font-size: 13px;
+  }
+}
+
+.pending-score {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  text-align: center;
+  font-weight: 800;
+
+  strong {
+    font-size: 26px;
+    color: var(--text-main);
+  }
+}
+
+.pending-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .04);
+    font-size: 12px;
+  }
+
+  span {
+    color: var(--text-muted);
+  }
+}
+
+.pending-players {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+
+  small {
+    color: var(--text-muted);
+  }
+}
+
+.pending-player {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, .05);
+
+  span:last-child {
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+}
+
+.pending-actions {
+  display: flex;
+  gap: 10px;
+
+  button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font-weight: 900;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+  }
+
+  .accept {
+    background: rgba(0, 255, 136, .15);
+    border-color: var(--neon-primary, #00ff88);
+    color: var(--neon-primary, #00ff88);
+  }
+
+  .reject {
+    background: rgba(255, 70, 70, .12);
+    border-color: #ff4646;
+    color: #ff6b6b;
+  }
+}
+
+.proposal-message {
+  margin: 0 0 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .pending-summary,
+  .pending-players {
+    grid-template-columns: 1fr;
+  }
+}
+
+.empty-action {
+  background: transparent;
+  color: #00ffaa;
+  border: 1px solid rgba(0, 255, 170, 0.45);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}

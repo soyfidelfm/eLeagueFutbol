@@ -11,6 +11,7 @@ using backend.Features.Messages.Services;
 using backend.Features.Notifications.Services;
 using backend.Features.Rankings.Services;
 using backend.Features.Realtime;
+using backend.Features.Search.Services;
 using backend.Features.Seasons.Services;
 using backend.Features.Sidebar.Services;
 using backend.Features.Stats.Services;
@@ -48,15 +49,18 @@ builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IActivityFeedService, ActivityFeedService>();
 builder.Services.AddScoped<IRankingService, RankingService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
+builder.Services.AddScoped<IPendingMatchResultService, PendingMatchResultService>();
 builder.Services.AddScoped<ISidebarService, SidebarService>();
 builder.Services.AddScoped<DraftService>();
 builder.Services.AddScoped<IDraftService, DraftRealtimeDecorator>();
+builder.Services.AddHostedService<DraftTimerBackgroundService>();
 builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<ITransferService, TransferRealtimeDecorator>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<INotificationInboxService, NotificationInboxService>();
 builder.Services.AddScoped<IMatchStatsService, MatchStatsService>();
+builder.Services.AddScoped<ISearchService, SearchService>();
 
 // Settings
 builder.Services.Configure<CloudinarySettings>(
@@ -90,7 +94,8 @@ builder.Services.AddCors(options =>
 				"https://www.eleaguefutbol.com"
 			)
 			.AllowAnyHeader()
-			.AllowAnyMethod();
+			.AllowAnyMethod()
+			.AllowCredentials();
 	});
 });
 

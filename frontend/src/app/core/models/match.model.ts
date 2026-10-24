@@ -119,3 +119,37 @@ export interface ManualPlayerStats {
   goals: number;
   assists: number;
 }
+
+
+export interface PendingResultPlayer {
+  position: string;
+  playerName: string;
+  rating: number;
+  goals: number;
+  assists: number;
+}
+
+export interface PendingMatchResult {
+  pendingMatchResultId: string;
+  matchId: string;
+  submittedByUserId: string;
+  submittedByName: string;
+  status: 'Pending' | 'Accepted' | 'Rejected';
+  homeScore: number;
+  awayScore: number;
+  summary?: {
+    homePossession: number;
+    awayPossession: number;
+    homeShots: number;
+    awayShots: number;
+    homeExpectedGoals: number;
+    awayExpectedGoals: number;
+    homePasses: number;
+    awayPasses: number;
+  } | null;
+  homePlayers: PendingResultPlayer[];
+  awayPlayers: PendingResultPlayer[];
+  createdAtUTC: string;
+  isMine: boolean;
+  canReview: boolean;
+}

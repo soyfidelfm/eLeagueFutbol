@@ -190,44 +190,91 @@
   line-height: 1.25;
 }
 
+.avatar-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
 .avatar-preview {
   position: relative;
 
-  flex: 0 0 auto;
-
-  width: 92px;
-  height: 92px;
-
-  padding: 4px;
+  width: 96px;
+  height: 96px;
 
   border-radius: 50%;
   border: 3px solid var(--neon-primary);
+  overflow: hidden;
 
-  box-shadow: 0 0 26px var(--neon-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
+  box-shadow: 0 0 22px var(--neon-glow);
 }
 
 .avatar-preview img {
   width: 100%;
   height: 100%;
-
   object-fit: cover;
-  border-radius: 50%;
+  display: block;
 }
 
-.avatar-status {
+.avatar-initials {
+  color: var(--bg-primary);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  user-select: none;
+}
+
+.avatar-uploading {
   position: absolute;
+  inset: 0;
 
-  right: 4px;
-  bottom: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  width: 17px;
-  height: 17px;
+  background: rgba(0, 0, 0, .55);
+  color: var(--neon-primary);
+  font-size: 24px;
+}
 
-  border-radius: 50%;
-  background: var(--success);
-  border: 3px solid var(--bg-secondary);
+.avatar-change-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 
-  box-shadow: 0 0 14px var(--neon-glow);
+  padding: 8px 14px;
+
+  border: 1px solid var(--neon-primary);
+  border-radius: 999px;
+  background: transparent;
+
+  color: var(--neon-primary);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  cursor: pointer;
+  transition: background .2s, box-shadow .2s;
+}
+
+.avatar-change-btn:hover:not(:disabled) {
+  background: rgba(0, 255, 136, .10);
+  box-shadow: 0 0 14px rgba(0, 255, 136, .22);
+}
+
+.avatar-change-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
 }
 
 /* =========================================
@@ -239,7 +286,13 @@ form {
   min-width: 0;
 
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
+}
+
+form .full-width,
+form .btn-primary {
+  grid-column: 1 / -1;
 }
 
 label,
@@ -284,7 +337,7 @@ input {
 
 .team-selection-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
@@ -369,11 +422,11 @@ button[type="submit"] {
 
   background: linear-gradient(
     135deg,
-    #00ff88,
-    #00d66f
+    var(--neon-primary),
+    var(--neon-secondary)
   );
 
-  color: #00130b;
+  color: var(--bg-primary);
 
   font-family: 'Rajdhani', sans-serif;
   font-size: 20px;
@@ -393,80 +446,6 @@ button[type="submit"]:disabled {
   opacity: .65;
   cursor: not-allowed;
 }
-.avatar-preview {
-  width: 300px;
-  height: 300px;
-  min-width: 300px;
-
-  border-radius: 50%;
-  overflow: hidden;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar-upload-preview {
-  width: 300px;
-  height: 420px;
-  min-width: 300px;
-
-  border-radius: 18px;
-  overflow: hidden;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-upload-preview img {
-  max-width: 100%;
-  max-height: 100%;
-
-  width: auto;
-  height: auto;
-
-  object-fit: contain;
-  border-radius: 0;
-
-  display: block;
-}
-
-.avatar-placeholder {
-  width: 100%;
-  height: 100%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar-upload-section {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-@media (max-width: 480px) {
-  .avatar-preview,
-  .avatar-upload-preview {
-    width: 72px;
-    height: 72px;
-    min-width: 72px;
-  }
-
-  .avatar-upload-section {
-    align-items: center;
-    gap: 12px;
-  }
-}
-
 /* =========================================
    RESPONSIVE TABLET
 ========================================= */
@@ -502,6 +481,10 @@ button[type="submit"]:disabled {
   .avatar-preview {
     width: 86px;
     height: 86px;
+  }
+
+  .team-selection-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -565,16 +548,17 @@ button[type="submit"]:disabled {
   }
 
   .avatar-preview {
-    width: 82px;
-    height: 82px;
+    width: 72px;
+    height: 72px;
   }
 
-  .avatar-status {
-    width: 15px;
-    height: 15px;
+  .avatar-initials {
+    font-size: 26px;
+  }
 
-    right: 3px;
-    bottom: 7px;
+  .avatar-change-btn {
+    padding: 6px 10px;
+    font-size: 11px;
   }
 
   form {

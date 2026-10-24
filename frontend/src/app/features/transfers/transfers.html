@@ -3,59 +3,119 @@
 
   <header class="transfers-header" *ngIf="!isLoading">
     <div>
-      <p class="eyebrow">TRANSFER MARKET</p>
-      <h1>{{ board?.myClubName || 'Transfers' }}</h1>
+      <p class="eyebrow">{{ 'TRANSFER MARKET' | t }}</p>
+      <h1>{{ board?.myClubName || ('Transfers' | t) }}</h1>
       <p class="live-line" *ngIf="!seasonClosed">
         <span class="live-dot" [class.refreshing]="isRefreshing"></span>
-        Live market
-        <span *ngIf="liveMessage"> · {{ liveMessage }}</span>
+        {{ 'Live market' | t }}
+        <span *ngIf="liveMessage"> · {{ liveMessage | t }}</span>
       </p>
-      <p class="live-line closed" *ngIf="seasonClosed">Season closed — transfers locked</p>
+      <p class="live-line closed" *ngIf="seasonClosed">{{ 'Season closed — transfers locked' | t }}</p>
     </div>
     <div class="budget">
-      <span>Budget</span>
+      <span>{{ 'Budget' | t }}</span>
       <strong>€{{ (board?.currentBudget || 0) | number:'1.0-0' }}</strong>
     </div>
   </header>
 
-  <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <app-empty-state
+    *ngIf="!isLoading && errorMessage"
+    tone="error"
+    [compact]="!!board"
+    icon="fa-solid fa-triangle-exclamation"
+    title="Something went wrong"
+    [description]="errorMessage">
+  </app-empty-state>
 
   <div class="grid" *ngIf="!isLoading && board">
     <article class="panel">
-      <h2>Incoming offers</h2>
-      <p *ngIf="!board.incomingOffers.length" class="empty">No incoming offers.</p>
+      <h2>{{ 'Incoming offers' | t }}</h2>
+      <app-empty-state
+        *ngIf="!board.incomingOffers.length"
+        [compact]="true"
+        icon="fa-solid fa-inbox"
+        title="No incoming offers"
+        description="Offers other clubs make for your players will appear here.">
+      </app-empty-state>
       <div class="offer" *ngFor="let offer of board.incomingOffers">
         <div>
           <strong>{{ offer.playerName }}</strong>
           <span>{{ offer.toClubName }} · €{{ offer.transferFee | number:'1.0-0' }}</span>
         </div>
         <div class="actions">
-          <button type="button" [disabled]="seasonClosed" (click)="accept(offer)">Accept</button>
-          <button type="button" class="ghost" [disabled]="seasonClosed" (click)="reject(offer)">Reject</button>
+          <button type="button" [disabled]="seasonClosed" (click)="accept(offer)">{{ 'Accept' | t }}</button>
+          <button type="button" class="ghost" [disabled]="seasonClosed" (click)="reject(offer)">{{ 'Reject' | t }}</button>
         </div>
       </div>
     </article>
 
     <article class="panel">
-      <h2>My offers</h2>
-      <p *ngIf="!board.outgoingOffers.length" class="empty">No outgoing offers.</p>
+      <h2>{{ 'My offers' | t }}</h2>
+      <app-empty-state
+        *ngIf="!board.outgoingOffers.length"
+        [compact]="true"
+        icon="fa-solid fa-paper-plane"
+        title="No outgoing offers"
+        description="Make an offer on a player from the market below.">
+      </app-empty-state>
       <div class="offer" *ngFor="let offer of board.outgoingOffers">
         <div>
           <strong>{{ offer.playerName }}</strong>
           <span>{{ offer.fromClubName }} · €{{ offer.transferFee | number:'1.0-0' }}</span>
         </div>
-        <button type="button" class="ghost" [disabled]="seasonClosed" (click)="cancel(offer)">Cancel</button>
+        <button type="button" class="ghost" [disabled]="seasonClosed" (click)="cancel(offer)">{{ 'Cancel' | t }}</button>
       </div>
     </article>
   </div>
 
   <article class="panel market" *ngIf="!isLoading && board">
     <div class="market-head">
-      <h2>Available players</h2>
-      <input [(ngModel)]="searchTerm" placeholder="Search player, club or position" />
+      <h2>{{ 'Available players' | t }}</h2>
+      <input [(ngModel)]="searchTerm" [placeholder]="'Search player, club or position' | t" />
     </div>
 
-    <p *ngIf="!filteredMarket.length" class="empty">No players on the market yet.</p>
+    <div class="market-filters" *ngIf="board.market.length">
+      <app-neon-dropdown label="Position" [options]="positionOptions"
+        [selectedValue]="positionFilter" (selectedValueChange)="positionFilter = $event"></app-neon-dropdown>
+      <app-neon-dropdown label="Club" [options]="clubOptions"
+        [selectedValue]="clubFilter" (selectedValueChange)="clubFilter = $event"></app-neon-dropdown>
+      <app-neon-dropdown label="Status" [options]="statusOptions"
+        [selectedValue]="statusFilter" (selectedValueChange)="statusFilter = $event"></app-neon-dropdown>
+      <div class="price-range">
+        <label>{{ 'Price range' | t }}</label>
+        <div class="price-inputs">
+          <input type="number" min="0" [(ngModel)]="minPrice" [placeholder]="'Min' | t" />
+          <span>–</span>
+          <input type="number" min="0" [(ngModel)]="maxPrice" [placeholder]="'Max' | t" />
+        </div>
+      </div>
+      <app-neon-dropdown label="Sort by" [options]="sortOptions"
+        [selectedValue]="sortBy" (selectedValueChange)="onSortChange($event)"></app-neon-dropdown>
+      <button type="button" class="ghost clear-btn" *ngIf="hasActiveFilters" (click)="clearFilters()">
+        <i class="fa-solid fa-xmark"></i> {{ 'Clear filters' | t }}
+      </button>
+    </div>
+
+    <p class="result-count" *ngIf="board.market.length">
+      {{ '{n} of {total} players' | t:{ n: filteredMarket.length, total: board.market.length } }}
+    </p>
+
+    <app-empty-state
+      *ngIf="!filteredMarket.length && board.market.length"
+      [compact]="true"
+      icon="fa-solid fa-filter-circle-xmark"
+      title="No players match your filters"
+      description="Try changing or clearing the filters to see more players.">
+      <button type="button" class="ghost" (click)="clearFilters()">{{ 'Clear filters' | t }}</button>
+    </app-empty-state>
+
+    <app-empty-state
+      *ngIf="!board.market.length"
+      [compact]="true"
+      icon="fa-solid fa-store"
+      title="No players on the market yet"
+      description="Players become available once the draft is complete.">
+    </app-empty-state>
 
     <div class="player" *ngFor="let player of filteredMarket">
       <img [src]="player.imageUrl || 'https://cdn.sofifa.net/players/239/085/26_120.png'" [alt]="player.name" />
@@ -65,14 +125,21 @@
       </div>
       <div class="bid" *ngIf="!player.hasMyPendingOffer && !seasonClosed">
         <input type="number" [(ngModel)]="offerAmount[player.gamePlayerId]" [placeholder]="(player.marketValue || 0).toString()" />
-        <button type="button" (click)="makeOffer(player)">Offer</button>
+        <button type="button" (click)="makeOffer(player)">{{ 'Offer' | t }}</button>
       </div>
-      <span class="pending" *ngIf="player.hasMyPendingOffer">Offer sent</span>
+      <span class="pending" *ngIf="player.hasMyPendingOffer">{{ 'Offer sent' | t }}</span>
     </div>
   </article>
 
-  <article class="panel" *ngIf="!isLoading && board?.history?.length">
-    <h2>Completed transfers</h2>
+  <article class="panel" *ngIf="!isLoading && board">
+    <h2>{{ 'Completed transfers' | t }}</h2>
+    <app-empty-state
+      *ngIf="!board.history.length"
+      [compact]="true"
+      icon="fa-solid fa-right-left"
+      title="No completed transfers"
+      description="Accepted transfers this season will be listed here.">
+    </app-empty-state>
     <div class="offer" *ngFor="let item of board?.history">
       <div>
         <strong>{{ item.playerName }}</strong>

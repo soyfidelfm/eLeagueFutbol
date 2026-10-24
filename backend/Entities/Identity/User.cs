@@ -22,6 +22,15 @@ public class User : BaseEntity
 
 	public string TimeZone { get; set; } = "UTC";
 
+	/// <summary>UI language code: "en" or "es".</summary>
+	public string Language { get; set; } = "en";
+
+	/// <summary>When false, no FCM push is sent to this user.</summary>
+	public bool PushNotificationsEnabled { get; set; } = true;
+
+	/// <summary>When false, the web app hides realtime in-app toasts.</summary>
+	public bool InAppToastsEnabled { get; set; } = true;
+
 	public DateTime? LastLoginAtUTC { get; set; }
 
 	public bool IsActive { get; set; } = true;

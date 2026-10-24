@@ -11,61 +11,26 @@
     <div class="season-card">
 
       <span class="season-label">
-        {{ sidebarData?.season?.label || 'CURRENT SEASON' }}
+        {{ sidebarData?.season?.label || ('CURRENT SEASON' | t) }}
       </span>
 
-      <h3>{{ sidebarData?.season?.name || 'No Season' }}</h3>
+      <h3>{{ sidebarData?.season?.name || ('No Season' | t) }}</h3>
 
       <div class="season-rank">
         <span>{{ sidebarData?.season?.totalClubs || 0 }}</span>
       </div>
 
-      <small>REGISTERED CLUBS</small>
+      <small>{{ 'REGISTERED CLUBS' | t }}</small>
 
       <div class="season-stats">
         <div>
           <strong>{{ sidebarData?.season?.totalMatches || 0 }}</strong>
-          <span>MATCHES</span>
+          <span>{{ 'MATCHES' | t }}</span>
         </div>
       </div>
 
       <button routerLink="/seasons" [queryParams]="{ view: 'current' }">
-        View Season
-      </button>
-
-    </div>
-
-    <div class="cup-card">
-
-      <div class="cup-icon">
-        <i class="fa-solid fa-trophy"></i>
-      </div>
-
-      <h3>{{ sidebarData?.cup?.name || 'No Cup' }}</h3>
-
-      <p>STARTS IN</p>
-
-      <div class="countdown">
-
-        <div>
-          <strong>{{ days }}</strong>
-          <span>DAYS</span>
-        </div>
-
-        <div>
-          <strong>{{ hours }}</strong>
-          <span>HRS</span>
-        </div>
-
-        <div>
-          <strong>{{ minutes }}</strong>
-          <span>MIN</span>
-        </div>
-
-      </div>
-
-      <button routerLink="/arena">
-        See Details
+        {{ 'View Season' | t }}
       </button>
 
     </div>

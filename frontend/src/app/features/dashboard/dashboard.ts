@@ -21,6 +21,8 @@ import { Player } from '../../core/models/player.model';
 import { UpcomingMatch } from '../../core/models/upcomingmatch.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 interface CurrentSeasonView {
   seasonId: string;
@@ -39,7 +41,9 @@ interface GameClubView {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppLoading],
+  imports: [CommonModule, FormsModule, AppLoading,
+    TranslatePipe, EmptyState
+  ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })

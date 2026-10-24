@@ -70,6 +70,15 @@ public class NotificationService : INotificationService
 		string body,
 		Dictionary<string, string>? data = null)
 	{
+		// Respect the user's push preference.
+		var pushEnabled = await _context.Users
+			.Where(x => x.UserId == userId && !x.IsDeleted)
+			.Select(x => (bool?)x.PushNotificationsEnabled)
+			.FirstOrDefaultAsync();
+
+		if (pushEnabled == false)
+			return;
+
 		var tokens = await _context.NotificationTokens
 			.Where(x =>
 				!x.IsDeleted &&

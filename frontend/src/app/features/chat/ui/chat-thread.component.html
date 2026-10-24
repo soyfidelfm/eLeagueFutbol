@@ -1,0 +1,85 @@
+<header class="flex items-center gap-2 border-b border-[rgba(0,255,136,0.18)] px-2 py-2.5">
+  <button type="button" (click)="chat.closeThread()" aria-label="Back"
+          class="rounded-lg p-1.5 text-[#8d97a5] hover:bg-[#111a14] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00ff88]">
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <span class="relative shrink-0">
+    @if (peer()?.avatarUrl) {
+      <img [src]="peer()!.avatarUrl" [alt]="peer()?.name" class="h-9 w-9 rounded-full object-cover object-top border border-[rgba(0,255,136,0.35)]" />
+    } @else {
+      <span class="flex h-9 w-9 items-center justify-center rounded-full bg-[#111a14] border border-[rgba(0,255,136,0.35)] text-xs font-bold text-[#00ff88]">{{ peer()?.name?.charAt(0) }}</span>
+    }
+    <span class="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#0a0f0c]" [class.bg-[#00ff88]]="peer()?.online" [class.bg-[#5b6b63]]="!peer()?.online"></span>
+  </span>
+  <div class="min-w-0 flex-1">
+    <h2 class="truncate text-sm font-semibold text-white">{{ peer()?.name }}</h2>
+    <p class="truncate text-[11px]" [class]="typing() ? 'text-[#00ff88]' : 'text-[#8d97a5]'">
+      @if (typing()) { typing… }
+      @else if (peer()?.online) { Online }
+      @else { Private message }
+    </p>
+  </div>
+  <button type="button" (click)="closed.emit()" aria-label="Close"
+          class="rounded-lg p-1.5 text-[#8d97a5] hover:bg-[#111a14] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00ff88]">
+    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+</header>
+
+<div #scroller (scroll)="onScroll()" role="log" class="flex-1 overflow-y-auto px-3 py-3">
+  @if (loading() && !chat.activeMessages().length) {
+    <div class="flex h-full items-center justify-center" role="status">
+      <span class="spinner h-6 w-6 rounded-full border-2 border-[rgba(0,255,136,0.28)] border-t-[#00ff88]"></span>
+    </div>
+  } @else if (failedLoad() && !chat.activeMessages().length) {
+    <div class="flex h-full flex-col items-center justify-center gap-3 text-center text-sm text-[#8d97a5]" role="alert">
+      <span>Unable to load conversation.</span>
+      <button type="button" (click)="chat.loadThread(chat.activeId()!)" class="rounded-lg bg-[#00ff88] px-3 py-1.5 text-xs font-medium text-[#02120a] hover:bg-[#00cc6a]">Retry</button>
+    </div>
+  } @else {
+    @if (chat.activeHasMore()) {
+      <div class="mb-2 flex justify-center">
+        @if (loadingOlder()) {
+          <span class="spinner h-4 w-4 rounded-full border-2 border-[rgba(0,255,136,0.28)] border-t-[#00ff88]"></span>
+        } @else {
+          <button type="button" (click)="chat.loadOlder(chat.activeId()!)" class="text-xs text-[#00ff88] underline">Load older</button>
+        }
+      </div>
+    }
+
+    @for (item of items(); track item.key) {
+      @if (item.kind === 'day') {
+        <div class="my-3 flex justify-center">
+          <span class="rounded-full bg-[#111a14] px-3 py-0.5 text-[11px] text-[#8d97a5]">{{ item.label }}</span>
+        </div>
+      } @else {
+        <div class="mb-1 flex" [class]="item.mine ? 'justify-end' : 'justify-start'">
+          <div class="flex max-w-[78%] flex-col gap-0.5">
+            @for (m of item.messages; track m.messageId; let first = $first; let last = $last) {
+              <div class="whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm leading-snug" [class]="bubble(item.mine, first, last)">{{ m.text }}</div>
+            }
+            <span class="px-1 text-[10px] text-[#5f6977]">{{ item.time }}</span>
+          </div>
+        </div>
+      }
+    }
+
+    @if (typing(); as t) {
+      <div class="mb-1 flex items-center gap-2 text-xs text-[#8d97a5]" role="status">
+        <span class="typing-dots flex items-center gap-1 rounded-2xl bg-[#111a14] px-3 py-2.5" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>{{ t.name }} is typing…</span>
+      </div>
+    }
+  }
+</div>
+
+<form class="flex items-end gap-2 border-t border-[rgba(0,255,136,0.18)] p-2.5" (submit)="$event.preventDefault(); send()">
+  <label class="sr-only" for="chat-composer">Message</label>
+  <textarea #box id="chat-composer" rows="1" [value]="draft()" [attr.maxlength]="maxLength"
+            (input)="onInput($event)" (keydown.enter)="onEnter($event)"
+            placeholder="Write a message..."
+            class="max-h-28 min-h-10 flex-1 resize-none rounded-2xl border border-[rgba(0,255,136,0.28)] bg-[#111a14] px-3.5 py-2 text-sm text-white placeholder:text-[#5f6977] focus:border-[#00ff88] focus:outline-none"></textarea>
+  <button type="submit" aria-label="Send" title="Send"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#00ff88] text-[#02120a] hover:bg-[#00cc6a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00ff88]">
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/></svg>
+  </button>
+</form>

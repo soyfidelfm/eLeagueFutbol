@@ -2,8 +2,8 @@
 
   <app-loading
     *ngIf="isLoading"
-    title="Loading Matches"
-    message="Loading match schedule, standings and weekly fixtures..."
+    [title]="'Loading Matches' | t"
+    [message]="'Loading match schedule, standings and weekly fixtures...' | t"
     [logo]="true"
     [showBar]="true">
   </app-loading>
@@ -14,7 +14,7 @@
 
     <i class="fa-solid fa-triangle-exclamation"></i>
 
-    <span>{{ errorMessage }}</span>
+    <span>{{ errorMessage | t }}</span>
 
   </div>
 
@@ -25,23 +25,23 @@
       <div class="page-header-content">
 
         <span class="page-eyebrow">
-          MATCH MANAGEMENT
+          {{ 'MATCH MANAGEMENT' | t }}
         </span>
 
-        <h1>Matches</h1>
+        <h1>{{ 'Matches' | t }}</h1>
 
         <p>
-          Select a week and manage all scheduled matches.
+          {{ 'Select a week and manage all scheduled matches.' | t }}
         </p>
 
         <p class="live-line" *ngIf="!seasonClosed">
           <span class="live-dot" [class.refreshing]="isRefreshing"></span>
-          Live fixture
-          <span *ngIf="liveMessage"> · {{ liveMessage }}</span>
+          {{ 'Live fixture' | t }}
+          <span *ngIf="liveMessage"> · {{ liveMessage | t }}</span>
         </p>
 
         <p class="live-line closed" *ngIf="seasonClosed">
-          Season closed — results locked
+          {{ 'Season closed — results locked' | t }}
         </p>
 
       </div>
@@ -51,8 +51,8 @@
         <div class="week-filter">
 
           <app-neon-dropdown
-            label="Week"
-            placeholder="Select week"
+            [label]="'Week' | t"
+            [placeholder]="'Select week' | t"
             [options]="weekOptions"
             [selectedValue]="selectedWeekValue"
             (selectedValueChange)="onWeekDropdownChange($event)">
@@ -68,6 +68,16 @@
 
       <div class="matches-list">
 
+        <div class="status-filter" role="group" [aria-label]="'Filter matches' | t">
+          <button
+            type="button"
+            *ngFor="let option of statusFilterOptions"
+            [class.active]="statusFilter === option.value"
+            (click)="setStatusFilter(option.value)">
+            {{ option.label | t }}
+          </button>
+        </div>
+
         <article
           class="match-card match-of-week"
           *ngIf="matchOfTheWeek as match"
@@ -79,7 +89,7 @@
 
             <i class="fa-solid fa-star"></i>
 
-            Match of the Week
+            {{ 'Match of the Week' | t }}
 
           </div>
 
@@ -93,9 +103,7 @@
 
             </div>
 
-            <img
-              [src]="match.home.logo"
-              alt="Home logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: match.home, alt: 'Home logo' }"></ng-container>
 
           </div>
 
@@ -125,9 +133,7 @@
 
           <div class="team away">
 
-            <img
-              [src]="match.away.logo"
-              alt="Away logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: match.away, alt: 'Away logo' }"></ng-container>
 
             <div>
 
@@ -160,9 +166,7 @@
 
             </div>
 
-            <img
-              [src]="match.home.logo"
-              alt="Home logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: match.home, alt: 'Home logo' }"></ng-container>
 
           </div>
 
@@ -192,9 +196,7 @@
 
           <div class="team away">
 
-            <img
-              [src]="match.away.logo"
-              alt="Away logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: match.away, alt: 'Away logo' }"></ng-container>
 
             <div>
 
@@ -210,19 +212,24 @@
 
         </article>
 
-        <div
-          class="empty-state"
-          *ngIf="filteredMatches.length === 0">
+        <app-empty-state
+          *ngIf="!errorMessage && matches.length === 0"
+          icon="fa-regular fa-calendar-xmark"
+          title="No matches this week"
+          description="There are no matches scheduled for this week. Try another week.">
+        </app-empty-state>
 
-          <i class="fa-regular fa-calendar-xmark"></i>
-
-          <h3>No matches found</h3>
-
-          <p>
-            There are no matches scheduled for this week.
-          </p>
-
-        </div>
+        <app-empty-state
+          *ngIf="matches.length > 0 && filteredMatches.length === 0"
+          icon="fa-solid fa-filter"
+          [title]="statusFilter === 'finished' ? 'No finished matches' : 'No upcoming matches'"
+          [description]="statusFilter === 'finished'
+            ? 'None of this week\'s matches have finished yet.'
+            : 'All of this week\'s matches are already finished.'">
+          <button type="button" class="empty-action" (click)="setStatusFilter('all')">
+            {{ 'Show all matches' | t }}
+          </button>
+        </app-empty-state>
 
       </div>
 
@@ -234,7 +241,7 @@
 
           <div>
 
-            <h2>MATCH DETAILS</h2>
+            <h2>{{ 'MATCH DETAILS' | t }}</h2>
 
             <p>
               {{ selectedMatch.arena }}
@@ -252,9 +259,7 @@
 
           <div class="versus-team">
 
-            <img
-              [src]="selectedMatch.home.logo"
-              alt="Home logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: selectedMatch.home, alt: 'Home logo' }"></ng-container>
 
             <h3>{{ selectedMatch.home.name }}</h3>
 
@@ -281,9 +286,7 @@
 
           <div class="versus-team">
 
-            <img
-              [src]="selectedMatch.away.logo"
-              alt="Away logo">
+            <ng-container *ngTemplateOutlet="teamLogo; context: { $implicit: selectedMatch.away, alt: 'Away logo' }"></ng-container>
 
             <h3>{{ selectedMatch.away.name }}</h3>
 
@@ -293,64 +296,70 @@
 
         </div>
 
-        <div class="result-card" *ngIf="canSubmitResult(selectedMatch)">
+        <div class="pending-result-card" *ngIf="pendingProposal as proposal">
 
-          <h3>SUBMIT RESULT</h3>
+          <ng-container *ngIf="proposal.canReview; else waitingForOpponent">
+            <h3>{{ 'PENDING RESULT – REVIEW AND ACCEPT/REJECT' | t }}</h3>
+            <p>
+              {{ 'Submitted by' | t }} {{ proposal.submittedByName }}
+              · {{ proposal.createdAtUTC | tdate:'medium' }}
+            </p>
+          </ng-container>
 
-          <p>
-            Participants and admins can post the final score.
-            Rankings update when the match is finished.
-          </p>
+          <ng-template #waitingForOpponent>
+            <h3>{{ 'PENDING RESULT' | t }}</h3>
+            <p *ngIf="proposal.isMine">{{ 'Waiting for opponent to accept.' | t }}</p>
+            <p *ngIf="!proposal.isMine">
+              {{ 'Submitted by' | t }} {{ proposal.submittedByName }}. {{ 'Waiting for review.' | t }}
+            </p>
+          </ng-template>
 
-          <div class="result-inputs">
-
-            <label>
-              {{ selectedMatch.home.name }}
-              <input
-                type="number"
-                min="0"
-                [(ngModel)]="resultHomeScore"
-                [disabled]="isSubmittingResult">
-            </label>
-
-            <span>:</span>
-
-            <label>
-              {{ selectedMatch.away.name }}
-              <input
-                type="number"
-                min="0"
-                [(ngModel)]="resultAwayScore"
-                [disabled]="isSubmittingResult">
-            </label>
-
+          <div class="pending-score">
+            <span>{{ selectedMatch.home.name }}</span>
+            <strong>{{ proposal.homeScore }} - {{ proposal.awayScore }}</strong>
+            <span>{{ selectedMatch.away.name }}</span>
           </div>
 
-          <button
-            type="button"
-            [disabled]="
-              resultHomeScore === null ||
-              resultAwayScore === null ||
-              isSubmittingResult
-            "
-            (click)="submitResult()">
+          <div class="pending-summary" *ngIf="proposal.summary as summary">
+            <div><span>{{ 'Possession' | t }}</span><strong>{{ summary.homePossession }}% - {{ summary.awayPossession }}%</strong></div>
+            <div><span>{{ 'Shots' | t }}</span><strong>{{ summary.homeShots }} - {{ summary.awayShots }}</strong></div>
+            <div><span>xG</span><strong>{{ summary.homeExpectedGoals }} - {{ summary.awayExpectedGoals }}</strong></div>
+            <div><span>{{ 'Passes' | t }}</span><strong>{{ summary.homePasses }} - {{ summary.awayPasses }}</strong></div>
+          </div>
 
-            <i
-              class="fa-solid"
-              [class.fa-spinner]="isSubmittingResult"
-              [class.fa-spin]="isSubmittingResult"
-              [class.fa-flag-checkered]="!isSubmittingResult">
-            </i>
+          <div class="pending-players">
+            <div>
+              <h4>{{ selectedMatch.home.name }}</h4>
+              <small *ngIf="proposal.homePlayers.length === 0">{{ 'No player stats detected.' | t }}</small>
+              <div class="pending-player" *ngFor="let player of proposal.homePlayers">
+                <span>{{ player.position }} {{ player.playerName }}</span>
+                <span>{{ player.rating }} · {{ player.goals }}G {{ player.assists }}A</span>
+              </div>
+            </div>
+            <div>
+              <h4>{{ selectedMatch.away.name }}</h4>
+              <small *ngIf="proposal.awayPlayers.length === 0">{{ 'No player stats detected.' | t }}</small>
+              <div class="pending-player" *ngFor="let player of proposal.awayPlayers">
+                <span>{{ player.position }} {{ player.playerName }}</span>
+                <span>{{ player.rating }} · {{ player.goals }}G {{ player.assists }}A</span>
+              </div>
+            </div>
+          </div>
 
-            {{
-              isSubmittingResult
-                ? 'Saving Result...'
-                : (isFinished(selectedMatch) ? 'Update Result' : 'Submit Result')
-            }}
-
-          </button>
+          <div class="pending-actions" *ngIf="proposal.canReview">
+            <button type="button" class="accept" [disabled]="isReviewingProposal" (click)="acceptProposal()">
+              <i class="fa-solid fa-check"></i>
+              {{ 'Accept' | t }}
+            </button>
+            <button type="button" class="reject" [disabled]="isReviewingProposal" (click)="rejectProposal()">
+              <i class="fa-solid fa-xmark"></i>
+              {{ 'Reject' | t }}
+            </button>
+          </div>
 
         </div>
+
+        <p class="proposal-message" *ngIf="proposalMessage">{{ proposalMessage | t }}</p>
 
         <div class="stat-box">
 
@@ -358,7 +367,7 @@
 
             <i class="fa-solid fa-futbol"></i>
 
-            TOP SCORER
+            {{ 'TOP SCORER' | t }}
 
           </h4>
 
@@ -372,7 +381,7 @@
 
               <span>
                 {{ selectedMatch.home.stats.goals }}
-                Goals
+                {{ 'Goals' | t }}
               </span>
 
             </div>
@@ -385,7 +394,7 @@
 
               <span>
                 {{ selectedMatch.away.stats.goals }}
-                Goals
+                {{ 'Goals' | t }}
               </span>
 
             </div>
@@ -400,7 +409,7 @@
 
             <i class="fa-solid fa-share-nodes"></i>
 
-            TOP ASSISTS
+            {{ 'TOP ASSISTS' | t }}
 
           </h4>
 
@@ -414,7 +423,7 @@
 
               <span>
                 {{ selectedMatch.home.stats.assists }}
-                Assists
+                {{ 'Assists' | t }}
               </span>
 
             </div>
@@ -427,7 +436,7 @@
 
               <span>
                 {{ selectedMatch.away.stats.assists }}
-                Assists
+                {{ 'Assists' | t }}
               </span>
 
             </div>
@@ -442,7 +451,7 @@
 
             <i class="fa-solid fa-fire"></i>
 
-            WIN STREAK
+            {{ 'LAST 5 RESULTS' | t }}
 
           </h4>
 
@@ -466,7 +475,7 @@
 
               <strong>
                 {{ selectedMatch.home.stats.streak.length }}
-                Games
+                {{ 'Games' | t }}
               </strong>
 
             </div>
@@ -489,7 +498,7 @@
 
               <strong>
                 {{ selectedMatch.away.stats.streak.length }}
-                Games
+                {{ 'Games' | t }}
               </strong>
 
             </div>
@@ -508,11 +517,10 @@
 
           <div>
 
-            <h3>UPLOAD & REVIEW MATCH STATS</h3>
+            <h3>{{ 'UPLOAD & REVIEW MATCH STATS' | t }}</h3>
 
             <p>
-              Upload exactly 3 screenshots. OCR will read the
-              information and open the manual review popup before saving.
+              {{ 'Upload exactly 3 screenshots. OCR will read the information and open the manual review popup before saving.' | t }}
             </p>
 
           </div>
@@ -520,7 +528,7 @@
           <div class="upload-group">
 
             <label for="match-summary-image">
-              Match Summary
+              {{ 'Match Summary' | t }}
             </label>
 
             <input
@@ -531,7 +539,7 @@
               (change)="onSummarySelected($event)">
 
             <label for="home-performance-image">
-              Home Team Performance
+              {{ 'Home Team Performance' | t }}
             </label>
 
             <input
@@ -542,7 +550,7 @@
               (change)="onHomePerformanceSelected($event)">
 
             <label for="away-performance-image">
-              Away Team Performance
+              {{ 'Away Team Performance' | t }}
             </label>
 
             <input
@@ -573,8 +581,36 @@
 
             {{
               isUploadingResult
-                ? 'Reading Screenshots...'
-                : 'Read Stats & Review'
+                ? ('Reading Screenshots...' | t)
+                : ('Upload & Review' | t)
+            }}
+
+          </button>
+
+          <button
+            type="button"
+            class="approval-button"
+            [disabled]="
+              !summaryFile ||
+              !homePerformanceFile ||
+              !awayPerformanceFile ||
+              isUploadingResult ||
+              isSubmittingProposal ||
+              !!pendingProposal
+            "
+            (click)="submitForApproval()">
+
+            <i
+              class="fa-solid"
+              [class.fa-spinner]="isSubmittingProposal"
+              [class.fa-spin]="isSubmittingProposal"
+              [class.fa-user-check]="!isSubmittingProposal">
+            </i>
+
+            {{
+              isSubmittingProposal
+                ? ('Submitting...' | t)
+                : (pendingProposal ? ('Result Pending Review' | t) : ('Submit for Opponent Approval' | t))
             }}
 
           </button>
@@ -587,7 +623,7 @@
 
             <i class="fa-solid fa-keyboard"></i>
 
-            Enter Stats Manually
+            {{ 'Enter Stats Manually' | t }}
 
           </button>
 
@@ -597,7 +633,7 @@
 
               <i class="fa-solid fa-check"></i>
 
-              Match Summary selected
+              {{ 'Match Summary selected' | t }}
 
             </small>
 
@@ -605,7 +641,7 @@
 
               <i class="fa-solid fa-check"></i>
 
-              Home Team Performance selected
+              {{ 'Home Team Performance selected' | t }}
 
             </small>
 
@@ -613,7 +649,7 @@
 
               <i class="fa-solid fa-check"></i>
 
-              Away Team Performance selected
+              {{ 'Away Team Performance selected' | t }}
 
             </small>
 
@@ -623,8 +659,7 @@
 
             <i class="fa-regular fa-circle-question"></i>
 
-            Detected values will not be saved until you review and
-            confirm them in the manual popup.
+            {{ 'Detected values will not be saved until you review and confirm them in the manual popup.' | t }}
 
           </small>
 
@@ -635,6 +670,20 @@
     </div>
 
   </ng-container>
+
+  <ng-template #teamLogo let-team let-alt="alt">
+    <img
+      *ngIf="team?.logo; else logoPlaceholder"
+      [src]="team.logo"
+      [alt]="alt"
+      (error)="onLogoError(team)">
+
+    <ng-template #logoPlaceholder>
+      <span class="logo-placeholder" [attr.aria-label]="alt" role="img">
+        {{ teamInitial(team?.name) }}
+      </span>
+    </ng-template>
+  </ng-template>
 
 </section>
 

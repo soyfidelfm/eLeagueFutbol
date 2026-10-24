@@ -1,0 +1,98 @@
+<section class="settings-page">
+  <header class="settings-header">
+    <p class="eyebrow">{{ 'PREFERENCES' | t }}</p>
+    <h1>{{ 'Settings' | t }}</h1>
+    <p class="subtitle">{{ 'Personalize how eLeagueFutbol looks and notifies you.' | t }}</p>
+  </header>
+
+  @if (isLoading) {
+    <p class="muted">{{ 'Loading...' | t }}</p>
+  } @else {
+    <form class="settings-card" (ngSubmit)="save()">
+      <div class="field">
+        <label for="language">{{ 'Language' | t }}</label>
+        <select id="language" name="language" [ngModel]="model.language" (ngModelChange)="onLanguageChange($event)">
+          @for (lang of languages; track lang.code) {
+            <option [value]="lang.code">{{ lang.label | t }}</option>
+          }
+        </select>
+        <small>{{ 'Changes apply immediately.' | t }}</small>
+      </div>
+
+      <div class="field">
+        <label for="timezone">{{ 'Time zone' | t }}</label>
+        <select id="timezone" name="timeZone" [(ngModel)]="model.timeZone">
+          @for (zone of timeZones; track zone) {
+            <option [value]="zone">{{ zone }}</option>
+          }
+        </select>
+        <small>
+          {{ 'Used for match dates and times.' | t }}
+          <button type="button" class="link-btn" (click)="useBrowserZone()">
+            {{ 'Use browser time zone' | t }} ({{ browserZone }})
+          </button>
+        </small>
+      </div>
+
+      <label class="toggle">
+        <input type="checkbox" name="push" [(ngModel)]="model.pushNotificationsEnabled" />
+        <span class="switch"></span>
+        <span class="toggle-text">
+          <strong>{{ 'Push notifications' | t }}</strong>
+          <small>{{ 'Draft turns, messages and match results on this device.' | t }}</small>
+        </span>
+      </label>
+
+      <label class="toggle">
+        <input type="checkbox" name="toasts" [(ngModel)]="model.inAppToastsEnabled" />
+        <span class="switch"></span>
+        <span class="toggle-text">
+          <strong>{{ 'In-app toasts' | t }}</strong>
+          <small>{{ 'Live pop-up alerts while you use the app.' | t }}</small>
+        </span>
+      </label>
+
+      @if (successMessage) {
+        <div class="alert success">{{ successMessage | t }}</div>
+      }
+      @if (errorMessage) {
+        <div class="alert error">{{ errorMessage | t }}</div>
+      }
+
+      <div class="actions">
+        <button type="submit" class="primary" [disabled]="isSaving">
+          {{ (isSaving ? 'Saving...' : 'Save changes') | t }}
+        </button>
+      </div>
+    </form>
+
+    @if (isAdmin) {
+      <form class="settings-card" (ngSubmit)="saveDraftSettings()">
+        <p class="eyebrow">{{ 'ADMIN' | t }}</p>
+        <h2 class="card-title">{{ 'Draft' | t }}</h2>
+
+        <div class="field">
+          <label for="draftPickSeconds">{{ 'Default seconds per pick' | t }}</label>
+          <input id="draftPickSeconds" name="draftPickSeconds" type="number" step="1"
+            [min]="draftMinSeconds" [max]="draftMaxSeconds" [(ngModel)]="draftPickSeconds" />
+          <small>
+            {{ 'Used when a new draft order is generated. Between {min} and {max} seconds.' | t: { min: draftMinSeconds, max: draftMaxSeconds } }}
+          </small>
+        </div>
+
+        @if (draftSuccessMessage) {
+          <div class="alert success">{{ draftSuccessMessage | t }}</div>
+        }
+        @if (draftErrorMessage) {
+          <div class="alert error">{{ draftErrorMessage | t }}</div>
+        }
+
+        <div class="actions">
+          <button type="submit" class="primary" [disabled]="isSavingDraft || !isDraftSecondsValid">
+            {{ (isSavingDraft ? 'Saving...' : 'Save draft settings') | t }}
+          </button>
+        </div>
+      </form>
+    }
+  }
+</section>

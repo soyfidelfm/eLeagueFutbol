@@ -39,6 +39,7 @@ import {
 import {
   TeamPlayerOption
 } from '../../../../core/models/team-player-option.model';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 type ManualPlayer =
   NonNullable<
@@ -50,7 +51,8 @@ type ManualPlayer =
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    TranslatePipe
   ],
   templateUrl: './manual-match-stats-modal.html',
   styleUrl: './manual-match-stats-modal.scss',

@@ -2,28 +2,32 @@
 
   <app-loading
   *ngIf="isLoading"
-  title="Loading Seasons"
-  message="Loading season information, schedules and league configuration..."
+  [title]="'Loading Seasons' | t"
+  [message]="'Loading season information, schedules and league configuration...' | t"
   [logo]="true"
   [showBar]="true">
 </app-loading>
 
-  <div class="dashboard-state error" *ngIf="!isLoading && errorMessage">
-    {{ errorMessage }}
-  </div>
+  <app-empty-state
+    *ngIf="!isLoading && errorMessage"
+    tone="error"
+    icon="fa-solid fa-triangle-exclamation"
+    title="Something went wrong"
+    [description]="errorMessage">
+  </app-empty-state>
 
   <ng-container *ngIf="!isLoading && !errorMessage">
 
     <div class="page-header">
       <div class="page-header-content">
   <span class="page-eyebrow">
-    LEAGUE MANAGEMENT
+    {{ 'LEAGUE MANAGEMENT' | t }}
   </span>
 
-  <h1>Seasons</h1>
+  <h1>{{ 'Seasons' | t }}</h1>
 
   <p>
-    Create, manage and close the league season loop.
+    {{ 'Create, manage and close the league season loop.' | t }}
   </p>
 
   <div class="form-actions" *ngIf="isAdmin">
@@ -32,7 +36,7 @@
       class="primary-action"
       (click)="openCreate()">
       <i class="fa-solid fa-plus"></i>
-      Create Season
+      {{ 'Create Season' | t }}
     </button>
   </div>
 </div>
@@ -40,12 +44,15 @@
 
     <ng-container *ngIf="view === 'current'">
 
-      <div
-        class="empty-state"
+      <app-empty-state
         *ngIf="!currentSeason"
-      >
-        No current season found.
-      </div>
+        icon="fa-solid fa-trophy"
+        title="No current season"
+        description="There is no active season right now. Check back soon.">
+        <button type="button" class="empty-action" *ngIf="isAdmin" (click)="openCreate()">
+          {{ 'Create Season' | t }}
+        </button>
+      </app-empty-state>
 
       <div
         class="season-panel"
@@ -69,8 +76,8 @@
             <span class="custom-check"></span>
 
             <div>
-              <strong>Start Date</strong>
-              <p>{{ currentSeason?.startDate | date:'medium' }}</p>
+              <strong>{{ 'Start Date' | t }}</strong>
+              <p>{{ currentSeason?.startDate | tdate:'medium' }}</p>
             </div>
           </div>
 
@@ -78,8 +85,8 @@
             <span class="custom-check"></span>
 
             <div>
-              <strong>End Date</strong>
-              <p>{{ currentSeason?.endDate | date:'medium' }}</p>
+              <strong>{{ 'End Date' | t }}</strong>
+              <p>{{ currentSeason?.endDate | tdate:'medium' }}</p>
             </div>
           </div>
 
@@ -87,8 +94,8 @@
             <span class="custom-check"></span>
 
             <div>
-              <strong>Phase</strong>
-              <p>{{ phaseLabel(currentSeason) }}</p>
+              <strong>{{ 'Phase' | t }}</strong>
+              <p>{{ phaseLabel(currentSeason) | t }}</p>
             </div>
           </div>
 
@@ -96,7 +103,7 @@
             <span class="custom-check"></span>
 
             <div>
-              <strong>Registered</strong>
+              <strong>{{ 'Registered' | t }}</strong>
               <p>{{ currentSeason?.registeredCount || 0 }} / {{ currentSeason?.maxPlayers }}</p>
             </div>
           </div>
@@ -109,7 +116,7 @@
             class="primary-action"
             (click)="edit(currentSeason)"
           >
-            Edit Current Season
+            {{ 'Edit Current Season' | t }}
           </button>
 
           <button
@@ -119,7 +126,7 @@
             [disabled]="isSaving"
             (click)="closeRegistration(currentSeason)"
           >
-            Close registration
+            {{ 'Close registration' | t }}
           </button>
 
           <button
@@ -129,7 +136,7 @@
             [disabled]="isSaving"
             (click)="openRegistration(currentSeason)"
           >
-            Open registration
+            {{ 'Open registration' | t }}
           </button>
 
           <button
@@ -139,7 +146,7 @@
             [disabled]="isSaving"
             (click)="closeSeason(currentSeason)"
           >
-            Close season
+            {{ 'Close season' | t }}
           </button>
         </div>
 
@@ -159,8 +166,8 @@
         </div>
 
         <div>
-          <h2>{{ isEditMode ? 'Edit Season' : 'Create New Season' }}</h2>
-          <p>Configure your eLeagueFutbol competitive season.</p>
+          <h2>{{ isEditMode ? ('Edit Season' | t) : ('Create New Season' | t) }}</h2>
+          <p>{{ 'Configure your eLeagueFutbol competitive season.' | t }}</p>
         </div>
       </div>
 
@@ -172,7 +179,7 @@
         <div class="top-grid">
 
           <div class="field-card">
-            <label>Season Name</label>
+            <label>{{ 'Season Name' | t }}</label>
 
             <div class="input-wrapper">
               <span>🏆</span>
@@ -180,14 +187,14 @@
               <input
                 type="text"
                 name="name"
-                placeholder="Enter season name"
+                [placeholder]="'Enter season name' | t"
                 [(ngModel)]="form.name"
               />
             </div>
           </div>
 
           <div class="field-card">
-            <label>Description</label>
+            <label>{{ 'Description' | t }}</label>
 
             <div class="input-wrapper">
               <span>📝</span>
@@ -195,7 +202,7 @@
               <input
                 type="text"
                 name="description"
-                placeholder="Enter season description"
+                [placeholder]="'Enter season description' | t"
                 [(ngModel)]="form.description"
               />
             </div>
@@ -208,7 +215,7 @@
           <div class="date-card">
             <label>
               <span>📅</span>
-              Start Date & Time
+              {{ 'Start Date & Time' | t }}
             </label>
 
             <input
@@ -218,14 +225,14 @@
             />
 
             <div class="date-preview">
-              🕒 {{ form.startDate ? (form.startDate | date:'medium') : 'Not selected' }}
+              🕒 {{ form.startDate ? (form.startDate | tdate:'medium') : ('Not selected' | t) }}
             </div>
           </div>
 
           <div class="date-card">
             <label>
               <span>📅</span>
-              End Date & Time
+              {{ 'End Date & Time' | t }}
             </label>
 
             <input
@@ -235,7 +242,7 @@
             />
 
             <div class="date-preview">
-              🕒 {{ form.endDate ? (form.endDate | date:'medium') : 'Not selected' }}
+              🕒 {{ form.endDate ? (form.endDate | tdate:'medium') : ('Not selected' | t) }}
             </div>
           </div>
 
@@ -244,7 +251,7 @@
         <div class="top-grid">
 
           <div class="field-card">
-            <label>Max Players</label>
+            <label>{{ 'Max Players' | t }}</label>
 
             <div class="input-wrapper">
               <span>🎮</span>
@@ -260,7 +267,7 @@
           </div>
 
           <div class="field-card">
-            <label>Total Weeks</label>
+            <label>{{ 'Total Weeks' | t }}</label>
 
             <div class="input-wrapper">
               <span>🗓️</span>
@@ -289,8 +296,8 @@
             <span class="custom-check"></span>
 
             <div>
-              <strong>Set as current season</strong>
-              <p>Only one season can be current. Others will be unmarked.</p>
+              <strong>{{ 'Set as current season' | t }}</strong>
+              <p>{{ 'Only one season can be current. Others will be unmarked.' | t }}</p>
             </div>
           </label>
 
@@ -304,8 +311,8 @@
             <span class="custom-check"></span>
 
             <div>
-              <strong>Active season</strong>
-              <p>Allow this season to appear in the platform.</p>
+              <strong>{{ 'Active season' | t }}</strong>
+              <p>{{ 'Allow this season to appear in the platform.' | t }}</p>
             </div>
           </label>
 
@@ -319,8 +326,8 @@
             <span class="custom-check"></span>
 
             <div>
-              <strong>Registration open</strong>
-              <p>Allow players to register for this season.</p>
+              <strong>{{ 'Registration open' | t }}</strong>
+              <p>{{ 'Allow players to register for this season.' | t }}</p>
             </div>
           </label>
 
@@ -333,14 +340,14 @@
             class="primary-action"
             [disabled]="isSaving"
           >
-            {{ isSaving ? 'Saving...' : (isEditMode ? 'Update Season' : 'Create Season') }}
+            {{ isSaving ? ('Saving...' | t) : (isEditMode ? ('Update Season' | t) : ('Create Season' | t)) }}
           </button>
 
           <button
   type="button"
   class="secondary-action"
   (click)="view = 'list'; resetForm()">
-  Cancel
+  {{ 'Cancel' | t }}
 </button>
 
         </div>
@@ -351,13 +358,16 @@
 
     <ng-container *ngIf="view === 'list'">
 
-      <div
-        class="empty-state"
+      <app-empty-state
         id="season-list"
         *ngIf="seasons.length === 0"
-      >
-        No seasons found.
-      </div>
+        icon="fa-regular fa-calendar-xmark"
+        title="No seasons found"
+        description="Seasons created by an admin will be listed here.">
+        <button type="button" class="empty-action" *ngIf="isAdmin" (click)="openCreate()">
+          {{ 'Create Season' | t }}
+        </button>
+      </app-empty-state>
 
       <div
         class="season-table-card"
@@ -366,8 +376,8 @@
       >
 
         <div class="table-header">
-          <h3>All Seasons</h3>
-          <span>{{ seasons.length }} total</span>
+          <h3>{{ 'All Seasons' | t }}</h3>
+          <span>{{ seasons.length }} {{ 'total' | t }}</span>
         </div>
 
         <div class="table-scroll">
@@ -375,16 +385,16 @@
 
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Start</th>
-                <th>End</th>
-                <th>Weeks</th>
-                <th>Phase</th>
-                <th>Players</th>
-                <th *ngIf="isAdmin">Schedule</th>
-                <th>Current</th>
-                <th>Active</th>
-                <th *ngIf="isAdmin">Actions</th>
+                <th>{{ 'Name' | t }}</th>
+                <th>{{ 'Start' | t }}</th>
+                <th>{{ 'End' | t }}</th>
+                <th>{{ 'Weeks' | t }}</th>
+                <th>{{ 'Phase' | t }}</th>
+                <th>{{ 'Players' | t }}</th>
+                <th *ngIf="isAdmin">{{ 'Schedule' | t }}</th>
+                <th>{{ 'Current' | t }}</th>
+                <th>{{ 'Active' | t }}</th>
+                <th *ngIf="isAdmin">{{ 'Actions' | t }}</th>
               </tr>
             </thead>
 
@@ -393,16 +403,16 @@
 
                 <td>
                   <strong>{{ season.name }}</strong>
-                  <small>{{ season.description || 'No description' }}</small>
+                  <small>{{ season.description || ('No description' | t) }}</small>
                 </td>
 
-                <td>{{ season.startDate | date:'medium' }}</td>
-                <td>{{ season.endDate | date:'medium' }}</td>
+                <td>{{ season.startDate | tdate:'medium' }}</td>
+                <td>{{ season.endDate | tdate:'medium' }}</td>
                 <td>{{ season.totalWeeks }}</td>
 
                 <td>
                   <span class="status-pill" [ngClass]="phaseClass(season)">
-                    {{ phaseLabel(season) }}
+                    {{ phaseLabel(season) | t }}
                   </span>
                 </td>
 
@@ -415,7 +425,7 @@
                     [disabled]="isSaving || !season.isActive"
                     (click)="generateSchedule(season)"
                   >
-                    Generate
+                    {{ 'Generate' | t }}
                   </button>
                 </td>
 
@@ -424,14 +434,14 @@
                     class="status-pill current"
                     *ngIf="season.isCurrent"
                   >
-                    Current
+                    {{ 'Current' | t }}
                   </span>
 
                   <span
                     class="status-pill off"
                     *ngIf="!season.isCurrent"
                   >
-                    No
+                    {{ 'No' | t }}
                   </span>
                 </td>
 
@@ -440,14 +450,14 @@
                     class="status-pill active"
                     *ngIf="season.isActive"
                   >
-                    Active
+                    {{ 'Active' | t }}
                   </span>
 
                   <span
                     class="status-pill off"
                     *ngIf="!season.isActive"
                   >
-                    Inactive
+                    {{ 'Inactive' | t }}
                   </span>
                 </td>
 
@@ -459,7 +469,7 @@
                       class="edit-btn"
                       (click)="edit(season)"
                     >
-                      Edit
+                      {{ 'Edit' | t }}
                     </button>
 
                     <button
@@ -469,7 +479,7 @@
                       [disabled]="isSaving"
                       (click)="closeRegistration(season)"
                     >
-                      Close reg.
+                      {{ 'Close reg.' | t }}
                     </button>
 
                     <button
@@ -479,7 +489,7 @@
                       [disabled]="isSaving"
                       (click)="openRegistration(season)"
                     >
-                      Open reg.
+                      {{ 'Open reg.' | t }}
                     </button>
 
                     <button
@@ -489,7 +499,7 @@
                       [disabled]="isSaving"
                       (click)="setCurrent(season)"
                     >
-                      Make current
+                      {{ 'Make current' | t }}
                     </button>
 
                     <button
@@ -499,7 +509,7 @@
                       [disabled]="isSaving"
                       (click)="closeSeason(season)"
                     >
-                      Close
+                      {{ 'Close' | t }}
                     </button>
 
                     <button
@@ -509,7 +519,7 @@
                       [disabled]="isSaving"
                       (click)="activateSeason(season)"
                     >
-                      Activate
+                      {{ 'Activate' | t }}
                     </button>
 
                     <button
@@ -517,7 +527,7 @@
                       class="delete-btn"
                       (click)="delete(season.seasonId)"
                     >
-                      Delete
+                      {{ 'Delete' | t }}
                     </button>
 
                   </div>

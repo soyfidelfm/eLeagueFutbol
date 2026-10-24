@@ -1,0 +1,14 @@
+<div class="empty-state-box" [class.compact]="compact" [class.error]="tone === 'error'" role="status">
+  <div class="icon-wrap">
+    <i [class]="icon" aria-hidden="true"></i>
+  </div>
+  @if (title) {
+    <h4>{{ title | t }}</h4>
+  }
+  @if (description) {
+    <p>{{ description | t }}</p>
+  }
+  <div class="actions">
+    <ng-content></ng-content>
+  </div>
+</div>

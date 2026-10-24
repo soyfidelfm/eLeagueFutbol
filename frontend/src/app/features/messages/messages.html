@@ -4,8 +4,8 @@
 
     <app-loading
   *ngIf="isLoading"
-  title="Loading Messages"
-  message="Syncing conversations and notifications..."
+  [title]="'Loading Messages' | t"
+  [message]="'Syncing conversations and notifications...' | t"
   [logo]="true"
   [showBar]="true">
 </app-loading>
@@ -14,8 +14,8 @@
 
       <header class="inbox-header">
         <div>
-          <span>INBOX</span>
-          <h1>Messages</h1>
+          <span>{{ 'INBOX' | t }}</span>
+          <h1>{{ 'Messages' | t }}</h1>
         </div>
 
         <button type="button" (click)="startNewMessage()">
@@ -28,7 +28,7 @@
 
         <input
           type="text"
-          placeholder="Search conversations..."
+          [placeholder]="'Search conversations...' | t"
           [(ngModel)]="conversationSearchTerm">
       </div>
 
@@ -57,7 +57,7 @@
             </div>
 
             <span class="time">
-              {{ item.lastMessageAtUTC | date:'shortTime' }}
+              {{ item.lastMessageAtUTC | tdate:'shortTime' }}
             </span>
 
             <span class="unread-badge" *ngIf="item.unreadCount > 0">
@@ -66,17 +66,24 @@
 
           </div>
 
-          <div
-            class="empty-state"
-            *ngIf="filteredConversations.length === 0">
+          <app-empty-state
+            *ngIf="!isLoading && filteredConversations.length === 0 && !conversationSearchTerm.trim()"
+            [compact]="true"
+            icon="fa-solid fa-comments"
+            title="No conversations yet"
+            description="Start a message with another player.">
+            <button type="button" class="empty-action" (click)="startNewMessage()">
+              {{ 'New Message' | t }}
+            </button>
+          </app-empty-state>
 
-            <i class="fa-solid fa-comments"></i>
-
-            <strong>No conversations yet</strong>
-
-            <span>Start a message with another player.</span>
-
-          </div>
+          <app-empty-state
+            *ngIf="!isLoading && filteredConversations.length === 0 && conversationSearchTerm.trim()"
+            [compact]="true"
+            icon="fa-solid fa-magnifying-glass"
+            title="No conversations match your search"
+            description="Try another name.">
+          </app-empty-state>
 
         </ng-container>
 
@@ -108,24 +115,29 @@
 
         <div>
           <strong>{{ selectedConversation?.displayName }}</strong>
-          <span *ngIf="isUserOnline(selectedUserId)" class="online-label">En línea</span>
-          <span *ngIf="!isUserOnline(selectedUserId)">Private message</span>
+          <span *ngIf="isUserOnline(selectedUserId)" class="online-label">{{ 'Online' | t }}</span>
+          <span *ngIf="!isUserOnline(selectedUserId)">{{ 'Private message' | t }}</span>
         </div>
 
       </header>
 
-      <div class="chat-body">
+      <div class="chat-body" #chatBody (scroll)="onChatScroll()">
 
         <app-loading
   *ngIf="isLoadingConversation"
-  title="Loading Conversation"
-  message="Retrieving messages..."
+  [title]="'Loading Conversation' | t"
+  [message]="'Retrieving messages...' | t"
   [small]="true"
   [logo]="false"
   [showBar]="false">
 </app-loading>
 
         <ng-container *ngIf="!isLoadingConversation">
+
+          <div class="older-loading" *ngIf="isLoadingOlder">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            {{ 'Loading older messages...' | t }}
+          </div>
 
           <div
             class="message-row"
@@ -136,22 +148,23 @@
               <p>{{ message.text }}</p>
 
               <span>
-                {{ message.sentAtUTC | date:'shortTime' }}
+                {{ message.sentAtUTC | tdate:'shortTime' }}
               </span>
             </div>
 
           </div>
 
-          <div
-            class="empty-state chat-empty"
-            *ngIf="messages.length === 0">
+          <app-empty-state
+            class="chat-empty"
+            *ngIf="!isLoadingConversation && messages.length === 0"
+            [compact]="true"
+            icon="fa-solid fa-paper-plane"
+            title="No messages yet"
+            description="Send the first message.">
+          </app-empty-state>
 
-            <i class="fa-solid fa-paper-plane"></i>
-
-            <strong>No messages yet</strong>
-
-            <span>Send the first message.</span>
-
+          <div class="typing-indicator" *ngIf="isOtherUserTyping">
+            {{ selectedConversation?.displayName || ('User' | t) }} {{ 'is typing...' | t }}
           </div>
 
         </ng-container>
@@ -162,8 +175,9 @@
 
         <textarea
           rows="1"
-          placeholder="Write a message..."
+          [placeholder]="'Write a message...' | t"
           [(ngModel)]="newMessageText"
+          (input)="onComposerInput()"
           (keydown.enter)="sendOnEnter($event)">
         </textarea>
 
@@ -189,16 +203,15 @@
 
       <section class="chat-card empty-desktop">
 
-        <i class="fa-solid fa-envelope-open-text"></i>
-
-        <h2>Select a message</h2>
-
-        <p>Choose a conversation or start a new one.</p>
-
-        <button type="button" (click)="startNewMessage()">
-          <i class="fa-solid fa-pen"></i>
-          New Message
-        </button>
+        <app-empty-state
+          icon="fa-solid fa-envelope-open-text"
+          title="Select a message"
+          description="Choose a conversation or start a new one.">
+          <button type="button" class="empty-action" (click)="startNewMessage()">
+            <i class="fa-solid fa-pen"></i>
+            {{ 'New Message' | t }}
+          </button>
+        </app-empty-state>
 
       </section>
 
@@ -224,16 +237,16 @@
 
       </button>
 
-      <span>NEW MESSAGE</span>
+      <span>{{ 'NEW MESSAGE' | t }}</span>
 
-      <h2>Choose Player</h2>
+      <h2>{{ 'Choose Player' | t }}</h2>
 
       <div class="search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
 
         <input
           type="text"
-          placeholder="Search player..."
+          [placeholder]="'Search player...' | t"
           [(ngModel)]="userSearchTerm"
           (input)="searchUsers()">
       </div>
@@ -242,8 +255,8 @@
 
         <app-loading
   *ngIf="isSearchingUsers"
-  title="Searching Players"
-  message="Finding league users..."
+  [title]="'Searching Players' | t"
+  [message]="'Finding league users...' | t"
   [small]="true"
   [logo]="false"
   [showBar]="false">
@@ -267,36 +280,28 @@
 
             <div>
               <strong>{{ user.displayName }}</strong>
-              <small>{{ isUserOnline(user.userId) ? 'En línea' : 'Start private message' }}</small>
+              <small>{{ isUserOnline(user.userId) ? ('Online' | t) : ('Start private message' | t) }}</small>
             </div>
 
             <i class="fa-solid fa-arrow-right"></i>
 
           </div>
 
-          <div
-  class="empty-state"
-  *ngIf="!isSearchingUsers && userSearchTerm.trim().length < 4">
+          <app-empty-state
+            *ngIf="!isSearchingUsers && userSearchTerm.trim().length < 4"
+            [compact]="true"
+            icon="fa-solid fa-user-plus"
+            title="Search players"
+            description="Type at least 4 characters.">
+          </app-empty-state>
 
-  <i class="fa-solid fa-user-plus"></i>
-
-  <strong>Search players</strong>
-
-  <span>Type at least 4 characters.</span>
-
-</div>
-
-          <div
-            class="empty-state"
-            *ngIf="userSearchTerm.trim().length >= 2 && userResults.length === 0">
-
-            <i class="fa-solid fa-user-slash"></i>
-
-            <strong>No players found</strong>
-
-            <span>Try another name, gamer tag, or club.</span>
-
-          </div>
+          <app-empty-state
+            *ngIf="!isSearchingUsers && userSearchTerm.trim().length >= 4 && userResults.length === 0"
+            [compact]="true"
+            icon="fa-solid fa-user-slash"
+            title="No players found"
+            description="Try another name, gamer tag, or club.">
+          </app-empty-state>
 
         </ng-container>
 

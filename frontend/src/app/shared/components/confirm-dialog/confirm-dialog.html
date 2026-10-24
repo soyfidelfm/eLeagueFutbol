@@ -1,0 +1,45 @@
+@if (dialog.state(); as state) {
+  <div class="confirm-backdrop" (click)="dialog.cancel()">
+    <div
+      class="confirm-card"
+      [class.danger]="state.danger"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
+      aria-describedby="confirm-description"
+      (click)="$event.stopPropagation()">
+
+      <div class="confirm-icon">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      </div>
+
+      <h3 id="confirm-title">{{ state.title | t: state.params }}</h3>
+
+      @if (state.description) {
+        <p id="confirm-description">{{ state.description | t: state.params }}</p>
+      }
+
+      <div class="confirm-actions">
+        <button
+          #cancelButton
+          type="button"
+          class="btn-cancel"
+          [disabled]="dialog.busy()"
+          (click)="dialog.cancel()">
+          {{ (state.cancelLabel || 'Cancel') | t }}
+        </button>
+
+        <button
+          type="button"
+          class="btn-confirm"
+          [disabled]="dialog.busy()"
+          (click)="dialog.accept()">
+          @if (dialog.busy()) {
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+          }
+          {{ (state.confirmLabel || 'Confirm') | t }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

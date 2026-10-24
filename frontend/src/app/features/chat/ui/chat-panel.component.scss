@@ -1,0 +1,15 @@
+@keyframes chat-panel-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes chat-skeleton {
+  50% { opacity: 0.45; }
+}
+
+.chat-panel { animation: chat-panel-in 160ms ease-out; }
+.skeleton { animation: chat-skeleton 1.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-panel, .skeleton { animation: none; }
+}

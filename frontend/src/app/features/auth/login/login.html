@@ -18,15 +18,14 @@
 
       <div class="hero-content">
 
-        <h3>WELCOME BACK TO</h3>
+        <h3>{{ 'WELCOME BACK TO' | t }}</h3>
 
         <h2>E-LEAGUE</h2>
 
-        <h4>COMPETE. CONNECT. CONQUER.</h4>
+        <h4>{{ 'COMPETE. CONNECT. CONQUER.' | t }}</h4>
 
         <p>
-          Join players worldwide, compete in live matches,
-          climb rankings and dominate the eLeague.
+          {{ 'Join players worldwide, compete in live matches, climb rankings and dominate the eLeague.' | t }}
         </p>
 
         <div class="hero-buttons">
@@ -35,14 +34,14 @@
             class="primary-btn"
             type="button"
             (click)="enterArena()">
-            GET STARTED
+            {{ 'GET STARTED' | t }}
           </button>
 
           <button
             class="secondary-btn"
             type="button"
             (click)="openExploreModal()">
-            EXPLORE
+            {{ 'EXPLORE' | t }}
           </button>
 
         </div>
@@ -63,10 +62,10 @@
             class="brand-logo" />
         </div>
 
-        <h2>LOGIN</h2>
+        <h2>{{ 'LOGIN' | t }}</h2>
 
         <p class="subtitle">
-          Continue your competitive journey.
+          {{ 'Continue your competitive journey.' | t }}
         </p>
 
       </div>
@@ -77,14 +76,14 @@
           class="email-login-btn"
           type="button"
           (click)="loginWithEmail()">
-          <span>LOGIN</span>
+          <span>{{ 'LOGIN' | t }}</span>
         </button>
 
         <button
           class="email-signup-btn"
           type="button"
           (click)="signUpWithEmail()">
-          <span>SIGN UP</span>
+          <span>{{ 'SIGN UP' | t }}</span>
         </button>
 
       </div>
@@ -93,7 +92,7 @@
 
         <span></span>
 
-        <p>SOCIAL LOGIN</p>
+        <p>{{ 'SOCIAL LOGIN' | t }}</p>
 
         <span></span>
 
@@ -105,10 +104,10 @@
         (click)="loginWithProvider('google-oauth2')">
         <img
           src="https://developers.google.com/identity/images/g-logo.png"
-          alt="Google" />
+          [alt]="'Google' | t" />
 
         <span>
-          Continue with Google
+          {{ 'Continue with Google' | t }}
         </span>
       </button>
 
@@ -118,10 +117,10 @@
         (click)="loginWithProvider('windowslive')">
         <img
           src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
-          alt="Microsoft" />
+          [alt]="'Microsoft' | t" />
 
         <span>
-          Continue with Microsoft
+          {{ 'Continue with Microsoft' | t }}
         </span>
       </button>
 
@@ -134,17 +133,17 @@
           alt="Apple" />
 
         <span>
-          Continue with Apple
+          {{ 'Continue with Apple' | t }}
         </span>
       </button>
 
       <div class="login-footer">
 
         <p>
-          By continuing you agree to the
-          <a>Terms of Service</a>
-          and
-          <a>Privacy Policy</a>
+          {{ 'By continuing you agree to the' | t }}
+          <a>{{ 'Terms of Service' | t }}</a>
+          {{ 'and' | t }}
+          <a>{{ 'Privacy Policy' | t }}</a>
         </p>
 
       </div>
@@ -156,8 +155,8 @@
   <!-- ARENA INTRO -->
   <div class="arena-overlay" *ngIf="showArenaIntro">
     <div class="arena-content">
-      <span>ENTER THE ARENA</span>
-      <h1>ENTER THE ARENA</h1>
+      <span>{{ 'ENTER THE ARENA' | t }}</span>
+      <h1>{{ 'ENTER THE ARENA' | t }}</h1>
     </div>
   </div>
 
@@ -178,15 +177,14 @@
 
       <div class="explore-header">
 
-        <span>EXPLORE THE PLATFORM</span>
+        <span>{{ 'EXPLORE THE PLATFORM' | t }}</span>
 
         <h2>
-          BUILT FOR COMPETITIVE PLAYERS
+          {{ 'BUILT FOR COMPETITIVE PLAYERS' | t }}
         </h2>
 
         <p>
-          Track your matches, join tournaments, climb rankings and
-          build your football gaming legacy.
+          {{ 'Track your matches, join tournaments, climb rankings and build your football gaming legacy.' | t }}
         </p>
 
       </div>
@@ -199,47 +197,45 @@
             <span class="card-badge">SEASON 02</span>
           </div>
 
-          <h3>Ranked Seasons</h3>
+          <h3>{{ 'Ranked Seasons' | t }}</h3>
 
           <p>
-            Fight through divisions, earn promotion rewards and dominate
-            global seasonal rankings.
+            {{ 'Fight through divisions, earn promotion rewards and dominate global seasonal rankings.' | t }}
           </p>
 
           <div class="card-stat">
             <strong>1K</strong>
-            <span>ACTIVE PLAYERS</span>
+            <span>{{ 'ACTIVE PLAYERS' | t }}</span>
           </div>
 
           <div class="card-tags">
-            <span>DIVISIONS</span>
-            <span>REWARDS</span>
-            <span>CROSSPLAY</span>
+            <span>{{ 'DIVISIONS' | t }}</span>
+            <span>{{ 'REWARDS' | t }}</span>
+            <span>{{ 'CROSSPLAY' | t }}</span>
           </div>
         </div>
 
         <div class="explore-card">
           <div class="card-top">
             <div class="card-icon">📊</div>
-            <span class="card-badge live">LIVE</span>
+            <span class="card-badge live">{{ 'LIVE' | t }}</span>
           </div>
 
-          <h3>Live Match Stats</h3>
+          <h3>{{ 'Live Match Stats' | t }}</h3>
 
           <p>
-            Track goals, assists, possession, win rate and player performance
-            after every match.
+            {{ 'Track goals, assists, possession, win rate and player performance after every match.' | t }}
           </p>
 
           <div class="mini-bars">
             <div>
-              <span>WIN RATE</span>
+              <span>{{ 'WIN RATE' | t }}</span>
               <strong>82%</strong>
             </div>
             <div class="bar"><i style="width: 82%;"></i></div>
 
             <div>
-              <span>POSSESSION</span>
+              <span>{{ 'POSSESSION' | t }}</span>
               <strong>64%</strong>
             </div>
             <div class="bar"><i style="width: 64%;"></i></div>
@@ -252,28 +248,27 @@
             <span class="card-badge">TOP 1%</span>
           </div>
 
-          <h3>Global Leaderboards</h3>
+          <h3>{{ 'Global Leaderboards' | t }}</h3>
 
           <p>
-            Compare your ranking against elite players by region, platform
-            and competitive season.
+            {{ 'Compare your ranking against elite players by region, platform and competitive season.' | t }}
           </p>
 
           <div class="rank-preview">
             <div>
-              <small>GLOBAL RANK</small>
+              <small>{{ 'GLOBAL RANK' | t }}</small>
               <strong>#184</strong>
             </div>
 
             <div>
-              <small>REGION</small>
+              <small>{{ 'REGION' | t }}</small>
               <strong>NA WEST</strong>
             </div>
           </div>
 
           <div class="card-tags">
-            <span>GLOBAL</span>
-            <span>REGIONAL</span>
+            <span>{{ 'GLOBAL' | t }}</span>
+            <span>{{ 'REGIONAL' | t }}</span>
             <span>H2H</span>
           </div>
         </div>
@@ -281,26 +276,25 @@
         <div class="explore-card">
           <div class="card-top">
             <div class="card-icon">⚽</div>
-            <span class="card-badge live">OPEN</span>
+            <span class="card-badge live">{{ 'OPEN' | t }}</span>
           </div>
 
-          <h3>Friendly Weekend Tournaments</h3>
+          <h3>{{ 'Friendly Weekend Tournaments' | t }}</h3>
 
           <p>
-            Join knockout events, build your squad and compete for exclusive
-            rewards every weekend.
+            {{ 'Join knockout events, build your squad and compete for exclusive rewards every weekend.' | t }}
           </p>
 
           <div class="event-box">
-            <small>NEXT EVENT</small>
-            <strong>SATURDAY · 8PM</strong>
+            <small>{{ 'NEXT EVENT' | t }}</small>
+            <strong>{{ 'SATURDAY · 8PM' | t }}</strong>
             <span>64 TEAMS REGISTERED</span>
           </div>
 
           <div class="card-tags">
-            <span>KNOCKOUT</span>
-            <span>PRIZES</span>
-            <span>CLUBS</span>
+            <span>{{ 'KNOCKOUT' | t }}</span>
+            <span>{{ 'PRIZES' | t }}</span>
+            <span>{{ 'CLUBS' | t }}</span>
           </div>
         </div>
 
@@ -312,7 +306,7 @@
           class="primary-btn"
           type="button"
           (click)="startFromExplore()">
-          START COMPETING
+          {{ 'START COMPETING' | t }}
         </button>
 
       </div>
@@ -328,18 +322,17 @@
 
     <div class="notification-required-card">
 
-      <h2>🔔 Notifications Required</h2>
+      <h2>{{ '🔔 Notifications Required' | t }}</h2>
 
       <p>
-        eLeagueFutbol requires notifications for draft turns, messages,
-        match schedules and league updates.
+        {{ 'eLeagueFutbol requires notifications for draft turns, messages, match schedules and league updates.' | t }}
       </p>
 
       <button
         type="button"
         [disabled]="isEnablingNotifications"
         (click)="enableNotifications()">
-        {{ isEnablingNotifications ? 'Enabling...' : 'Enable Notifications' }}
+        {{ isEnablingNotifications ? ('Enabling...' | t) : ('Enable Notifications' | t) }}
       </button>
 
     </div>
@@ -353,14 +346,14 @@
 
     <div class="notification-required-card">
 
-      <h2>📲 Install eLeagueFutbol</h2>
+      <h2>{{ '📲 Install eLeagueFutbol' | t }}</h2>
 
       <p>
-        On iPhone, notifications require installing eLeagueFutbol first.
+        {{ 'On iPhone, notifications require installing eLeagueFutbol first.' | t }}
       </p>
 
       <p>
-        Open Safari → Share → Add to Home Screen.
+        {{ 'Open Safari → Share → Add to Home Screen.' | t }}
       </p>
 
     </div>

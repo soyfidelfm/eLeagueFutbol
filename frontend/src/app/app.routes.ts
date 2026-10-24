@@ -31,17 +31,24 @@ export const routes: Routes = [
       },
 
       {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./features/notification-center/notification-center')
+            .then(m => m.NotificationCenter)
+      },
+
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/settings/settings')
+            .then(m => m.Settings)
+      },
+
+      {
         path: 'profile',
         loadComponent: () =>
           import('./features/profile/profile')
             .then(m => m.Profile)
-      },
-
-      {
-        path: 'arena',
-        loadComponent: () =>
-          import('./features/arena/arena')
-            .then(m => m.Arena)
       },
 
       {

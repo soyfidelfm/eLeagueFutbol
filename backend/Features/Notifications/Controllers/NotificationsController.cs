@@ -1,4 +1,4 @@
-﻿namespace backend.Features.Notifications.Controllers;
+namespace backend.Features.Notifications.Controllers;
 
 using System.Security.Claims;
 using backend.Features.Notifications.Dtos;
@@ -40,7 +40,10 @@ public class NotificationsController : ControllerBase
 	}
 
 	[HttpGet]
-	public async Task<ActionResult<List<NotificationDto>>> GetMyNotifications()
+	public async Task<ActionResult<List<NotificationDto>>> GetMyNotifications(
+		[FromQuery] bool unreadOnly = false,
+		[FromQuery] DateTime? before = null,
+		[FromQuery] int take = 50)
 	{
 		var auth0Id =
 			User.FindFirstValue(ClaimTypes.NameIdentifier) ??
@@ -51,7 +54,11 @@ public class NotificationsController : ControllerBase
 			return Unauthorized();
 
 		var notifications =
-			await _notificationInboxService.GetMyNotificationsAsync(auth0Id);
+			await _notificationInboxService.GetMyNotificationsAsync(
+				auth0Id,
+				unreadOnly,
+				before,
+				take);
 
 		return Ok(notifications);
 	}

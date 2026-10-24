@@ -1,4 +1,4 @@
-﻿using backend.Data;
+using backend.Data;
 using backend.Entities.Clubs;
 using backend.Entities.Enums;
 using backend.Entities.MatchStats;
@@ -8,6 +8,7 @@ using backend.Entities.Tournaments;
 using backend.Features.Matches.Dtos;
 using backend.Features.Messages.Services;
 using backend.Features.Notifications.Services;
+using backend.Features.Realtime;
 using backend.Features.Stats.Dtos;
 using backend.Features.Stats.Services;
 using Microsoft.EntityFrameworkCore;
@@ -22,17 +23,20 @@ public class MatchService : IMatchService
 	private readonly IMatchStatsOcrService _ocrService;
 	private readonly IMessageService _messageService;
 	private readonly INotificationService _notificationService;
+	private readonly IAppRealtimeService _realtime;
 
 	public MatchService(
 		AppDbContext context,
 		IMatchStatsOcrService ocrService,
 		IMessageService messageService,
-		INotificationService notificationService)
+		INotificationService notificationService,
+		IAppRealtimeService realtime)
 	{
 		_context = context;
 		_ocrService = ocrService;
 		_messageService = messageService;
 		_notificationService = notificationService;
+		_realtime = realtime;
 	}
 
 	public async Task<List<MatchWeekDto>> GetWeeksAsync(Guid seasonId)
@@ -134,6 +138,7 @@ public class MatchService : IMatchService
 	UploadMatchResultDto dto)
 	{
 		var match = await _context.Matches
+			.Include(x => x.Tournament)
 			.Include(x => x.HomeUserClub)
 			.Include(x => x.AwayUserClub)
 			.FirstOrDefaultAsync(x =>
@@ -156,6 +161,12 @@ public class MatchService : IMatchService
 
 		var userIds = new List<Guid>();
 
+		if (match.HomeUserId != Guid.Empty)
+			userIds.Add(match.HomeUserId);
+
+		if (match.AwayUserId != Guid.Empty)
+			userIds.Add(match.AwayUserId);
+
 		userIds = userIds
 			.Distinct()
 			.ToList();
@@ -165,13 +176,20 @@ public class MatchService : IMatchService
 			await _messageService.SendSystemMessageAsync(
 	userId,
 	"Match Result Submitted",
-	$"The match has been completed. Final score: {resultText}");
+	$"The match has been completed. Final score: {resultText}",
+	"match_result",
+	"/matches");
 
 			await _notificationService.SendToUserAsync(
 				userId,
 				"Match Result Submitted",
 				$"Final score: {resultText}");
 		}
+
+		var seasonId = match.Tournament?.SeasonId ?? Guid.Empty;
+
+		if (seasonId != Guid.Empty)
+			await _realtime.PublishDraftEventAsync(seasonId, "matchResult");
 
 		return new MatchResultDto
 		{
@@ -657,6 +675,53 @@ public class MatchService : IMatchService
 		public int WeekNumber { get; set; }
 		public ScheduleTeam Home { get; set; } = null!;
 		public ScheduleTeam Away { get; set; } = null!;
+	}
+
+	public async Task ApplyOcrStatsAsync(
+		Guid matchId,
+		string summaryJson,
+		string homePerformanceJson,
+		string awayPerformanceJson)
+	{
+		var payloads = new Dictionary<MatchStatsUploadType, string>
+		{
+			[MatchStatsUploadType.MatchSummary] = summaryJson,
+			[MatchStatsUploadType.HomeTeamPerformance] = homePerformanceJson,
+			[MatchStatsUploadType.AwayTeamPerformance] = awayPerformanceJson
+		};
+
+		var existing = await _context.MatchStatsUploads
+			.Where(x => x.MatchId == matchId)
+			.ToListAsync();
+
+		foreach (var (type, json) in payloads)
+		{
+			var upload = existing.FirstOrDefault(x => x.Type == type);
+
+			if (upload is null)
+			{
+				_context.MatchStatsUploads.Add(new MatchStatsUpload
+				{
+					MatchStatsUploadId = Guid.NewGuid(),
+					MatchId = matchId,
+					UploadedByUserId = Guid.Empty,
+					Type = type,
+					ImageUrl = string.Empty,
+					RawJson = json,
+					IsProcessed = false,
+					CreatedAtUTC = DateTime.UtcNow
+				});
+			}
+			else
+			{
+				upload.RawJson = json;
+				upload.IsProcessed = false;
+				upload.UpdatedAtUTC = DateTime.UtcNow;
+			}
+		}
+
+		await _context.SaveChangesAsync();
+		await ProcessUploadedStatsAsync(matchId);
 	}
 
 	private async Task ProcessUploadedStatsAsync(Guid matchId)

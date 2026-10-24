@@ -181,18 +181,43 @@
   box-shadow: none;
 }
 
-.profile-box img {
+.nav-avatar {
   width: 42px;
   height: 42px;
   flex-shrink: 0;
   border-radius: 50%;
-  object-fit: cover;
-  object-position: top center;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid rgba(0, 255, 136, .4);
+  background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
 }
 
-.profile-box.loading img {
+.nav-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.avatar-initials {
+  color: var(--bg-primary);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  line-height: 1;
+  user-select: none;
+}
+
+.profile-box.loading .nav-avatar {
   opacity: .55;
+}
+
+.profile-box:focus-visible {
+  outline: 2px solid var(--neon-primary);
+  outline-offset: 2px;
 }
 
 .profile-info {
@@ -260,7 +285,8 @@
   border-top: 1px solid rgba(0, 255, 136, 0.22);
 }
 
-.user-menu button {
+.user-menu button,
+.user-menu a {
   width: 100%;
   display: flex;
   align-items: center;
@@ -277,14 +303,58 @@
   transition: .2s ease;
 }
 
-.user-menu button i {
+.user-menu button i,
+.user-menu a i {
   width: 18px;
   color: var(--neon-primary);
 }
 
-.user-menu button:hover {
+.user-menu button:hover,
+.user-menu a:hover,
+.user-menu button:focus-visible,
+.user-menu a:focus-visible {
+  outline: none;
   background: rgba(0, 255, 136, 0.12);
   color: var(--neon-primary);
+}
+
+.user-menu a {
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.user-menu button i,
+.user-menu a i {
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.menu-divider {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--border-primary);
+}
+
+.user-menu button.danger,
+.user-menu button.danger i {
+  color: var(--danger);
+}
+
+.user-menu button.danger:hover,
+.user-menu button.danger:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--danger);
+}
+
+@media (max-width: 600px) {
+  .user-menu {
+    position: fixed;
+    top: 72px;
+    right: 10px;
+    left: auto;
+    min-width: 200px;
+    max-width: calc(100vw - 20px);
+  }
 }
 
 .profile-modal-backdrop {
@@ -515,11 +585,11 @@
     overflow: visible;
   }
 
-  .profile-box img {
+  .profile-box .nav-avatar {
     width: 46px;
     height: 46px;
 
-    display: block;
+    display: flex;
 
     opacity: 1;
     visibility: visible;
@@ -595,4 +665,8 @@
     width: 38px;
     height: 38px;
   }
+}
+.user-menu a {
+  text-decoration: none;
+  box-sizing: border-box;
 }

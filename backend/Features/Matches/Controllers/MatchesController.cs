@@ -1,7 +1,6 @@
 using backend.Data;
 using backend.Features.Matches.Dtos;
 using backend.Features.Matches.Services;
-using backend.Features.Realtime;
 using backend.Features.Users.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,18 +15,18 @@ public class MatchesController : ControllerBase
 {
 	private readonly IMatchService _matchService;
 	private readonly IAdminAccessService _adminAccess;
-	private readonly IAppRealtimeService _realtime;
+	private readonly IPendingMatchResultService _pendingResults;
 	private readonly AppDbContext _db;
 
 	public MatchesController(
 		IMatchService matchService,
 		IAdminAccessService adminAccess,
-		IAppRealtimeService realtime,
+		IPendingMatchResultService pendingResults,
 		AppDbContext db)
 	{
 		_matchService = matchService;
 		_adminAccess = adminAccess;
-		_realtime = realtime;
+		_pendingResults = pendingResults;
 		_db = db;
 	}
 
@@ -84,7 +83,7 @@ public class MatchesController : ControllerBase
 			if (result is null)
 				return NotFound();
 
-			await PublishMatchResultAsync(matchId);
+			// matchResult is published once inside MatchService.UploadResultAsync.
 			return Ok(result);
 		}
 		catch (UnauthorizedAccessException ex)
@@ -93,18 +92,33 @@ public class MatchesController : ControllerBase
 		}
 	}
 
+	[Authorize]
 	[HttpPost("{matchId:guid}/stats-upload")]
 	[Consumes("multipart/form-data")]
 	public async Task<ActionResult<MatchStatsUploadResultDto>> UploadStatsImage(
 		Guid matchId,
 		[FromForm] UploadMatchStatsImageDto dto)
 	{
-		var result = await _matchService.UploadStatsImageAsync(matchId, dto);
+		var auth0Id = GetAuth0Id();
 
-		if (result is null)
-			return NotFound();
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
 
-		return Ok(result);
+		try
+		{
+			await EnsureCanSubmitResultAsync(matchId, auth0Id);
+
+			var result = await _matchService.UploadStatsImageAsync(matchId, dto);
+
+			if (result is null)
+				return NotFound();
+
+			return Ok(result);
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
 	}
 
 	[Authorize]
@@ -198,7 +212,7 @@ public class MatchesController : ControllerBase
 				AwayScore = dto.AwayGoals
 			});
 
-			await PublishMatchResultAsync(matchId);
+			// UploadResultAsync publishes matchResult; no extra publish here.
 
 			return Ok(new
 			{
@@ -209,6 +223,80 @@ public class MatchesController : ControllerBase
 		catch (UnauthorizedAccessException ex)
 		{
 			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
+	}
+
+	// ===== Pending OCR result proposals =====
+
+	/// <summary>Submit 3 screenshots; OCR runs and the result is stored as Pending (nothing saved to the match).</summary>
+	[Authorize]
+	[HttpPost("{matchId:guid}/result-proposals")]
+	[Consumes("multipart/form-data")]
+	public Task<IActionResult> SubmitResultProposal(
+		Guid matchId,
+		[FromForm] SubmitMatchResultProposalDto dto)
+	{
+		return HandleProposalAsync(async auth0Id =>
+			Ok(await _pendingResults.SubmitAsync(matchId, auth0Id, dto)));
+	}
+
+	/// <summary>Current pending proposal for the match, or 204 when there is none.</summary>
+	[Authorize]
+	[HttpGet("{matchId:guid}/result-proposals/pending")]
+	public Task<IActionResult> GetPendingResultProposal(Guid matchId)
+	{
+		return HandleProposalAsync(async auth0Id =>
+		{
+			var pending = await _pendingResults.GetPendingAsync(matchId, auth0Id);
+			return pending is null ? NoContent() : Ok(pending);
+		});
+	}
+
+	[Authorize]
+	[HttpPost("{matchId:guid}/result-proposals/{proposalId:guid}/accept")]
+	public Task<IActionResult> AcceptResultProposal(Guid matchId, Guid proposalId)
+	{
+		return HandleProposalAsync(async auth0Id =>
+			Ok(await _pendingResults.AcceptAsync(matchId, proposalId, auth0Id)));
+	}
+
+	[Authorize]
+	[HttpPost("{matchId:guid}/result-proposals/{proposalId:guid}/reject")]
+	public Task<IActionResult> RejectResultProposal(Guid matchId, Guid proposalId)
+	{
+		return HandleProposalAsync(async auth0Id =>
+		{
+			await _pendingResults.RejectAsync(matchId, proposalId, auth0Id);
+			return NoContent();
+		});
+	}
+
+	private async Task<IActionResult> HandleProposalAsync(Func<string, Task<IActionResult>> action)
+	{
+		var auth0Id = GetAuth0Id();
+
+		if (string.IsNullOrWhiteSpace(auth0Id))
+			return Unauthorized(new { message = "User token is missing Auth0 id." });
+
+		try
+		{
+			return await action(auth0Id);
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(new { message = ex.Message });
+		}
+		catch (InvalidOperationException ex)
+		{
+			return Conflict(new { message = ex.Message });
+		}
+		catch (ArgumentException ex)
+		{
+			return BadRequest(new { message = ex.Message });
 		}
 	}
 
@@ -237,20 +325,6 @@ public class MatchesController : ControllerBase
 
 		if (user.UserId != match.HomeUserId && user.UserId != match.AwayUserId)
 			throw new UnauthorizedAccessException("Only the match participants or an admin can submit the result.");
-	}
-
-	private async Task PublishMatchResultAsync(Guid matchId)
-	{
-		var seasonId = await _db.Matches
-			.AsNoTracking()
-			.Where(x => x.MatchId == matchId)
-			.Select(x => x.Tournament.SeasonId)
-			.FirstOrDefaultAsync();
-
-		if (seasonId == Guid.Empty)
-			return;
-
-		await _realtime.PublishDraftEventAsync(seasonId, "matchResult");
 	}
 
 	private string? GetAuth0Id()

@@ -12,7 +12,9 @@ import {
   DraftOrder,
   MakeDraftPick,
   DraftLotteryPreview,
-  DraftPlayerPoolFilter
+  DraftPlayerPoolFilter,
+  DraftSettings,
+  UpdateDraftTimer
 } from '../models/draft.model';
 
 
@@ -115,5 +117,29 @@ export class DraftService extends ApiService {
       `${API_ENDPOINTS.draft}/picks?seasonId=${seasonId}`,
       body
     );
+  }
+
+  pauseDraft(seasonId: string): Observable<DraftCenter> {
+    return this.post<DraftCenter>(`${API_ENDPOINTS.draft}/pause?seasonId=${seasonId}`, {});
+  }
+
+  resumeDraft(seasonId: string): Observable<DraftCenter> {
+    return this.post<DraftCenter>(`${API_ENDPOINTS.draft}/resume?seasonId=${seasonId}`, {});
+  }
+
+  stopDraft(seasonId: string): Observable<DraftCenter> {
+    return this.post<DraftCenter>(`${API_ENDPOINTS.draft}/stop?seasonId=${seasonId}`, {});
+  }
+
+  updateTimer(seasonId: string, body: UpdateDraftTimer): Observable<DraftCenter> {
+    return this.put<DraftCenter>(`${API_ENDPOINTS.draft}/timer?seasonId=${seasonId}`, body);
+  }
+
+  getSettings(): Observable<DraftSettings> {
+    return this.get<DraftSettings>(`${API_ENDPOINTS.draft}/settings`);
+  }
+
+  updateSettings(body: Pick<DraftSettings, 'defaultPickSeconds'>): Observable<DraftSettings> {
+    return this.put<DraftSettings>(`${API_ENDPOINTS.draft}/settings`, body);
   }
 }

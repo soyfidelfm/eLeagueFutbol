@@ -1139,3 +1139,41 @@
     overflow-y: auto;
   }
 }
+
+/* =========================================
+   PAGINATION + TYPING
+========================================= */
+
+.older-loading {
+  align-self: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+
+  i {
+    margin-right: 6px;
+  }
+}
+
+.typing-indicator {
+  align-self: flex-start;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 700;
+  padding: 2px 4px;
+}
+
+.empty-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: #00ffaa;
+  border: 1px solid rgba(0, 255, 170, 0.45);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}

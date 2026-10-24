@@ -1,4 +1,4 @@
-﻿namespace backend.Features.Notifications.Services;
+namespace backend.Features.Notifications.Services;
 
 using backend.Data;
 using backend.Features.Notifications.Dtos;
@@ -13,7 +13,11 @@ public class NotificationInboxService : INotificationInboxService
 		_context = context;
 	}
 
-	public async Task<List<NotificationDto>> GetMyNotificationsAsync(string auth0Id)
+	public async Task<List<NotificationDto>> GetMyNotificationsAsync(
+		string auth0Id,
+		bool unreadOnly = false,
+		DateTime? before = null,
+		int take = 50)
 	{
 		var me = await _context.Users
 			.AsNoTracking()
@@ -24,13 +28,30 @@ public class NotificationInboxService : INotificationInboxService
 		if (me is null)
 			return [];
 
-		return await _context.Notifications
+		take = Math.Clamp(take, 1, 100);
+
+		var query = _context.Notifications
 			.AsNoTracking()
 			.Where(x =>
 				x.UserId == me.UserId &&
-				!x.IsDeleted)
+				!x.IsDeleted);
+
+		if (unreadOnly)
+			query = query.Where(x => !x.IsRead);
+
+		if (before.HasValue)
+		{
+			// Cursor is the CreatedAtUTC of the last item the client has; treat zone-less values as UTC.
+			var cursor = before.Value.Kind == DateTimeKind.Unspecified
+				? DateTime.SpecifyKind(before.Value, DateTimeKind.Utc)
+				: before.Value.ToUniversalTime();
+			query = query.Where(x => x.CreatedAtUTC < cursor);
+		}
+
+		return await query
 			.OrderByDescending(x => x.CreatedAtUTC)
-			.Take(50)
+			.ThenByDescending(x => x.NotificationId)
+			.Take(take)
 			.Select(x => new NotificationDto
 			{
 				NotificationId = x.NotificationId,

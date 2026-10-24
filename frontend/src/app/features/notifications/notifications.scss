@@ -297,3 +297,19 @@
     height: 40px;
   }
 }
+.view-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: #00ffaa;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.view-all:hover {
+  background: rgba(0, 255, 136, 0.06);
+}

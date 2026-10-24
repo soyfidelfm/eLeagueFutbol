@@ -6,7 +6,8 @@ import {
   OnInit
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subscription, finalize, forkJoin, take } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { Observable, Subscription, finalize, forkJoin, take } from 'rxjs';
 
 import { MatchService } from '../../core/services/match.service';
 import { SeasonService } from '../../core/services/season.service';
@@ -18,7 +19,8 @@ import { AppLoading } from '../../shared/components/app-loading/app-loading';
 
 import {
   MatchDto,
-  MatchWeekDto
+  MatchWeekDto,
+  PendingMatchResult
 } from '../../core/models/match.model';
 
 import { MatchView } from '../../core/models/match-view.model';
@@ -37,6 +39,10 @@ import {
 import {
   ManualMatchStatsModal
 } from './components/manual-match-stats-modal/manual-match-stats-modal';
+import { ConfirmDialogService } from '../../shared/components/confirm-dialog/confirm-dialog.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-matches',
@@ -46,7 +52,8 @@ import {
     FormsModule,
     NeonDropdownComponent,
     AppLoading,
-    ManualMatchStatsModal
+    ManualMatchStatsModal,
+    TranslatePipe, LocalizedDatePipe, EmptyState
   ],
   templateUrl: './matches.html',
   styleUrl: './matches.scss',
@@ -82,53 +89,6 @@ import {
       text-transform: uppercase;
     }
     .match-card.finished { border-color: rgba(61, 255, 138, 0.28); }
-    .result-card {
-      margin: 0 0 16px;
-      padding: 18px;
-      border: 1px solid var(--neon-primary);
-      border-radius: 18px;
-      background: radial-gradient(circle at top, rgba(0,255,136,.12), transparent 50%), rgba(0,255,136,.04);
-      text-align: center;
-    }
-    .result-card h3 { margin: 0 0 6px; font-size: 16px; font-weight: 900; }
-    .result-card p { margin: 0 0 14px; color: var(--text-secondary); font-size: 13px; }
-    .result-card button {
-      width: 100%;
-      margin-top: 14px;
-      padding: 12px;
-      border: none;
-      border-radius: 12px;
-      background: var(--neon-primary);
-      color: var(--text-inverse);
-      font-weight: 900;
-      cursor: pointer;
-    }
-    .result-card button:disabled { opacity: .55; cursor: not-allowed; }
-    .result-inputs {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: end;
-      gap: 10px;
-    }
-    .result-inputs label {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-    .result-inputs input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--border-secondary);
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.28);
-      color: var(--text-main);
-      font-size: 22px;
-      font-weight: 900;
-      text-align: center;
-    }
-    .result-inputs span { padding-bottom: 10px; font-size: 22px; font-weight: 900; }
   `]
 })
 export class Matches implements OnInit, OnDestroy {
@@ -150,7 +110,6 @@ export class Matches implements OnInit, OnDestroy {
   isLoading = false;
   isRefreshing = false;
   isUploadingResult = false;
-  isSubmittingResult = false;
   errorMessage = '';
   liveMessage = '';
   seasonClosed = false;
@@ -162,6 +121,15 @@ export class Matches implements OnInit, OnDestroy {
   weekOptions: NeonDropdownOption[] = [];
 
   matches: MatchView[] = [];
+
+  /** Client-side filter applied to the selected week's matches. */
+  statusFilter: 'all' | 'upcoming' | 'finished' = 'all';
+
+  readonly statusFilterOptions: { value: 'all' | 'upcoming' | 'finished'; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'upcoming', label: 'Upcoming' },
+    { value: 'finished', label: 'Finished' }
+  ];
   selectedMatch: MatchView | null = null;
 
   selectedResultFiles: File[] = [];
@@ -169,10 +137,13 @@ export class Matches implements OnInit, OnDestroy {
   statsUploadResult:
     MatchStatsUploadResult | null = null;
 
-  resultHomeScore: number | null = null;
-  resultAwayScore: number | null = null;
-
   currentUserId = '';
+
+  pendingProposal: PendingMatchResult | null = null;
+  isLoadingPending = false;
+  isSubmittingProposal = false;
+  isReviewingProposal = false;
+  proposalMessage = '';
   isAdmin = false;
 
   private subscription = new Subscription();
@@ -183,8 +154,15 @@ export class Matches implements OnInit, OnDestroy {
     private readonly matchStatsService: MatchStatsService,
     private readonly userService: UserService,
     private readonly realtime: RealtimeService,
+    private readonly confirmDialog: ConfirmDialogService,
+    private readonly route: ActivatedRoute,
     private readonly cdr: ChangeDetectorRef
   ) {}
+
+  /** Deep link from global search: ?seasonId=&week=&matchId= */
+  private requestedSeasonId: string | null = null;
+  private requestedWeek: number | null = null;
+  private requestedMatchId: string | null = null;
 
   ngOnInit(): void {
     this.userService.getMe().pipe(take(1)).subscribe({
@@ -195,7 +173,22 @@ export class Matches implements OnInit, OnDestroy {
       }
     });
 
-    this.loadCurrentSeason();
+    this.subscription.add(
+      this.route.queryParamMap.subscribe(params => {
+        const week = Number(params.get('week'));
+
+        this.requestedSeasonId = params.get('seasonId')?.trim() || null;
+        this.requestedWeek = Number.isFinite(week) && week > 0 ? week : null;
+        this.requestedMatchId = params.get('matchId')?.trim() || null;
+
+        if (this.requestedMatchId) {
+          // Make sure the linked match is not hidden by the status filter.
+          this.statusFilter = 'all';
+        }
+
+        this.loadCurrentSeason();
+      })
+    );
 
     this.subscription.add(
       this.realtime.draftEvents$.subscribe(event => {
@@ -207,8 +200,9 @@ export class Matches implements OnInit, OnDestroy {
           return;
         }
 
-        this.liveMessage = 'Resultado actualizado';
+        this.liveMessage = 'Result updated';
         this.loadMatches(false);
+        this.loadPendingProposal();
       })
     );
   }
@@ -233,6 +227,9 @@ export class Matches implements OnInit, OnDestroy {
     this.seasonService.getAll().subscribe({
       next: seasons => {
         const currentSeason =
+          (this.requestedSeasonId
+            ? seasons.find(x => x.seasonId === this.requestedSeasonId)
+            : undefined) ??
           seasons.find(x => x.isCurrent) ??
           seasons[0];
 
@@ -241,6 +238,10 @@ export class Matches implements OnInit, OnDestroy {
           this.isLoading = false;
           this.cdr.detectChanges();
           return;
+        }
+
+        if (this.selectedSeasonId && this.selectedSeasonId !== currentSeason.seasonId) {
+          void this.realtime.leaveSeason(this.selectedSeasonId);
         }
 
         this.selectedSeasonId =
@@ -284,8 +285,14 @@ export class Matches implements OnInit, OnDestroy {
             return;
           }
 
+          const requestedWeek = weeks.find(
+            week => Number(week.value) === this.requestedWeek
+          );
+
           this.selectedWeek =
-            Number(weeks[0].value);
+            Number((requestedWeek ?? weeks[0]).value);
+
+          this.requestedWeek = null;
 
           this.loadMatches(true);
         },
@@ -332,16 +339,36 @@ export class Matches implements OnInit, OnDestroy {
             this.mapMatch(match)
           );
 
+          const requestedMatch = this.requestedMatchId
+            ? this.matches.find(x => x.id === this.requestedMatchId)
+            : undefined;
+
+          this.requestedMatchId = null;
+
           const preserved =
+            requestedMatch ??
             this.matches.find(x => x.id === selectedId) ??
             this.matchOfTheWeek ??
             this.matches[0] ??
             null;
 
+          const changedMatch = this.selectedMatch?.id !== preserved?.id;
+
           this.selectedMatch = preserved;
-          this.syncResultInputs(preserved);
+
+          if (changedMatch || !this.pendingProposal) {
+            this.loadPendingProposal();
+          }
 
           this.cdr.detectChanges();
+
+          if (requestedMatch) {
+            setTimeout(() =>
+              document
+                .querySelector('.match-card.selected')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            );
+          }
         },
         error: () => {
           this.errorMessage =
@@ -362,8 +389,145 @@ export class Matches implements OnInit, OnDestroy {
 
   selectMatch(match: MatchView): void {
     this.selectedMatch = match;
-    this.syncResultInputs(match);
     this.clearUploadState();
+    this.loadPendingProposal();
+  }
+
+  /** Loads the pending OCR proposal (if any) for the selected match. */
+  loadPendingProposal(): void {
+    const matchId = this.selectedMatch?.id;
+
+    this.proposalMessage = '';
+
+    if (!matchId) {
+      this.pendingProposal = null;
+      return;
+    }
+
+    this.isLoadingPending = true;
+
+    this.matchService.getPendingResultProposal(matchId)
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.isLoadingPending = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: proposal => {
+          if (this.selectedMatch?.id !== matchId) {
+            return;
+          }
+
+          this.pendingProposal = proposal ?? null;
+        },
+        error: () => {
+          if (this.selectedMatch?.id === matchId) {
+            this.pendingProposal = null;
+          }
+        }
+      });
+  }
+
+  /** Uploads the 3 screenshots as a proposal that the opponent must accept. */
+  submitForApproval(): void {
+    const match = this.selectedMatch;
+
+    if (!match || !this.summaryFile || !this.homePerformanceFile || !this.awayPerformanceFile) {
+      this.errorMessage = 'Select all three screenshots first.';
+      return;
+    }
+
+    if (this.pendingProposal || this.isSubmittingProposal) {
+      return;
+    }
+
+    this.isSubmittingProposal = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    this.matchService.submitResultProposal(
+      match.id,
+      this.summaryFile,
+      this.homePerformanceFile,
+      this.awayPerformanceFile
+    )
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.isSubmittingProposal = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: proposal => {
+          this.pendingProposal = proposal;
+          this.clearUploadState();
+          this.proposalMessage = 'Result submitted. Waiting for opponent to accept.';
+        },
+        error: err => {
+          this.errorMessage = err?.error?.message || 'Could not submit the result.';
+          this.loadPendingProposal();
+        }
+      });
+  }
+
+  acceptProposal(): void {
+    this.reviewProposal(true);
+  }
+
+  async rejectProposal(): Promise<void> {
+    if (!this.pendingProposal?.canReview || this.isReviewingProposal) {
+      return;
+    }
+
+    const ok = await this.confirmDialog.confirm({
+      title: 'Reject this result?',
+      description: 'The proposed score and stats will be discarded and the uploader will need to submit again.',
+      confirmLabel: 'Reject result'
+    });
+
+    if (ok) {
+      this.reviewProposal(false);
+    }
+  }
+
+  private reviewProposal(accept: boolean): void {
+    const match = this.selectedMatch;
+    const proposal = this.pendingProposal;
+
+    if (!match || !proposal || !proposal.canReview || this.isReviewingProposal) {
+      return;
+    }
+
+    this.isReviewingProposal = true;
+    this.errorMessage = '';
+    this.cdr.detectChanges();
+
+    const request: Observable<unknown> = accept
+      ? this.matchService.acceptResultProposal(match.id, proposal.pendingMatchResultId)
+      : this.matchService.rejectResultProposal(match.id, proposal.pendingMatchResultId);
+
+    request
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.isReviewingProposal = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.pendingProposal = null;
+          this.proposalMessage = accept ? 'Result accepted.' : 'Result rejected.';
+          this.loadMatches(false);
+        },
+        error: err => {
+          this.errorMessage = err?.error?.message || 'Could not review the result.';
+          this.loadPendingProposal();
+        }
+      });
   }
 
   isFinished(match?: MatchView | null): boolean {
@@ -392,58 +556,6 @@ export class Matches implements OnInit, OnDestroy {
       match.homeUserId === this.currentUserId ||
       match.awayUserId === this.currentUserId
     );
-  }
-
-  submitResult(): void {
-    if (!this.selectedMatch) {
-      this.errorMessage = 'Please select a match.';
-      return;
-    }
-
-    if (!this.canSubmitResult(this.selectedMatch)) {
-      this.errorMessage =
-        this.seasonClosed
-          ? 'This season is closed.'
-          : 'Only match participants or an admin can submit the result.';
-      return;
-    }
-
-    if (
-      this.resultHomeScore === null ||
-      this.resultAwayScore === null ||
-      this.resultHomeScore < 0 ||
-      this.resultAwayScore < 0
-    ) {
-      this.errorMessage = 'Enter a valid score.';
-      return;
-    }
-
-    this.isSubmittingResult = true;
-    this.errorMessage = '';
-
-    this.matchService
-      .uploadResult(this.selectedMatch.id, {
-        homeScore: Number(this.resultHomeScore),
-        awayScore: Number(this.resultAwayScore)
-      })
-      .pipe(
-        finalize(() => {
-          this.isSubmittingResult = false;
-          this.cdr.detectChanges();
-        })
-      )
-      .subscribe({
-        next: () => {
-          this.liveMessage = 'Resultado guardado';
-          this.loadMatches(false);
-        },
-        error: error => {
-          this.errorMessage =
-            error?.error?.message ??
-            'Could not save match result.';
-          this.cdr.detectChanges();
-        }
-      });
   }
 
   previewUploadedResult(): void {
@@ -607,7 +719,7 @@ export class Matches implements OnInit, OnDestroy {
 
   onManualStatsSaved(): void {
     this.manualStatsMatch = null;
-    this.liveMessage = 'Estadísticas guardadas';
+    this.liveMessage = 'Stats saved';
     this.loadMatches(false);
   }
 
@@ -615,18 +727,47 @@ export class Matches implements OnInit, OnDestroy {
     return this.selectedWeek.toString();
   }
 
+  setStatusFilter(filter: 'all' | 'upcoming' | 'finished'): void {
+    this.statusFilter = filter;
+    this.cdr.detectChanges();
+  }
+
   get filteredMatches(): MatchView[] {
+    if (this.statusFilter === 'finished') {
+      return this.matches.filter(x => this.isFinished(x));
+    }
+
+    if (this.statusFilter === 'upcoming') {
+      return this.matches.filter(x => {
+        const status = (x.status ?? '').toLowerCase();
+        return status !== 'finished' && status !== 'cancelled';
+      });
+    }
+
     return this.matches;
   }
 
   get matchOfTheWeek(): MatchView | null {
+    const list = this.filteredMatches;
+
     return (
-      this.matches.find(
+      list.find(
         x => x.isMatchOfTheWeek
       ) ??
-      this.matches[0] ??
+      list[0] ??
       null
     );
+  }
+
+  /** First letter of a team name, used when the logo is missing. */
+  teamInitial(name?: string | null): string {
+    return (name ?? '').trim().charAt(0).toUpperCase() || '?';
+  }
+
+  /** Falls back to the placeholder when a logo URL fails to load. */
+  onLogoError(team: { logo?: string | null }): void {
+    team.logo = '';
+    this.cdr.detectChanges();
   }
 
   get regularMatches(): MatchView[] {
@@ -634,17 +775,12 @@ export class Matches implements OnInit, OnDestroy {
       this.matchOfTheWeek;
 
     if (!matchOfTheWeek) {
-      return this.matches;
+      return this.filteredMatches;
     }
 
-    return this.matches.filter(
+    return this.filteredMatches.filter(
       x => x.id !== matchOfTheWeek.id
     );
-  }
-
-  private syncResultInputs(match: MatchView | null): void {
-    this.resultHomeScore = match?.homeScore ?? null;
-    this.resultAwayScore = match?.awayScore ?? null;
   }
 
   private clearUploadState(): void {

@@ -19,29 +19,30 @@
 
     <div class="notifications-header">
       <div>
-        <h3>Notifications</h3>
-        <span>{{ unreadCount }} unread</span>
+        <h3>{{ 'Notifications' | t }}</h3>
+        <span>{{ unreadCount }} {{ 'unread' | t }}</span>
       </div>
 
       <button
         type="button"
         *ngIf="unreadCount > 0"
         (click)="markAllAsRead($event)">
-        Mark all read
+        {{ 'Mark all read' | t }}
       </button>
     </div>
 
     <div class="notifications-loading" *ngIf="isLoading">
       <i class="fa-solid fa-spinner fa-spin"></i>
-      <span>Loading...</span>
+      <span>{{ 'Loading...' | t }}</span>
     </div>
 
-    <div
-      class="notifications-empty"
-      *ngIf="!isLoading && notifications.length === 0">
-      <i class="fa-regular fa-bell"></i>
-      <span>No notifications yet.</span>
-    </div>
+    <app-empty-state
+      *ngIf="!isLoading && notifications.length === 0"
+      [compact]="true"
+      icon="fa-regular fa-bell"
+      title="No notifications yet"
+      description="Draft turns, offers and results will appear here.">
+    </app-empty-state>
 
     <div
       class="notification-list"
@@ -55,7 +56,7 @@
         (click)="openNotification(item)">
 
         <div class="notification-icon">
-          <i [class]="getIcon(item.type)"></i>
+          <i [class]="center.iconFor(item.type)"></i>
         </div>
 
         <div class="notification-content">
@@ -70,12 +71,16 @@
 
           <p>{{ item.message }}</p>
 
-          <small>
-            {{ item.createdAtUTC | date:'short' }}
+          <small [title]="item.createdAtUTC | tdate:'medium'">
+            {{ center.relativeTime(item.createdAtUTC) || (item.createdAtUTC | tdate:'short') }}
           </small>
         </div>
       </button>
     </div>
+
+    <a class="view-all" routerLink="/notifications" (click)="closeDropdown()">
+      {{ 'View all' | t }} <i class="fa-solid fa-arrow-right"></i>
+    </a>
   </div>
 
   <div

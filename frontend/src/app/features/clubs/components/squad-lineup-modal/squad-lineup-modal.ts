@@ -17,11 +17,14 @@ import {
   FormationSlot,
   SaveLineupPayload
 } from '../../../../core/models/squad.model';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-squad-lineup-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,
+    TranslatePipe
+  ],
   templateUrl: './squad-lineup-modal.html',
   styleUrl: './squad-lineup-modal.scss'
 })

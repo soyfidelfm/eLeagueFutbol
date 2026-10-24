@@ -1,4 +1,4 @@
-﻿namespace backend.Features.Draft.Services;
+namespace backend.Features.Draft.Services;
 
 using backend.Entities.Enums;
 using backend.Features.Draft.Dtos;
@@ -38,4 +38,16 @@ public interface IDraftService
 		Guid seasonId,
 		int drawNumber,
 		string auth0Id);
+
+	Task<DraftCenterDto> PauseDraftAsync(Guid seasonId, string auth0Id);
+
+	Task<DraftCenterDto> ResumeDraftAsync(Guid seasonId, string auth0Id);
+
+	Task<DraftCenterDto> StopDraftAsync(Guid seasonId, string auth0Id);
+
+	Task<DraftCenterDto> UpdateTimerAsync(Guid seasonId, string auth0Id, UpdateDraftTimerDto dto);
+
+	Task<DraftSettingsDto> GetDraftSettingsAsync();
+
+	Task<DraftSettingsDto> UpdateDraftSettingsAsync(string auth0Id, DraftSettingsDto dto);
 }

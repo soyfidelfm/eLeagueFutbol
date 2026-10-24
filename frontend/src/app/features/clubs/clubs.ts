@@ -14,6 +14,10 @@ import {
   FORMATION_LAYOUTS,
   FormationPlayerPosition
 } from '../../core/constants/formations';
+import { TranslationService } from '../../core/i18n/translation.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { LocalizedDatePipe } from '../../core/i18n/localized-date.pipe';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
 
 type ClubPlayer = NonNullable<MyClubDto['players']>[number];
 
@@ -24,7 +28,8 @@ type ClubPlayer = NonNullable<MyClubDto['players']>[number];
     CommonModule,
     RouterLink,
     SquadLineupModalComponent,
-    AppLoading
+    AppLoading,
+    TranslatePipe, LocalizedDatePipe, EmptyState
   ],
   templateUrl: './clubs.html',
   styleUrls: ['./clubs.scss', './clubs-squad.scss']
@@ -51,7 +56,8 @@ export class Clubs implements OnInit {
   constructor(
     private clubService: ClubService,
     private cloudinaryService: CloudinaryService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private i18n: TranslationService
   ) { }
 
   ngOnInit(): void {
@@ -91,13 +97,13 @@ export class Clubs implements OnInit {
       {
         label: 'Goals Scored',
         value: this.club.goalsFor.toString(),
-        sub: `${this.getAverage(this.club.goalsFor)} per match`,
+        sub: this.getAverage(this.club.goalsFor) + ' ' + this.i18n.t('per match'),
         icon: 'fa-solid fa-crosshairs'
       },
       {
         label: 'Goals Conceded',
         value: this.club.goalsAgainst.toString(),
-        sub: `${this.getAverage(this.club.goalsAgainst)} per match`,
+        sub: this.getAverage(this.club.goalsAgainst) + ' ' + this.i18n.t('per match'),
         icon: 'fa-solid fa-shield'
       },
       {

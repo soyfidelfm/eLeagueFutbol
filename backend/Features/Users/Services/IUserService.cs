@@ -1,4 +1,4 @@
-﻿using backend.Features.Users.Dtos;
+using backend.Features.Users.Dtos;
 using System.Security.Claims;
 
 namespace backend.Features.Users.Services;
@@ -14,4 +14,9 @@ public interface IUserService
 	Task<UserDto?> UpdateAsync(Guid userId, UpdateUserDto dto);
 	Task<MeUserDto?> GetMeAsync(ClaimsPrincipal principal);
 	Task<List<UserDto>> SearchAsync(string term, ClaimsPrincipal principal);
+
+	Task<UserSettingsDto?> GetSettingsAsync(ClaimsPrincipal principal);
+
+	/// <summary>Throws ArgumentException for an invalid time zone or language.</summary>
+	Task<UserSettingsDto?> UpdateSettingsAsync(ClaimsPrincipal principal, UserSettingsDto dto);
 }

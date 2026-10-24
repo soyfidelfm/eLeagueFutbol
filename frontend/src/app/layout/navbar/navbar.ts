@@ -1,12 +1,13 @@
 import { Component, HostListener, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
 import { firstValueFrom, Subscription, take } from 'rxjs';
 
 import { Profile } from '../../features/profile/profile';
 import { Notifications } from '../../features/notifications/notifications';
 import { MessageNotifications } from '../../features/message-notifications/message-notifications';
+import { GlobalSearch } from '../../features/global-search/global-search';
 
 import { UserService } from '../../core/services/user.service';
 import { SeasonService } from '../../core/services/season.service';
@@ -14,6 +15,9 @@ import { MessageService } from '../../core/services/message.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { NotificationInboxService } from '../../core/services/notification-inbox.service';
 import { RealtimeService } from '../../core/services/realtime.service';
+import { SettingsService } from '../../core/services/settings.service';
+import { TranslationService } from '../../core/i18n/translation.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 import { MeUserDto } from '../../core/models/user.model';
 
@@ -25,7 +29,9 @@ import { MeUserDto } from '../../core/models/user.model';
     RouterModule,
     Profile,
     Notifications,
-    MessageNotifications
+    MessageNotifications,
+    GlobalSearch,
+    TranslatePipe
   ],
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss'
@@ -43,6 +49,9 @@ export class Navbar implements OnInit, OnDestroy {
 
   unreadMessagesCount = 0;
 
+  avatarLoadFailed = false;
+  private lastAvatarUrl = '';
+
   constructor(
     public auth: AuthService,
     private userService: UserService,
@@ -52,11 +61,16 @@ export class Navbar implements OnInit, OnDestroy {
     private notificationInboxService: NotificationInboxService,
     private realtime: RealtimeService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private settingsService: SettingsService,
+    private i18n: TranslationService
   ) {}
 
   ngOnInit(): void {
     this.loadMe();
+
+    // Reconcile language / time zone / toast preference with the backend after login.
+    this.settingsService.load().subscribe({ error: () => {} });
     this.loadUnreadMessagesCount();
     this.setupPushNotifications();
 
@@ -72,12 +86,38 @@ export class Navbar implements OnInit, OnDestroy {
 
     this.subscription.add(
       this.realtime.userOnline$.subscribe(user => {
-        this.toastMessage = `${user.displayName} se conectó`;
+        if (!this.settingsService.toastsEnabled) {
+          return;
+        }
+
+        const onlineMessage = this.i18n.t('{name} is online', { name: user.displayName });
+        this.toastMessage = onlineMessage;
         this.showToast = true;
         this.cdr.detectChanges();
 
         setTimeout(() => {
-          if (this.toastMessage === `${user.displayName} se conectó`) {
+          if (this.toastMessage === onlineMessage) {
+            this.showToast = false;
+            this.cdr.detectChanges();
+          }
+        }, 3500);
+      })
+    );
+
+    // New inbox notifications: the center/badge always update; the toast respects the user's setting.
+    this.subscription.add(
+      this.realtime.notifications$.subscribe(notification => {
+        if (!notification?.title || !this.settingsService.toastsEnabled) {
+          return;
+        }
+
+        const message = notification.title;
+        this.toastMessage = message;
+        this.showToast = true;
+        this.cdr.detectChanges();
+
+        setTimeout(() => {
+          if (this.toastMessage === message) {
             this.showToast = false;
             this.cdr.detectChanges();
           }
@@ -87,7 +127,7 @@ export class Navbar implements OnInit, OnDestroy {
 
     this.subscription.add(
       this.realtime.draftEvents$.subscribe(event => {
-        if (!event?.eventType) {
+        if (!event?.eventType || !this.settingsService.toastsEnabled) {
           return;
         }
 
@@ -111,50 +151,50 @@ export class Navbar implements OnInit, OnDestroy {
     const type = (eventType ?? '').toLowerCase();
 
     if (type === 'transferoffer') {
-      return 'Nueva oferta de transferencia';
+      return 'New transfer offer';
     }
 
     if (type === 'transfercompleted' || type === 'transferaccepted') {
-      return 'Transferencia completada';
+      return 'Transfer completed';
     }
 
     if (type === 'transferrejected') {
-      return 'Oferta de transferencia rechazada';
+      return 'Transfer offer rejected';
     }
 
     if (type === 'transfercancelled') {
-      return 'Oferta de transferencia cancelada';
+      return 'Transfer offer cancelled';
     }
 
     if (type === 'matchresult' || type.startsWith('match')) {
-      return 'Resultado de partido actualizado';
+      return 'Match result updated';
     }
 
     if (type === 'pickmade' || type === 'pick') {
-      return 'Nuevo pick en el draft';
+      return 'New draft pick';
     }
 
     if (type === 'started' || type === 'start') {
-      return 'El draft inició';
+      return 'The draft has started';
     }
 
     if (type === 'turn' || type === 'turnchanged' || type === 'advanced') {
-      return 'Cambio de turno en el draft';
+      return 'Draft turn changed';
     }
 
     if (type === 'skipped' || type === 'skip') {
-      return 'Turno saltado por tiempo';
+      return 'Turn skipped (time expired)';
     }
 
     if (type === 'completed' || type === 'complete') {
-      return 'Draft completado';
+      return 'Draft completed';
     }
 
     if (type.startsWith('transfer')) {
-      return 'El mercado de transfers se actualizó';
+      return 'Transfer market updated';
     }
 
-    return 'El draft se actualizó';
+    return 'Draft updated';
   }
 
   async setupPushNotifications(): Promise<void> {
@@ -184,32 +224,26 @@ export class Navbar implements OnInit, OnDestroy {
       .pipe(take(1))
       .subscribe({
         next: me => {
+          const url = (me?.avatarUrl ?? '').trim();
+          if (url !== this.lastAvatarUrl) {
+            this.avatarLoadFailed = false;
+            this.lastAvatarUrl = url;
+          }
           this.me = me;
 
           if (me?.userId) {
             this.realtime.setCurrentUserId(me.userId);
           }
 
-          const profileIncomplete =
-            !me.gamerTag?.trim() ||
-            !me.clubName?.trim() ||
-            !me.gameClubId;
-
-          if (!this.firstProfileCheckDone && profileIncomplete) {
-            this.showProfileModal = true;
-            this.firstProfileCheckDone = true;
-          }
+          // Incomplete profiles are handled by the onboarding modal (features/onboarding).
+          this.firstProfileCheckDone = true;
 
           this.cdr.detectChanges();
         },
         error: err => {
           console.error('Error loading me', err);
 
-          if (err.status === 404 && !this.firstProfileCheckDone) {
-            this.showProfileModal = true;
-            this.firstProfileCheckDone = true;
-            this.cdr.detectChanges();
-          }
+          this.firstProfileCheckDone = true;
         }
       });
   }
@@ -265,7 +299,31 @@ export class Navbar implements OnInit, OnDestroy {
       });
   }
 
-  toggleUserMenu(event: MouseEvent): void {
+  get showAvatarImage(): boolean {
+    return !!this.me?.avatarUrl?.trim() && !this.avatarLoadFailed;
+  }
+
+  get avatarInitials(): string {
+    const source = (this.me?.displayName || this.me?.gamerTag || '').trim();
+
+    if (!source) {
+      return '?';
+    }
+
+    const parts = source.split(/\s+/).filter(Boolean);
+    const initials = parts.length > 1
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : source.slice(0, 2);
+
+    return initials.toUpperCase();
+  }
+
+  onAvatarError(): void {
+    this.avatarLoadFailed = true;
+    this.cdr.detectChanges();
+  }
+
+  toggleUserMenu(event: Event): void {
     event.stopPropagation();
     this.showUserMenu = !this.showUserMenu;
   }
@@ -307,6 +365,11 @@ export class Navbar implements OnInit, OnDestroy {
 
   @HostListener('document:click')
   onDocumentClick(): void {
+    this.showUserMenu = false;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
     this.showUserMenu = false;
   }
 }

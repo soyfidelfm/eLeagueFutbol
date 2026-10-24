@@ -788,3 +788,79 @@
     grid-template-columns: 1fr;
   }
 }
+/* =========================================
+   PERFORMANCE BAR CHART (responsive)
+========================================= */
+
+.perf-chart {
+  display: grid;
+  grid-template-columns: repeat(var(--perf-count, 10), minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+  height: 220px;
+  padding: 8px 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+
+.perf-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  min-width: 0;
+}
+
+.perf-rating {
+  margin-bottom: 4px;
+  color: var(--warning);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.perf-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  flex: 1;
+}
+
+.perf-bar {
+  width: min(16px, 40%);
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  transition: height .3s ease;
+
+  &.goals { background: var(--neon-primary); }
+  &.assists { background: var(--info); }
+}
+
+.perf-labels {
+  display: grid;
+  grid-template-columns: repeat(var(--perf-count, 10), minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .perf-chart, .perf-labels { gap: 4px; }
+  .perf-rating { font-size: 9px; }
+}
+
+.empty-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  border: 1px dashed rgba(255, 255, 255, .12);
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 800;
+}

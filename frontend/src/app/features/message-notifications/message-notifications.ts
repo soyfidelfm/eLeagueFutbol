@@ -4,12 +4,16 @@ import { RouterModule } from '@angular/router';
 import { Subscription, take } from 'rxjs';
 
 import { MessageService } from '../../core/services/message.service';
+import { ChatService } from '../chat/services/chat.service';
 import { AppLoading } from '../../shared/components/app-loading/app-loading';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-message-notifications',
   standalone: true,
-  imports: [CommonModule, RouterModule, AppLoading],
+  imports: [CommonModule, RouterModule, AppLoading,
+    TranslatePipe
+  ],
   templateUrl: './message-notifications.html',
   styleUrl: './message-notifications.scss'
 })
@@ -22,7 +26,8 @@ export class MessageNotifications implements OnInit, OnDestroy {
 
   constructor(
     private messageService: MessageService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private chat: ChatService
   ) {}
 
   ngOnInit(): void {
@@ -77,4 +82,9 @@ export class MessageNotifications implements OnInit, OnDestroy {
 
     this.subscription.add(sub);
   }
+
+  openChat(): void {
+    this.chat.openPanel();
+  }
+
 }

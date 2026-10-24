@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { ApiService } from '../services/api.service.ts';
@@ -33,9 +33,17 @@ export class NotificationInboxService extends ApiService {
     );
   }
 
-  getNotifications(): Observable<Notification[]> {
+  /** Newest first. `before` is the createdAtUTC of the last item already loaded. */
+  getNotifications(options: { unreadOnly?: boolean; before?: string | null; take?: number } = {}): Observable<Notification[]> {
+    let params = new HttpParams();
+
+    if (options.unreadOnly) params = params.set('unreadOnly', 'true');
+    if (options.before) params = params.set('before', options.before);
+    if (options.take) params = params.set('take', String(options.take));
+
     return this.get<Notification[]>(
-      API_ENDPOINTS.notifications
+      API_ENDPOINTS.notifications,
+      params
     );
   }
 

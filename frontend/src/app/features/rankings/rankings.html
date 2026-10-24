@@ -2,16 +2,19 @@
 
   <app-loading
   *ngIf="isLoading"
-  title="Loading Rankings"
-  message="Loading season standings, club statistics and leaderboard data..."
+  [title]="'Loading Rankings' | t"
+  [message]="'Loading season standings, club statistics and leaderboard data...' | t"
   [logo]="true"
   [showBar]="true">
 </app-loading>
 
-  <div *ngIf="!isLoading && errorMessage" class="error">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <span>{{ errorMessage }}</span>
-  </div>
+  <app-empty-state
+    *ngIf="!isLoading && errorMessage"
+    tone="error"
+    icon="fa-solid fa-triangle-exclamation"
+    title="Something went wrong"
+    [description]="errorMessage">
+  </app-empty-state>
 
   <ng-container *ngIf="!isLoading && !errorMessage">
 
@@ -19,19 +22,19 @@
 
       <div class="page-header-content">
         <span class="page-eyebrow">
-          SEASON LEADERBOARD
+          {{ 'SEASON LEADERBOARD' | t }}
         </span>
 
-        <h1>Rankings</h1>
+        <h1>{{ 'Rankings' | t }}</h1>
 
         <p>
-          Compare clubs and track league standings across all seasons.
+          {{ 'Compare clubs and track league standings across all seasons.' | t }}
         </p>
 
         <p class="live-line">
           <span class="live-dot" [class.refreshing]="isRefreshing"></span>
-          Live table
-          <span *ngIf="liveMessage"> · {{ liveMessage }}</span>
+          {{ 'Live table' | t }}
+          <span *ngIf="liveMessage"> · {{ liveMessage | t }}</span>
         </p>
       </div>
 
@@ -63,16 +66,15 @@
 
       <div class="card-header">
         <div>
-          <span class="section-label">Club Standings</span>
+          <span class="section-label">{{ 'Club Standings' | t }}</span>
 
           <h2>
             <i class="fa-solid fa-trophy"></i>
-            {{ selectedSeasonName }} Table
+            {{ selectedSeasonName }} {{ 'Table' | t }}
           </h2>
 
           <p>
-            Registered clubs ranked by points,
-            goal difference and goals scored.
+            {{ 'Registered clubs ranked by points, goal difference and goals scored.' | t }}
           </p>
         </div>
       </div>
@@ -83,7 +85,7 @@
           <i class="fa-solid fa-crown"></i>
 
           <div>
-            <span>League Leader</span>
+            <span>{{ 'League Leader' | t }}</span>
 
             <strong>
               {{ clubRankings[0]?.clubName || 'N/A' }}
@@ -95,7 +97,7 @@
           <i class="fa-solid fa-users"></i>
 
           <div>
-            <span>Registered Clubs</span>
+            <span>{{ 'Registered Clubs' | t }}</span>
             <strong>{{ clubRankings.length }}</strong>
           </div>
         </div>
@@ -104,23 +106,47 @@
           <i class="fa-solid fa-futbol"></i>
 
           <div>
-            <span>Total Goals</span>
+            <span>{{ 'Total Goals' | t }}</span>
             <strong>{{ getTotalGoals() }}</strong>
           </div>
         </div>
 
       </div>
 
-      <div
-        *ngIf="clubRankings.length === 0"
-        class="empty-state"
-      >
-        <i class="fa-solid fa-shield-halved"></i>
-        <span>No clubs registered for this season.</span>
+      <div class="ranking-filters" *ngIf="clubRankings.length > 0">
+        <div class="search-box">
+          <label>{{ 'Search' | t }}</label>
+          <div class="search-input">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" [(ngModel)]="searchTerm" [placeholder]="'Search club or player' | t" />
+          </div>
+        </div>
+        <app-neon-dropdown label="Club" [options]="clubOptions"
+          [selectedValue]="clubFilter" (selectedValueChange)="clubFilter = $event"></app-neon-dropdown>
+        <app-neon-dropdown label="Sort by" [options]="sortOptions"
+          [selectedValue]="sortBy" (selectedValueChange)="onSortChange($event)"></app-neon-dropdown>
+        <button type="button" class="clear-btn" *ngIf="hasActiveFilters" (click)="clearFilters()">
+          <i class="fa-solid fa-xmark"></i> {{ 'Clear filters' | t }}
+        </button>
       </div>
 
+      <app-empty-state
+        *ngIf="clubRankings.length > 0 && filteredClubRankings.length === 0"
+        icon="fa-solid fa-filter-circle-xmark"
+        title="No clubs match your filters"
+        description="Try another club or player name, or clear the filters.">
+        <button type="button" class="clear-btn" (click)="clearFilters()">{{ 'Clear filters' | t }}</button>
+      </app-empty-state>
+
+      <app-empty-state
+        *ngIf="clubRankings.length === 0"
+        icon="fa-solid fa-shield-halved"
+        title="No standings yet"
+        description="No clubs are registered for this season yet. The table fills in as clubs join and play.">
+      </app-empty-state>
+
       <div
-        *ngIf="clubRankings.length > 0"
+        *ngIf="filteredClubRankings.length > 0"
         class="table-wrap"
       >
 
@@ -128,8 +154,8 @@
 
           <thead>
             <tr>
-              <th>Rank</th>
-              <th>Club</th>
+              <th>{{ 'Rank' | t }}</th>
+              <th>{{ 'Club' | t }}</th>
               <th>PTS</th>
               <th>W</th>
               <th>D</th>
@@ -137,14 +163,14 @@
               <th>GF</th>
               <th>GA</th>
               <th>GD</th>
-              <th>Win %</th>
-              <th>Form</th>
+              <th>{{ 'Win %' | t }}</th>
+              <th>{{ 'Form' | t }}</th>
             </tr>
           </thead>
 
           <tbody>
 
-            <tr *ngFor="let club of clubRankings">
+            <tr *ngFor="let club of filteredClubRankings">
 
               <td>
                 <span

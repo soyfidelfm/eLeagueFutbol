@@ -49,6 +49,8 @@ public class AppDbContext : DbContext
 	public DbSet<DraftOrder> DraftOrders => Set<DraftOrder>();
 	public DbSet<DraftPick> DraftPicks => Set<DraftPick>();
 
+	public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+
 	public DbSet<NotificationToken> NotificationTokens => Set<NotificationToken>();
 	public DbSet<Message> Messages => Set<Message>();
 	public DbSet<Notification> Notifications => Set<Notification>();
@@ -58,10 +60,49 @@ public class AppDbContext : DbContext
 	public DbSet<MatchPlayerStats> MatchPlayerStats => Set<MatchPlayerStats>();
 	public DbSet<MatchSummaryStats> MatchSummaryStats => Set<MatchSummaryStats>();
 	public DbSet<MatchStatsUpload> MatchStatsUploads => Set<MatchStatsUpload>();
+	public DbSet<PendingMatchResult> PendingMatchResults => Set<PendingMatchResult>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);
+
+		modelBuilder.Entity<AppSetting>(entity =>
+		{
+			entity.HasKey(x => x.Key);
+			entity.Property(x => x.Key).HasMaxLength(100);
+			entity.Property(x => x.Value).HasMaxLength(1000);
+		});
+
+		modelBuilder.Entity<PendingMatchResult>(entity =>
+		{
+			entity.HasKey(x => x.PendingMatchResultId);
+
+			entity.HasOne(x => x.Match)
+				.WithMany()
+				.HasForeignKey(x => x.MatchId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			entity.HasIndex(x => new { x.MatchId, x.Status });
+
+			// Only one Pending (Status = 1) proposal per match.
+			entity.HasIndex(x => x.MatchId)
+				.IsUnique()
+				.HasFilter("\"Status\" = 1")
+				.HasDatabaseName("IX_PendingMatchResults_MatchId_Pending");
+		});
+
+		modelBuilder.Entity<User>(entity =>
+		{
+			entity.Property(x => x.Language)
+				.HasMaxLength(8)
+				.HasDefaultValue("en");
+
+			entity.Property(x => x.PushNotificationsEnabled)
+				.HasDefaultValue(true);
+
+			entity.Property(x => x.InAppToastsEnabled)
+				.HasDefaultValue(true);
+		});
 
 		modelBuilder.Entity<User>()
 			.HasOne(x => x.GameClub)
