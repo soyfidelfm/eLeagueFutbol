@@ -1,6 +1,6 @@
 @if (chat.panelOpen()) {
   <section id="chat-panel" role="dialog" aria-label="Messages"
-           class="chat-panel fixed inset-0 z-[70] flex flex-col overflow-hidden bg-[#0a0f0c] text-white sm:inset-auto sm:bottom-4 sm:right-4 sm:h-[min(36rem,calc(100dvh-6rem))] sm:w-[24rem] sm:rounded-2xl sm:border sm:border-[rgba(0,255,136,0.28)] sm:shadow-2xl">
+           class="chat-panel fixed inset-0 z-[10050] flex flex-col overflow-hidden bg-[#0a0f0c] text-white sm:inset-auto sm:bottom-4 sm:right-4 sm:h-[min(36rem,calc(100dvh-6rem))] sm:w-[24rem] sm:rounded-2xl sm:border sm:border-[rgba(0,255,136,0.28)] sm:shadow-2xl">
     @if (chat.composing()) {
       <app-new-chat (closed)="close()" />
     } @else if (chat.activeId()) {

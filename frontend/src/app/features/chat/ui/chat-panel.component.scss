@@ -10,6 +10,35 @@
 .chat-panel { animation: chat-panel-in 160ms ease-out; }
 .skeleton { animation: chat-skeleton 1.4s ease-in-out infinite; }
 
+/* Footer is fixed at <= 1400px with z-index 9999. Keep the panel above it. */
+@media (max-width: 1400px) {
+  .chat-panel {
+    z-index: 10050;
+    /* Clear the mobile footer (72px + safe area) so the composer stays usable. */
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    top: calc(92px + env(safe-area-inset-top));
+    right: 0.75rem;
+    left: auto;
+    height: auto;
+    width: min(24rem, calc(100vw - 1.5rem));
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 255, 136, 0.28);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Phones: full width between navbar and footer. */
+@media (max-width: 640px) {
+  .chat-panel {
+    left: 0;
+    right: 0;
+    width: auto;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .chat-panel, .skeleton { animation: none; }
 }
