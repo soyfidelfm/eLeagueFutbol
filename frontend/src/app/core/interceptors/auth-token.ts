@@ -9,7 +9,8 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
   const isApiRequest =
     req.url.startsWith('https://localhost:7159/api') ||
     req.url.startsWith('https://api.eleaguefutbol.com/api') ||
-    req.url.startsWith('https://api.eleaguefutbol.fidelfm.com/api');
+    req.url.startsWith('https://api.eleaguefutbol.fidelfm.com/api') ||
+    req.url.startsWith('https://eleaguefutbol.onrender.com/api');
 
   if (!isApiRequest) {
     return next(req);
