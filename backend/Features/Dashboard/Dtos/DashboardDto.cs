@@ -1,4 +1,4 @@
-﻿namespace backend.Features.Dashboard.Dtos;
+namespace backend.Features.Dashboard.Dtos;
 
 public class DashboardDto
 {
@@ -35,6 +35,9 @@ public class PlayerLeaderboardDto
 {
 	public int Rank { get; set; }
 	public string Name { get; set; } = string.Empty;
+	public string TeamName { get; set; } = string.Empty;
+	public string TeamLogo { get; set; } = string.Empty;
+	public bool IsMe { get; set; }
 	public int Points { get; set; }
 	public string Gd { get; set; } = string.Empty;
 	public string Record { get; set; } = string.Empty;
@@ -66,6 +69,11 @@ public class MatchSummaryDto
 	public string Stage { get; set; } = string.Empty;
 	public string Score { get; set; } = string.Empty;
 	public string Status { get; set; } = string.Empty;
+	public string Home { get; set; } = string.Empty;
+	public string Away { get; set; } = string.Empty;
+	public string Date { get; set; } = string.Empty;
+	/// <summary>W, D or L from the current user's point of view.</summary>
+	public string Result { get; set; } = string.Empty;
 }
 
 public class UpcomingMatchDto
@@ -89,6 +97,10 @@ public class MyStatsDto
 	public int Assists { get; set; }
 	public int CleanSheets { get; set; }
 	public string AvgPossession { get; set; } = "0%";
+	public int MatchesPlayed { get; set; }
+	public int Wins { get; set; }
+	public int Draws { get; set; }
+	public int Losses { get; set; }
 }
 
 public class ActivityDto
