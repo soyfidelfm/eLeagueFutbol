@@ -60,6 +60,11 @@ export interface Match {
   stage: string;
   score: string;
   status: string;
+  home?: string;
+  away?: string;
+  date?: string;
+  /** W / D / L from the current user's point of view. */
+  result?: 'W' | 'D' | 'L' | '';
 }
 
 export interface SaveManualMatchStatsRequest {
