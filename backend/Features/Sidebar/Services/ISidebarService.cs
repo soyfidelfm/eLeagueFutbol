@@ -1,8 +1,8 @@
-﻿using backend.Features.Sidebar.Dtos;
+using backend.Features.Sidebar.Dtos;
 
 namespace backend.Features.Sidebar.Services;
 
 public interface ISidebarService
 {
-	Task<SidebarDto> GetAsync();
+	Task<SidebarDto> GetAsync(string? auth0Id = null);
 }
