@@ -834,4 +834,8 @@ export const ES: Record<string, string> = {
   "YOUR NEXT FIXTURES": "TUS PRÓXIMOS PARTIDOS",
   "Your pending fixtures will appear here.": "Tus partidos pendientes aparecerán aquí.",
   "Played": "Jugados",
+  "TOP 5": "TOP 5",
+  "LEAGUE TOP ASSISTS": "LÍDER DE ASISTENCIAS",
+  "MY TEAM TOP ASSISTS": "ASISTENCIAS DE MI EQUIPO",
+  "No assists yet": "Aún sin asistencias",
 };

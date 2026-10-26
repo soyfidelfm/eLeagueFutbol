@@ -550,3 +550,61 @@ a.insight-card:hover {
 .insight-card.highlight strong.position {
   color: var(--neon-primary);
 }
+
+/* Top 5 table card */
+.table-card {
+  gap: 4px;
+}
+
+.table-card .table-row {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  align-items: center;
+  gap: 6px;
+
+  padding: 4px 6px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+.table-card .table-row .pos {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.table-card .table-row .names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.table-card .table-row .names strong {
+  font-size: 13px;
+}
+
+.table-card .table-row b {
+  color: var(--neon-primary);
+  font-weight: 900;
+}
+
+.table-card .table-row.me {
+  background: rgba(0,255,136,.08);
+  border-color: rgba(0,255,136,.25);
+}
+
+.table-card .table-row.me .pos,
+.table-card .table-row.me strong {
+  color: var(--neon-primary);
+}
+
+.table-card .table-gap {
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.table-card .table-foot {
+  margin-top: 2px;
+  text-align: right;
+}
