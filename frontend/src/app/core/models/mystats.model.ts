@@ -4,4 +4,8 @@ export interface MyStats {
   assists: number;
   cleanSheets: number;
   avgPossession: string;
+  matchesPlayed?: number;
+  wins?: number;
+  draws?: number;
+  losses?: number;
 }

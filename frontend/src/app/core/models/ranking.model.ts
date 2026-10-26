@@ -11,10 +11,17 @@ export interface PlayerRankingDto {
 
   points: number;
   wins: number;
+  draws: number;
   losses: number;
+  played: number;
 
   goalsFor: number;
   goalsAgainst: number;
+  goalDifference: number;
+
+  /** Goals / assists from player stats (not part of points). */
+  goals: number;
+  assists: number;
 
   winRate: number;
 
@@ -33,6 +40,7 @@ export interface ClubRankingDto {
   wins: number;
   draws: number;
   losses: number;
+  played: number;
 
   goalsFor: number;
   goalsAgainst: number;

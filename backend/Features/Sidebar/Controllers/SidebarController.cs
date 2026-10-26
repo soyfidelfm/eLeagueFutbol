@@ -1,4 +1,5 @@
-﻿using backend.Features.Sidebar.Dtos;
+using System.Security.Claims;
+using backend.Features.Sidebar.Dtos;
 using backend.Features.Sidebar.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,7 +19,9 @@ public class SidebarController : ControllerBase
 	[HttpGet]
 	public async Task<ActionResult<SidebarDto>> Get()
 	{
-		var result = await _sidebarService.GetAsync();
+		// Endpoint stays anonymous; personal widgets are filled only when a token is present.
+		var auth0Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		var result = await _sidebarService.GetAsync(auth0Id);
 		return Ok(result);
 	}
 }

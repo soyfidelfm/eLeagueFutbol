@@ -472,3 +472,88 @@
     position: relative;
   }
 }
+/* =========================================
+   PERSONAL INSIGHTS (next match, position, scorers)
+========================================= */
+
+.insights-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding: 12px;
+
+  border-radius: 20px;
+
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border-primary);
+}
+
+.insight {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  padding: 8px 10px;
+
+  border-radius: 12px;
+  border: 1px solid transparent;
+
+  color: inherit;
+  text-decoration: none;
+
+  transition: .25s ease;
+}
+
+a.insight:hover {
+  border-color: var(--border-primary);
+  background: rgba(0,255,136,.05);
+}
+
+.insight-label {
+  color: var(--text-secondary);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+
+.insight strong {
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insight strong b {
+  color: var(--neon-primary);
+  margin-left: 4px;
+}
+
+.insight strong em {
+  color: var(--text-secondary);
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.insight small {
+  color: var(--text-secondary);
+  font-size: 11px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insight.top-five {
+  background: rgba(0,255,136,.08);
+  border-color: rgba(0,255,136,.25);
+  box-shadow: 0 0 18px rgba(0,255,136,.12);
+}
+
+.insight.top-five strong,
+.insight.top-five i {
+  color: var(--neon-primary);
+}

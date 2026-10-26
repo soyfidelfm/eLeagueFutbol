@@ -1,4 +1,4 @@
-﻿using backend.Data;
+using backend.Data;
 using backend.Entities.Clubs;
 using backend.Entities.Enums;
 using backend.Features.Rankings.DTOs;
@@ -85,44 +85,29 @@ public sealed class RankingService : IRankingService
 		Guid seasonId,
 		List<UserClub> userClubs)
 	{
-		var table = userClubs
+		var clubsByUser = userClubs
 			.GroupBy(x => x.UserId)
-			.ToDictionary(
-				g => g.Key,
-				g =>
-				{
-					var club = g.First();
+			.ToDictionary(g => g.Key, g => g.First());
 
-					return new PlayerRankingDto
-					{
-						UserId = club.UserId,
-						PlayerName = string.IsNullOrWhiteSpace(club.User.DisplayName)
-							? club.User.Email
-							: club.User.DisplayName,
-						AvatarUrl = string.IsNullOrWhiteSpace(club.User.AvatarUrl)
-							? string.Empty
-							: club.User.AvatarUrl,
+		var finishedMatches = await _context.Matches
+			.AsNoTracking()
+			.Where(x =>
+				!x.IsDeleted &&
+				x.Status == MatchStatus.Finished &&
+				x.Tournament.SeasonId == seasonId)
+			.ToListAsync();
 
-						ClubId = club.UserClubId,
-						ClubName = club.Name,
-						ClubLogoUrl = GetClubLogo(club),
-
-						Points = 0,
-						Wins = 0,
-						Losses = 0,
-						GoalsFor = 0,
-						GoalsAgainst = 0,
-						WinRate = 0,
-						Form = []
-					};
-				});
+		// League points only (3/1/0). Goals/assists are separate columns, not points.
+		var lines = LeaguePoints.Build(
+			finishedMatches,
+			userId => clubsByUser.ContainsKey(userId) ? userId : null);
 
 		var stats = await _context.MatchPlayerStats
-			.Include(x => x.Match)
-				.ThenInclude(x => x.Tournament)
+			.AsNoTracking()
 			.Where(x =>
 				!x.IsDeleted &&
 				x.Match.Status == MatchStatus.Finished &&
+				!x.Match.IsDeleted &&
 				x.Match.Tournament.SeasonId == seasonId)
 			.GroupBy(x => x.UserId)
 			.Select(g => new
@@ -131,78 +116,43 @@ public sealed class RankingService : IRankingService
 				Goals = g.Sum(x => x.Goals),
 				Assists = g.Sum(x => x.Assists)
 			})
-			.ToListAsync();
+			.ToDictionaryAsync(x => x.UserId);
 
-		foreach (var stat in stats)
-		{
-			if (!table.TryGetValue(stat.UserId, out var player))
-				continue;
-
-			player.Points += stat.Goals * 10 + stat.Assists * 5;
-		}
-
-		var finishedMatches = await _context.Matches
-			.Include(x => x.Tournament)
-			.Where(x =>
-				!x.IsDeleted &&
-				x.Status == MatchStatus.Finished &&
-				x.Tournament.SeasonId == seasonId)
-			.OrderBy(x => x.MatchDate)
-			.ToListAsync();
-
-		foreach (var match in finishedMatches)
-		{
-			if (!table.TryGetValue(match.HomeUserId, out var home))
-				continue;
-
-			if (!table.TryGetValue(match.AwayUserId, out var away))
-				continue;
-
-			home.GoalsFor += match.HomeScore;
-			home.GoalsAgainst += match.AwayScore;
-
-			away.GoalsFor += match.AwayScore;
-			away.GoalsAgainst += match.HomeScore;
-
-			if (match.HomeScore > match.AwayScore)
+		var rankings = clubsByUser.Values
+			.Select(club =>
 			{
-				home.Wins++;
-				home.Points += 3;
-				home.Form.Add("W");
+				lines.TryGetValue(club.UserId, out var line);
+				line ??= new LeaguePoints.Line();
+				stats.TryGetValue(club.UserId, out var stat);
 
-				away.Losses++;
-				away.Form.Add("L");
-			}
-			else if (match.HomeScore < match.AwayScore)
-			{
-				away.Wins++;
-				away.Points += 3;
-				away.Form.Add("W");
+				return new PlayerRankingDto
+				{
+					UserId = club.UserId,
+					PlayerName = string.IsNullOrWhiteSpace(club.User.DisplayName)
+						? club.User.Email
+						: club.User.DisplayName,
+					AvatarUrl = club.User.AvatarUrl ?? string.Empty,
 
-				home.Losses++;
-				home.Form.Add("L");
-			}
-			else
-			{
-				home.Form.Add("D");
-				away.Form.Add("D");
-			}
-		}
+					ClubId = club.UserClubId,
+					ClubName = club.Name,
+					ClubLogoUrl = GetClubLogo(club),
 
-		var rankings = table.Values
-			.Select(x =>
-			{
-				var games = x.Wins + x.Losses;
-
-				x.WinRate = games == 0
-					? 0
-					: Math.Round((decimal)x.Wins / games * 100, 2);
-
-				x.Form = x.Form.TakeLast(5).ToList();
-
-				return x;
+					Points = line.Points,
+					Wins = line.Wins,
+					Draws = line.Draws,
+					Losses = line.Losses,
+					Played = line.Played,
+					GoalsFor = line.GoalsFor,
+					GoalsAgainst = line.GoalsAgainst,
+					GoalDifference = line.GoalDifference,
+					Goals = stat?.Goals ?? 0,
+					Assists = stat?.Assists ?? 0,
+					WinRate = line.WinRate,
+					Form = line.LastFive
+				};
 			})
 			.OrderByDescending(x => x.Points)
+			.ThenByDescending(x => x.GoalDifference)
 			.ThenByDescending(x => x.GoalsFor)
 			.ThenBy(x => x.PlayerName)
 			.ToList();
@@ -218,93 +168,35 @@ public sealed class RankingService : IRankingService
 		List<UserClub> userClubs,
 		Dictionary<Guid, UserClub> userClubMap)
 	{
-		var table = userClubs
+		var lines = LeaguePoints.Build(
+			matches,
+			userId => userClubMap.TryGetValue(userId, out var c) ? c.UserClubId : null);
+
+		var rankings = userClubs
 			.GroupBy(x => x.UserClubId)
-			.ToDictionary(
-				g => g.Key,
-				g =>
+			.Select(g =>
+			{
+				var club = g.First();
+				lines.TryGetValue(club.UserClubId, out var line);
+				line ??= new LeaguePoints.Line();
+
+				return new ClubRankingDto
 				{
-					var club = g.First();
+					ClubId = club.UserClubId,
+					ClubName = club.Name,
+					ClubLogoUrl = GetClubLogo(club),
 
-					return new ClubRankingDto
-					{
-						ClubId = club.UserClubId,
-						ClubName = club.Name,
-						ClubLogoUrl = GetClubLogo(club),
-
-						Points = 0,
-						Wins = 0,
-						Draws = 0,
-						Losses = 0,
-						GoalsFor = 0,
-						GoalsAgainst = 0,
-						GoalDifference = 0,
-						WinRate = 0,
-						Form = []
-					};
-				});
-
-		foreach (var match in matches.OrderBy(x => x.MatchDate))
-		{
-			if (!userClubMap.TryGetValue(match.HomeUserId, out var homeClub))
-				continue;
-
-			if (!userClubMap.TryGetValue(match.AwayUserId, out var awayClub))
-				continue;
-
-			var home = table[homeClub.UserClubId];
-			var away = table[awayClub.UserClubId];
-
-			home.GoalsFor += match.HomeScore;
-			home.GoalsAgainst += match.AwayScore;
-
-			away.GoalsFor += match.AwayScore;
-			away.GoalsAgainst += match.HomeScore;
-
-			if (match.HomeScore > match.AwayScore)
-			{
-				home.Wins++;
-				home.Points += 3;
-				home.Form.Add("W");
-
-				away.Losses++;
-				away.Form.Add("L");
-			}
-			else if (match.HomeScore < match.AwayScore)
-			{
-				away.Wins++;
-				away.Points += 3;
-				away.Form.Add("W");
-
-				home.Losses++;
-				home.Form.Add("L");
-			}
-			else
-			{
-				home.Draws++;
-				away.Draws++;
-
-				home.Points++;
-				away.Points++;
-
-				home.Form.Add("D");
-				away.Form.Add("D");
-			}
-		}
-
-		var rankings = table.Values
-			.Select(x =>
-			{
-				var games = x.Wins + x.Draws + x.Losses;
-
-				x.GoalDifference = x.GoalsFor - x.GoalsAgainst;
-				x.WinRate = games == 0
-					? 0
-					: Math.Round((decimal)x.Wins / games * 100, 2);
-
-				x.Form = x.Form.TakeLast(5).ToList();
-
-				return x;
+					Points = line.Points,
+					Wins = line.Wins,
+					Draws = line.Draws,
+					Losses = line.Losses,
+					Played = line.Played,
+					GoalsFor = line.GoalsFor,
+					GoalsAgainst = line.GoalsAgainst,
+					GoalDifference = line.GoalDifference,
+					WinRate = line.WinRate,
+					Form = line.LastFive
+				};
 			})
 			.OrderByDescending(x => x.Points)
 			.ThenByDescending(x => x.GoalDifference)

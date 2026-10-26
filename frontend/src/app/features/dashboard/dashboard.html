@@ -126,9 +126,8 @@
         <div class="panel-header">
           <div>
             <h2>{{ 'ELITE LEADERBOARD' | t }}</h2>
-            <span>{{ 'TOP 100 PLAYERS' | t }}</span>
+            <span>{{ 'SEASON STANDINGS' | t }}</span>
           </div>
-          <button>{{ 'View All' | t }}</button>
         </div>
 
         <app-empty-state
@@ -143,30 +142,30 @@
           <div class="table-row table-head">
             <span>{{ 'Rank' | t }}</span>
             <span>{{ 'Player' | t }}</span>
-            <span>PTS</span>
-            <span>GD</span>
-            <span>W/L</span>
-            <span>{{ 'Form' | t }}</span>
+            <span>{{ 'Team' | t }}</span>
+            <span class="pts">{{ 'PTS' | t }}</span>
           </div>
 
           <div class="table-row" *ngFor="let player of leaderboard" [class.gold]="player.rank === 1"
-            [class.silver]="player.rank === 2" [class.bronze]="player.rank === 3">
+            [class.silver]="player.rank === 2" [class.bronze]="player.rank === 3" [class.me]="player.isMe">
             <span class="rank">{{ player.rank }}</span>
 
             <span class="player">
-              <img [src]="player.avatar || '/images/avatar1.png'" alt="avatar" />
+              <img
+                *ngIf="player.avatar && !brokenAvatars.has(player.avatar); else initialsTpl"
+                [src]="player.avatar"
+                alt=""
+                referrerpolicy="no-referrer"
+                (error)="brokenAvatars.add(player.avatar)" />
+              <ng-template #initialsTpl>
+                <span class="avatar-initials" aria-hidden="true">{{ initials(player.name) }}</span>
+              </ng-template>
               <strong>{{ player.name }}</strong>
             </span>
 
-            <span>{{ player.points }}</span>
-            <span>{{ player.gd }}</span>
-            <span>{{ player.record }}</span>
+            <span class="team">{{ player.teamName || '—' }}</span>
 
-            <span class="form">
-              <b *ngFor="let item of player.form" [class.loss]="item === 'L'">
-                {{ item }}
-              </b>
-            </span>
+            <span class="pts">{{ player.points }}</span>
           </div>
         </div>
       </article>
@@ -182,8 +181,8 @@
 
         <div class="match-week">
           <div class="hero-player green">
-            <div class="rating">{{ matchOfWeek.home.rating }}</div>
-            <img [src]="matchOfWeek.home.image || '/images/player1.png'" alt="player" />
+            <img [src]="matchOfWeek.home.image || '/images/player1.png'" alt="" referrerpolicy="no-referrer" />
+            <div class="rating" [title]="'Squad average rating' | t">{{ matchOfWeek.home.rating }}<small>{{ 'OVR' | t }}</small></div>
             <h3>{{ matchOfWeek.home.name }}</h3>
             <p>{{ 'Rank #' | t }}{{ matchOfWeek.home.rank }}</p>
             <strong>{{ matchOfWeek.home.streak }}</strong>
@@ -197,8 +196,8 @@
           </div>
 
           <div class="hero-player purple">
-            <div class="rating">{{ matchOfWeek.away.rating }}</div>
-            <img [src]="matchOfWeek.away.image || '/images/player2.png'" alt="player" />
+            <img [src]="matchOfWeek.away.image || '/images/player2.png'" alt="" referrerpolicy="no-referrer" />
+            <div class="rating" [title]="'Squad average rating' | t">{{ matchOfWeek.away.rating }}<small>{{ 'OVR' | t }}</small></div>
             <h3>{{ matchOfWeek.away.name }}</h3>
             <p>{{ 'Rank #' | t }}{{ matchOfWeek.away.rank }}</p>
             <strong>{{ matchOfWeek.away.streak }}</strong>
@@ -224,31 +223,30 @@
       <article class="panel active-panel">
         <div class="panel-header">
           <div>
-            <h2>{{ 'ACTIVE MATCHES' | t }}</h2>
-            <span>{{ matches.length }} {{ 'ACTIVE / UPCOMING' | t }}</span>
+            <h2>{{ 'LAST RESULTS' | t }}</h2>
+            <span>{{ 'YOUR LAST 3 MATCHES' | t }}</span>
           </div>
-          <button>{{ 'View All' | t }}</button>
         </div>
 
         <app-empty-state
           *ngIf="!isLoading && matches.length === 0"
           [compact]="true"
           icon="fa-solid fa-futbol"
-          title="No active matches"
-          description="Live and in-progress matches will show here.">
+          title="No results yet"
+          description="Your latest results will show here once you play.">
         </app-empty-state>
 
         <div class="active-list" *ngIf="matches.length > 0">
           <div class="active-match" *ngFor="let match of matches">
             <div>
-              <strong>{{ match.stage }}</strong>
-              <span>{{ match.status }}</span>
+              <strong>{{ match.home }} {{ 'vs' | t }} {{ match.away }}</strong>
+              <span>{{ match.stage }} · {{ match.date }}</span>
             </div>
 
             <h3>{{ match.score }}</h3>
 
-            <small [class.live]="match.status === 'LIVE'">
-              {{ match.status }}
+            <small [class.live]="match.result === 'L'" [class.draw]="match.result === 'D'">
+              {{ (match.result === 'W' ? 'W' : match.result === 'L' ? 'L' : 'D') | t }}
             </small>
           </div>
         </div>
@@ -258,9 +256,8 @@
         <div class="panel-header">
           <div>
             <h2>{{ 'UPCOMING MATCHES' | t }}</h2>
-            <span>{{ 'NEXT FIXTURES' | t }}</span>
+            <span>{{ 'YOUR NEXT FIXTURES' | t }}</span>
           </div>
-          <button>{{ 'View All' | t }}</button>
         </div>
 
         <app-empty-state
@@ -268,7 +265,7 @@
           [compact]="true"
           icon="fa-regular fa-calendar"
           title="No upcoming matches"
-          description="New fixtures will appear once the schedule is generated.">
+          description="Your pending fixtures will appear here.">
         </app-empty-state>
 
         <div class="upcoming-list" *ngIf="upcomingMatches.length > 0">
@@ -320,6 +317,9 @@
             <p>{{ 'Assists' | t }} <b>{{ myStats.assists }}</b></p>
             <p>{{ 'Clean Sheets' | t }} <b>{{ myStats.cleanSheets }}</b></p>
             <p>{{ 'Avg Possession' | t }} <b>{{ myStats.avgPossession }}</b></p>
+            <p>{{ 'Played' | t }} <b>{{ myStats.matchesPlayed ?? 0 }}</b>
+              <span class="wdl">{{ myStats.wins ?? 0 }}{{ 'W' | t }} · {{ myStats.draws ?? 0 }}{{ 'D' | t }} · {{ myStats.losses ?? 0 }}{{ 'L' | t }}</span>
+            </p>
           </div>
         </div>
       </article>
