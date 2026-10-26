@@ -116,6 +116,36 @@ public class SidebarService : ISidebarService
 			};
 		}
 
+		// Championship top assist provider (same source: MatchPlayerStats).
+		var topAssist = await _context.MatchPlayerStats
+			.AsNoTracking()
+			.Where(x =>
+				!x.IsDeleted &&
+				x.Assists > 0 &&
+				x.Match.Status == MatchStatus.Finished &&
+				!x.Match.IsDeleted &&
+				x.Match.Tournament.SeasonId == seasonId)
+			.GroupBy(x => new { x.UserClubId, x.PlayerName, ClubName = x.UserClub.Name })
+			.Select(g => new
+			{
+				g.Key.PlayerName,
+				g.Key.ClubName,
+				Assists = g.Sum(x => x.Assists)
+			})
+			.OrderByDescending(x => x.Assists)
+			.ThenBy(x => x.PlayerName)
+			.FirstOrDefaultAsync();
+
+		if (topAssist is not null)
+		{
+			dto.LeagueTopAssist = new SidebarAssistDto
+			{
+				PlayerName = topAssist.PlayerName,
+				ClubName = topAssist.ClubName,
+				Assists = topAssist.Assists
+			};
+		}
+
 		if (string.IsNullOrWhiteSpace(auth0Id))
 			return;
 

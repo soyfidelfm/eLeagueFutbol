@@ -10,6 +10,7 @@ public class SidebarDto
 	public SidebarStandingDto? Standing { get; set; }
 	public SidebarScorerDto? LeagueTopScorer { get; set; }
 	public SidebarScorerDto? TeamTopScorer { get; set; }
+	public SidebarAssistDto? LeagueTopAssist { get; set; }
 }
 
 public class SidebarSeasonDto
@@ -54,4 +55,11 @@ public class SidebarScorerDto
 	public string PlayerName { get; set; } = string.Empty;
 	public string ClubName { get; set; } = string.Empty;
 	public int Goals { get; set; }
+}
+
+public class SidebarAssistDto
+{
+	public string PlayerName { get; set; } = string.Empty;
+	public string ClubName { get; set; } = string.Empty;
+	public int Assists { get; set; }
 }
