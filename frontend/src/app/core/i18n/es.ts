@@ -818,7 +818,6 @@ export const ES: Record<string, string> = {
   "@": "@",
   "MY POSITION": "MI POSICIÓN",
   "PTS": "PTS",
-  "Top 5": "Top 5",
   "LEAGUE TOP SCORER": "LÍDER DE GOLEO",
   "MY TEAM TOP SCORER": "GOLEADOR DE MI EQUIPO",
   "No goals yet": "Aún sin goles",

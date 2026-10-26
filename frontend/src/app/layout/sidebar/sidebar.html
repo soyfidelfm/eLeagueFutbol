@@ -8,10 +8,10 @@
 
   <div class="sidebar-bottom">
 
-    <div class="insights-card" *ngIf="sidebarData">
+    <ng-container *ngIf="sidebarData">
 
       <a
-        class="insight"
+        class="insight-card"
         *ngIf="sidebarData.nextMatch as next; else noNext"
         routerLink="/matches"
         [queryParams]="{ seasonId: next.seasonId, week: next.weekNumber, matchId: next.matchId }">
@@ -22,27 +22,26 @@
         <small>{{ 'Week' | t }} {{ next.weekNumber }} · {{ next.matchDateUtc | date:'EEE d MMM, HH:mm' }}</small>
       </a>
       <ng-template #noNext>
-        <div class="insight">
+        <div class="insight-card">
           <span class="insight-label">{{ 'NEXT MATCH' | t }}</span>
           <small>{{ 'No pending matches' | t }}</small>
         </div>
       </ng-template>
 
       <a
-        class="insight"
+        class="insight-card"
         *ngIf="sidebarData.standing as standing"
         routerLink="/rankings"
-        [class.top-five]="standing.isTopFive">
+        [class.highlight]="standing.isTopFive">
         <span class="insight-label">{{ 'MY POSITION' | t }}</span>
-        <strong>
+        <strong class="position">
           #{{ standing.position }}
           <em>/ {{ standing.totalClubs }}</em>
-          <i *ngIf="standing.isTopFive" class="fa-solid fa-fire" aria-hidden="true"></i>
         </strong>
-        <small>{{ standing.points }} {{ 'PTS' | t }}<ng-container *ngIf="standing.isTopFive"> · {{ 'Top 5' | t }}</ng-container></small>
+        <small>{{ standing.points }} {{ 'PTS' | t }}</small>
       </a>
 
-      <div class="insight">
+      <div class="insight-card">
         <span class="insight-label">{{ 'LEAGUE TOP SCORER' | t }}</span>
         <ng-container *ngIf="sidebarData.leagueTopScorer as scorer; else noGoals">
           <strong>{{ scorer.playerName }} <b>{{ scorer.goals }}</b></strong>
@@ -50,7 +49,7 @@
         </ng-container>
       </div>
 
-      <div class="insight" *ngIf="sidebarData.standing || sidebarData.teamTopScorer">
+      <div class="insight-card" *ngIf="sidebarData.standing || sidebarData.teamTopScorer">
         <span class="insight-label">{{ 'MY TEAM TOP SCORER' | t }}</span>
         <ng-container *ngIf="sidebarData.teamTopScorer as scorer; else noGoals">
           <strong>{{ scorer.playerName }} <b>{{ scorer.goals }}</b></strong>
@@ -58,11 +57,17 @@
         </ng-container>
       </div>
 
+      <div class="insight-card" *ngIf="sidebarData.leagueTopAssist as assist">
+        <span class="insight-label">{{ 'TOP ASSISTS' | t }}</span>
+        <strong>{{ assist.playerName }} <b>{{ assist.assists }}</b></strong>
+        <small>{{ assist.clubName }}</small>
+      </div>
+
       <ng-template #noGoals>
         <small>{{ 'No goals yet' | t }}</small>
       </ng-template>
 
-    </div>
+    </ng-container>
 
     <div class="season-card">
 

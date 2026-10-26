@@ -4,6 +4,7 @@ export interface SidebarData {
   standing?: SidebarStanding | null;
   leagueTopScorer?: SidebarScorer | null;
   teamTopScorer?: SidebarScorer | null;
+  leagueTopAssist?: SidebarAssist | null;
 }
 
 export interface SidebarNextMatch {
@@ -37,4 +38,11 @@ export interface SidebarSeason {
   totalClubs: number;
   totalMatches: number;
   startsAtUtc: string | null;
+}
+
+
+export interface SidebarAssist {
+  playerName: string;
+  clubName: string;
+  assists: number;
 }
