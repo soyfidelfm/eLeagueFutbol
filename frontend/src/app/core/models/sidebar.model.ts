@@ -5,6 +5,9 @@ export interface SidebarData {
   leagueTopScorer?: SidebarScorer | null;
   teamTopScorer?: SidebarScorer | null;
   leagueTopAssist?: SidebarAssist | null;
+  teamTopAssist?: SidebarAssist | null;
+  topTable?: SidebarTableRow[];
+  myTableRow?: SidebarTableRow | null;
 }
 
 export interface SidebarNextMatch {
@@ -45,4 +48,13 @@ export interface SidebarAssist {
   playerName: string;
   clubName: string;
   assists: number;
+}
+
+export interface SidebarTableRow {
+  rank: number;
+  clubId: string;
+  clubName: string;
+  ownerName: string;
+  points: number;
+  isMe: boolean;
 }
