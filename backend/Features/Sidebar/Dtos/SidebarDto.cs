@@ -10,6 +10,14 @@ public class SidebarDto
 	public SidebarStandingDto? Standing { get; set; }
 	public SidebarScorerDto? LeagueTopScorer { get; set; }
 	public SidebarScorerDto? TeamTopScorer { get; set; }
+	public SidebarAssistDto? LeagueTopAssist { get; set; }
+	public SidebarAssistDto? TeamTopAssist { get; set; }
+
+	/// <summary>Top 5 of the league table (3/1/0 points).</summary>
+	public List<SidebarTableRowDto> TopTable { get; set; } = [];
+
+	/// <summary>The user's row when they are outside the top 5.</summary>
+	public SidebarTableRowDto? MyTableRow { get; set; }
 }
 
 public class SidebarSeasonDto
@@ -54,4 +62,21 @@ public class SidebarScorerDto
 	public string PlayerName { get; set; } = string.Empty;
 	public string ClubName { get; set; } = string.Empty;
 	public int Goals { get; set; }
+}
+
+public class SidebarAssistDto
+{
+	public string PlayerName { get; set; } = string.Empty;
+	public string ClubName { get; set; } = string.Empty;
+	public int Assists { get; set; }
+}
+
+public class SidebarTableRowDto
+{
+	public int Rank { get; set; }
+	public Guid ClubId { get; set; }
+	public string ClubName { get; set; } = string.Empty;
+	public string OwnerName { get; set; } = string.Empty;
+	public int Points { get; set; }
+	public bool IsMe { get; set; }
 }

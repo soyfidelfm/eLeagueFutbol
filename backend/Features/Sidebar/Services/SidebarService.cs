@@ -116,6 +116,59 @@ public class SidebarService : ISidebarService
 			};
 		}
 
+		// Championship top assist provider (same source: MatchPlayerStats).
+		var assisters = await _context.MatchPlayerStats
+			.AsNoTracking()
+			.Where(x =>
+				!x.IsDeleted &&
+				x.Assists > 0 &&
+				x.Match.Status == MatchStatus.Finished &&
+				!x.Match.IsDeleted &&
+				x.Match.Tournament.SeasonId == seasonId)
+			.GroupBy(x => new { x.UserClubId, x.PlayerName, ClubName = x.UserClub.Name })
+			.Select(g => new
+			{
+				g.Key.UserClubId,
+				g.Key.PlayerName,
+				g.Key.ClubName,
+				Assists = g.Sum(x => x.Assists)
+			})
+			.OrderByDescending(x => x.Assists)
+			.ThenBy(x => x.PlayerName)
+			.ToListAsync();
+
+		var topAssist = assisters.FirstOrDefault();
+
+		if (topAssist is not null)
+		{
+			dto.LeagueTopAssist = new SidebarAssistDto
+			{
+				PlayerName = topAssist.PlayerName,
+				ClubName = topAssist.ClubName,
+				Assists = topAssist.Assists
+			};
+		}
+
+		// League table (shared 3/1/0 calculation via RankingService) -> top 5.
+		var rankings = await _rankingService.GetRankingsAsync(seasonId);
+		var ownerByClub = rankings.PlayerRankings
+			.Where(x => x.ClubId.HasValue)
+			.GroupBy(x => x.ClubId!.Value)
+			.ToDictionary(g => g.Key, g => g.First().PlayerName);
+
+		var table = rankings.ClubRankings
+			.Select(r => new SidebarTableRowDto
+			{
+				Rank = r.Rank,
+				ClubId = r.ClubId,
+				ClubName = r.ClubName,
+				OwnerName = ownerByClub.TryGetValue(r.ClubId, out var owner) ? owner : string.Empty,
+				Points = r.Points
+			})
+			.ToList();
+
+		dto.TopTable = table.Take(5).ToList();
+
 		if (string.IsNullOrWhiteSpace(auth0Id))
 			return;
 
@@ -146,8 +199,21 @@ public class SidebarService : ISidebarService
 				};
 			}
 
+			var myAssist = assisters.FirstOrDefault(x => x.UserClubId == myClub.UserClubId);
+			if (myAssist is not null)
+			{
+				dto.TeamTopAssist = new SidebarAssistDto
+				{
+					PlayerName = myAssist.PlayerName,
+					ClubName = myAssist.ClubName,
+					Assists = myAssist.Assists
+				};
+			}
+
+			foreach (var r in table.Where(x => x.ClubId == myClub.UserClubId))
+				r.IsMe = true;
+
 			// Table position (same ordering as /api/rankings club table).
-			var rankings = await _rankingService.GetRankingsAsync(seasonId);
 			var row = rankings.ClubRankings.FirstOrDefault(x => x.ClubId == myClub.UserClubId);
 			if (row is not null)
 			{
@@ -159,6 +225,10 @@ public class SidebarService : ISidebarService
 					ClubName = row.ClubName,
 					IsTopFive = row.Rank <= 5
 				};
+
+				// Outside the top 5: send my own row so the card can append it.
+				if (row.Rank > 5)
+					dto.MyTableRow = table.FirstOrDefault(x => x.ClubId == myClub.UserClubId);
 			}
 		}
 

@@ -184,7 +184,7 @@
 
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
 
   margin-top: 16px;
 }
@@ -473,31 +473,20 @@
   }
 }
 /* =========================================
-   PERSONAL INSIGHTS (next match, position, scorers)
+   PERSONAL INSIGHT CARDS (one card each)
 ========================================= */
 
-.insights-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  padding: 12px;
-
-  border-radius: 20px;
-
-  background: rgba(255,255,255,.03);
-  border: 1px solid var(--border-primary);
-}
-
-.insight {
+.insight-card {
   display: flex;
   flex-direction: column;
   gap: 2px;
 
-  padding: 8px 10px;
+  padding: 12px 14px;
 
-  border-radius: 12px;
-  border: 1px solid transparent;
+  border-radius: 16px;
+
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border-primary);
 
   color: inherit;
   text-decoration: none;
@@ -505,9 +494,10 @@
   transition: .25s ease;
 }
 
-a.insight:hover {
-  border-color: var(--border-primary);
+a.insight-card:hover {
+  transform: translateY(-2px);
   background: rgba(0,255,136,.05);
+  box-shadow: 0 0 18px rgba(0,255,136,.12);
 }
 
 .insight-label {
@@ -516,7 +506,7 @@ a.insight:hover {
   letter-spacing: 1.5px;
 }
 
-.insight strong {
+.insight-card strong {
   color: white;
   font-size: 14px;
   font-weight: 800;
@@ -526,19 +516,23 @@ a.insight:hover {
   white-space: nowrap;
 }
 
-.insight strong b {
+.insight-card strong b {
   color: var(--neon-primary);
   margin-left: 4px;
 }
 
-.insight strong em {
+.insight-card strong.position {
+  font-size: 22px;
+}
+
+.insight-card strong em {
   color: var(--text-secondary);
   font-style: normal;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
-.insight small {
+.insight-card small {
   color: var(--text-secondary);
   font-size: 11px;
 
@@ -547,13 +541,70 @@ a.insight:hover {
   white-space: nowrap;
 }
 
-.insight.top-five {
+.insight-card.highlight {
   background: rgba(0,255,136,.08);
   border-color: rgba(0,255,136,.25);
   box-shadow: 0 0 18px rgba(0,255,136,.12);
 }
 
-.insight.top-five strong,
-.insight.top-five i {
+.insight-card.highlight strong.position {
   color: var(--neon-primary);
+}
+
+/* Top 5 table card */
+.table-card {
+  gap: 4px;
+}
+
+.table-card .table-row {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  align-items: center;
+  gap: 6px;
+
+  padding: 4px 6px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+.table-card .table-row .pos {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.table-card .table-row .names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.table-card .table-row .names strong {
+  font-size: 13px;
+}
+
+.table-card .table-row b {
+  color: var(--neon-primary);
+  font-weight: 900;
+}
+
+.table-card .table-row.me {
+  background: rgba(0,255,136,.08);
+  border-color: rgba(0,255,136,.25);
+}
+
+.table-card .table-row.me .pos,
+.table-card .table-row.me strong {
+  color: var(--neon-primary);
+}
+
+.table-card .table-gap {
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.table-card .table-foot {
+  margin-top: 2px;
+  text-align: right;
 }
