@@ -8,6 +8,62 @@
 
   <div class="sidebar-bottom">
 
+    <div class="insights-card" *ngIf="sidebarData">
+
+      <a
+        class="insight"
+        *ngIf="sidebarData.nextMatch as next; else noNext"
+        routerLink="/matches"
+        [queryParams]="{ seasonId: next.seasonId, week: next.weekNumber, matchId: next.matchId }">
+        <span class="insight-label">{{ 'NEXT MATCH' | t }}</span>
+        <strong>
+          {{ next.isHome ? ('vs' | t) : ('@' | t) }} {{ next.opponent }}
+        </strong>
+        <small>{{ 'Week' | t }} {{ next.weekNumber }} · {{ next.matchDateUtc | date:'EEE d MMM, HH:mm' }}</small>
+      </a>
+      <ng-template #noNext>
+        <div class="insight">
+          <span class="insight-label">{{ 'NEXT MATCH' | t }}</span>
+          <small>{{ 'No pending matches' | t }}</small>
+        </div>
+      </ng-template>
+
+      <a
+        class="insight"
+        *ngIf="sidebarData.standing as standing"
+        routerLink="/rankings"
+        [class.top-five]="standing.isTopFive">
+        <span class="insight-label">{{ 'MY POSITION' | t }}</span>
+        <strong>
+          #{{ standing.position }}
+          <em>/ {{ standing.totalClubs }}</em>
+          <i *ngIf="standing.isTopFive" class="fa-solid fa-fire" aria-hidden="true"></i>
+        </strong>
+        <small>{{ standing.points }} {{ 'PTS' | t }}<ng-container *ngIf="standing.isTopFive"> · {{ 'Top 5' | t }}</ng-container></small>
+      </a>
+
+      <div class="insight">
+        <span class="insight-label">{{ 'LEAGUE TOP SCORER' | t }}</span>
+        <ng-container *ngIf="sidebarData.leagueTopScorer as scorer; else noGoals">
+          <strong>{{ scorer.playerName }} <b>{{ scorer.goals }}</b></strong>
+          <small>{{ scorer.clubName }}</small>
+        </ng-container>
+      </div>
+
+      <div class="insight" *ngIf="sidebarData.standing || sidebarData.teamTopScorer">
+        <span class="insight-label">{{ 'MY TEAM TOP SCORER' | t }}</span>
+        <ng-container *ngIf="sidebarData.teamTopScorer as scorer; else noGoals">
+          <strong>{{ scorer.playerName }} <b>{{ scorer.goals }}</b></strong>
+          <small>{{ scorer.clubName }}</small>
+        </ng-container>
+      </div>
+
+      <ng-template #noGoals>
+        <small>{{ 'No goals yet' | t }}</small>
+      </ng-template>
+
+    </div>
+
     <div class="season-card">
 
       <span class="season-label">

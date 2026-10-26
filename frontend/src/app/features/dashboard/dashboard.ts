@@ -63,6 +63,9 @@ export class Dashboard implements OnInit {
   gameClubs: GameClubView[] = [];
   selectedGameClubId = '';
 
+  /** Avatar URLs that failed to load; rows fall back to initials. */
+  brokenAvatars = new Set<string>();
+
   kpis: Kpi[] = [];
   leaderboard: Player[] = [];
   matches: Match[] = [];
@@ -78,8 +81,18 @@ export class Dashboard implements OnInit {
     goals: 0,
     assists: 0,
     cleanSheets: 0,
-    avgPossession: '0%'
+    avgPossession: '—'
   };
+
+  initials(name: string | null | undefined): string {
+    const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) {
+      return '?';
+    }
+    return parts.length === 1
+      ? parts[0].slice(0, 2).toUpperCase()
+      : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
 
   get selectedClub(): GameClubView | null {
     return this.gameClubs.find(x => x.gameClubId === this.selectedGameClubId) ?? null;

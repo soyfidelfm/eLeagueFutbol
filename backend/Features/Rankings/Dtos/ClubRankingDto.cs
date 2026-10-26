@@ -1,4 +1,4 @@
-﻿namespace backend.Features.Rankings.DTOs;
+namespace backend.Features.Rankings.DTOs;
 
 public sealed class ClubRankingDto
 {
@@ -17,6 +17,8 @@ public sealed class ClubRankingDto
 	public int GoalsFor { get; set; }
 	public int GoalsAgainst { get; set; }
 	public int GoalDifference { get; set; }
+
+	public int Played { get; set; }
 
 	public decimal WinRate { get; set; }
 
